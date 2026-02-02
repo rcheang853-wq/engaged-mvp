@@ -1,55 +1,61 @@
-You are the primary agent. Work spec-first.
+PHASE 4 — PUBLIC SHARING
 
-Goal: Engaged MVP rewrite focusing on:
-- Auth C: Supabase Email/Password with email confirmation required + Google OAuth
-- Basic calendar UI
-- Event CRUD
-- Public share links that show title/time/location but hide notes
+Status: Phases 1-3 complete. Auth, calendar UI, and events CRUD are working.
 
-Phase 0:
-- Confirm app runs locally (already: npm run dev)
-- Document MVP scope in MVP_PLAN.md (avoid scope creep)
+Goal: Add public share functionality for personal events.
 
-Phase 1 — Trim to core routes/pages:
-Keep only:
-- /auth/signin
-- /auth/signup
-- /auth/reset-password
-- /calendar (main logged-in page)
-- /e/[shareSlug] (public view)
+Tasks:
 
-Disable/remove from nav and routes:
-- ai-match
-- discover
-- onboarding (optional)
-- organizer
-- admin
-- scraping UI
+1. Database Migration (supabase/personal-events-share.sql):
+   - Add share_slug column to personal_events table (TEXT, UNIQUE, NULLABLE)
+   - Add share_enabled column (BOOLEAN, DEFAULT false)
+   - Create index on share_slug for fast lookups
+   - Create function to generate random share slugs (8-10 chars, URL-safe)
+   - Create trigger to auto-generate share_slug on INSERT if share_enabled=true
 
-Phase 2 — Auth C implementation:
-Reuse existing auth scaffolding (AuthProvider, hooks, Supabase SSR client patterns):
-- Email/Password signup (email confirmation required before login)
-- Sign in/out
-- Reset password (email → recovery link)
-- Update password via Supabase recovery flow
-- Google OAuth: "Continue with Google" button on sign-in page
-- Document Supabase console settings + redirect URLs for local + prod
+2. Update Types (src/types/database.ts):
+   - Add share_slug?: string | null to personal_events Row/Insert/Update types
+   - Add share_enabled?: boolean to personal_events types
 
-Phase 3 — Calendar + events CRUD:
-- Calendar UI using react-big-calendar
-- Events stored in Supabase table events
-- CRUD: create/update/delete/list per logged-in user
-- Fields: title, start/end, location, notes
+3. Update Event Service (src/lib/supabase/events.ts):
+   - Add toggleShare(eventId, enabled) function
+   - Add getEventByShareSlug(slug) function (no auth required)
+   - Update createEvent to optionally enable sharing
+   - Add regenerateShareSlug(eventId) function
 
-Phase 4 — Public sharing:
-- Add share_slug to each event (random)
-- Public page /e/[shareSlug]
-- Public view shows title/start/end/general location label; notes hidden
+4. Update Event Modal (src/components/calendar/personal-event-modal.tsx):
+   - Add "Share" toggle switch
+   - If enabled, show share link with copy button
+   - Add "Regenerate Link" button
+   - Show share status in modal
+
+5. Create Public Share Page (src/app/e/[shareSlug]/page.tsx):
+   - NO auth required (public route)
+   - Fetch event by share_slug using getEventByShareSlug()
+   - Display card showing:
+     * Event title
+     * Start/end time (formatted nicely)
+     * Location (if present)
+     * "Private notes hidden" message
+   - Show 404 if slug not found or sharing disabled
+   - Clean, simple design
+   - Add "Get Engaged" CTA at bottom (link to signup)
+
+6. Update Calendar Component (personal-events-calendar.tsx):
+   - Add share icon/indicator on events that are shared
+   - Show share status in event details
 
 Constraints:
-- Windows dev environment; avoid bash-specific scripts.
-- Keep changes small/coherent.
+- Keep public page simple and clean
+- No auth required for /e/[shareSlug]
+- Notes must NEVER be exposed on public page
+- Share slugs must be unique and hard to guess
+- User can disable sharing anytime
 
-Output:
-- After each phase: summarize changes + next steps.
-- When finished: print a short summary and stop.
+Output when done:
+- Summary of what was built
+- SQL migration file location
+- Test instructions (how to create shared event + view public link)
+
+When completely finished, run:
+clawdbot gateway wake --text "Phase 4 complete: Public event sharing implemented" --mode now

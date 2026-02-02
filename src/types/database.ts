@@ -715,6 +715,8 @@ export interface Database {
           end_time: string;
           location: string | null;
           notes: string | null;
+          share_slug: string | null;
+          share_enabled: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -726,6 +728,8 @@ export interface Database {
           end_time: string;
           location?: string | null;
           notes?: string | null;
+          share_slug?: string | null;
+          share_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -737,6 +741,8 @@ export interface Database {
           end_time?: string;
           location?: string | null;
           notes?: string | null;
+          share_slug?: string | null;
+          share_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };

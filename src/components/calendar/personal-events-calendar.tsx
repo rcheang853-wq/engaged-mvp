@@ -7,7 +7,7 @@ import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { PersonalEventModal, PersonalEvent } from './personal-event-modal';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { Loader2, Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const locales = {
@@ -170,11 +170,15 @@ export function PersonalEventsCalendar({
   }, []);
 
   const components = useMemo(() => ({
-    event: ({ event }: { event: CalendarEvent }) => (
-      <div className="truncate font-medium text-xs">
-        {event.title}
-      </div>
-    ),
+    event: ({ event }: { event: CalendarEvent }) => {
+      const isShared = event.resource?.share_enabled && event.resource?.share_slug;
+      return (
+        <div className="truncate font-medium text-xs flex items-center gap-1">
+          {isShared && <Share2 className="h-3 w-3 flex-shrink-0" />}
+          <span className="truncate">{event.title}</span>
+        </div>
+      );
+    },
   }), []);
 
   const formats = useMemo(() => ({

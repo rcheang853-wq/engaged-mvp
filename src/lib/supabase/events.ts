@@ -167,3 +167,73 @@ export async function searchEvents(query: string): Promise<EventsResponse> {
     return { data: null, error: error instanceof Error ? error : new Error('Unknown error') };
   }
 }
+
+// Public sharing functions
+
+export async function toggleShare(eventId: string, enabled: boolean): Promise<EventResponse> {
+  try {
+    const { data, error } = await supabase
+      .from('personal_events')
+      .update({ share_enabled: enabled })
+      .eq('id', eventId)
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error: new Error(error.message) };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error : new Error('Unknown error') };
+  }
+}
+
+export async function getEventByShareSlug(slug: string): Promise<EventResponse> {
+  try {
+    const { data, error } = await supabase
+      .from('personal_events')
+      .select('id, title, start_time, end_time, location, share_slug, share_enabled')
+      .eq('share_slug', slug)
+      .eq('share_enabled', true)
+      .single();
+
+    if (error) {
+      return { data: null, error: new Error(error.message) };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error : new Error('Unknown error') };
+  }
+}
+
+export async function regenerateShareSlug(eventId: string): Promise<EventResponse> {
+  try {
+    // First, clear the slug to trigger regeneration
+    const { error: clearError } = await supabase
+      .from('personal_events')
+      .update({ share_slug: null })
+      .eq('id', eventId);
+
+    if (clearError) {
+      return { data: null, error: new Error(clearError.message) };
+    }
+
+    // Then update to re-enable sharing (trigger will generate new slug)
+    const { data, error } = await supabase
+      .from('personal_events')
+      .update({ share_enabled: true })
+      .eq('id', eventId)
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error: new Error(error.message) };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error : new Error('Unknown error') };
+  }
+}
