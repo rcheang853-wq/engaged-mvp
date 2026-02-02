@@ -1,0 +1,722 @@
+[
+  {
+    "url": "http://localhost:3000/",
+    "pageName": "Home",
+    "status": 200,
+    "metrics": {
+      "domContentLoaded": 0.10000000149011612,
+      "loadComplete": 0,
+      "firstPaint": 204,
+      "firstContentfulPaint": 204,
+      "resourceCount": 29,
+      "usedJSHeapSize": 17100000,
+      "totalJSHeapSize": 21700000,
+      "totalTransferSize": 1018319,
+      "responseTime": 24.600000001490116,
+      "domNodes": 91,
+      "images": 0,
+      "scripts": 43,
+      "stylesheets": 1
+    },
+    "bundleAnalysis": [
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_a9cb0712.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_5150ccfd._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_cf1d9188._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_b0daae9a._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40swc_helpers_cjs_b3dc30d6._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/_a0ff3932._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/turbopack-_cdba956c._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_8db7fb1f._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_favicon_ico_mjs_243aa161._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40tanstack_query-devtools_build_3e58a6c1._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_aab6bb42._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_lib_react-query_tsx_3367ec50._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_layout_tsx_0a548d63._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_01082c7d._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_db7ec875._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_6630d9a4._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_page_tsx_db00fff5._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_components_builtin_global-error_db00fff5.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_build_polyfills_polyfill-nomodule.js",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_7f3ebca3._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40tanstack_query-devtools_build_DevtoolsComponent_6ELMOJL2_11d8363e.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c8c997ce._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_285433b7._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_57d40746._.js",
+        "async": true,
+        "defer": false
+      }
+    ],
+    "accessibilityIssues": [],
+    "seoAnalysis": {
+      "title": "Engaged - Discover Local Events",
+      "titleLength": 31,
+      "description": "",
+      "descriptionLength": 0,
+      "h1Count": 1,
+      "hasViewport": true,
+      "hasLangAttribute": true,
+      "canonical": "",
+      "ogTags": [],
+      "twitterTags": []
+    },
+    "resourceRequests": [],
+    "timestamp": "2025-09-26T15:40:22.723Z"
+  },
+  {
+    "url": "http://localhost:3000/discover",
+    "pageName": "Discover",
+    "status": 200,
+    "metrics": {
+      "domContentLoaded": 0,
+      "loadComplete": 0,
+      "firstPaint": 1052,
+      "firstContentfulPaint": 1052,
+      "resourceCount": 34,
+      "usedJSHeapSize": 21700000,
+      "totalJSHeapSize": 26000000,
+      "totalTransferSize": 1058006,
+      "responseTime": 55.79999999701977,
+      "domNodes": 185,
+      "images": 0,
+      "scripts": 58,
+      "stylesheets": 1
+    },
+    "bundleAnalysis": [
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_a9cb0712.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_5150ccfd._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_cf1d9188._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_b0daae9a._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40swc_helpers_cjs_b3dc30d6._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/_a0ff3932._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/turbopack-_cdba956c._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_8db7fb1f._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_favicon_ico_mjs_243aa161._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40tanstack_query-devtools_build_3e58a6c1._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_aab6bb42._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_lib_react-query_tsx_3367ec50._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_layout_tsx_0a548d63._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_components_builtin_global-error_db00fff5.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40supabase_node-fetch_browser_ebbd8575.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_8ef8b2ff._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_df9231f0._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_discover_page_tsx_db00fff5._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_build_polyfills_polyfill-nomodule.js",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_7f3ebca3._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40tanstack_query-devtools_build_DevtoolsComponent_6ELMOJL2_11d8363e.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c8c997ce._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_285433b7._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_57d40746._.js",
+        "async": true,
+        "defer": false
+      }
+    ],
+    "accessibilityIssues": [
+      "1 form inputs without labels"
+    ],
+    "seoAnalysis": {
+      "title": "Discover Events - Engaged",
+      "titleLength": 25,
+      "description": "Discover trending, nearby, and top-rated events in Macau, Hong Kong, and the Greater Bay Area. Find your perfect event match with AI-powered recommendations.",
+      "descriptionLength": 157,
+      "h1Count": 1,
+      "hasViewport": true,
+      "hasLangAttribute": true,
+      "canonical": "",
+      "ogTags": [
+        {
+          "content": "Discover Events - Engaged"
+        },
+        {
+          "content": "Discover trending, nearby, and top-rated events in Macau, Hong Kong, and the Greater Bay Area."
+        },
+        {
+          "content": "website"
+        }
+      ],
+      "twitterTags": [
+        {
+          "name": "twitter:card",
+          "content": "summary"
+        },
+        {
+          "name": "twitter:title",
+          "content": "Discover Events - Engaged"
+        },
+        {
+          "name": "twitter:description",
+          "content": "Discover trending, nearby, and top-rated events in Macau, Hong Kong, and the Greater Bay Area."
+        }
+      ]
+    },
+    "resourceRequests": [],
+    "timestamp": "2025-09-26T15:40:27.919Z"
+  },
+  {
+    "url": "http://localhost:3000/calendar",
+    "pageName": "Calendar",
+    "status": 200,
+    "metrics": {
+      "domContentLoaded": 0.10000000149011612,
+      "loadComplete": 0,
+      "firstPaint": 260,
+      "firstContentfulPaint": 548,
+      "resourceCount": 35,
+      "usedJSHeapSize": 27600000,
+      "totalJSHeapSize": 31200000,
+      "totalTransferSize": 1363171,
+      "responseTime": 25.700000002980232,
+      "domNodes": 87,
+      "images": 0,
+      "scripts": 50,
+      "stylesheets": 1
+    },
+    "bundleAnalysis": [
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_a9cb0712.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_5150ccfd._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_cf1d9188._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_b0daae9a._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40swc_helpers_cjs_b3dc30d6._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/_a0ff3932._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/turbopack-_cdba956c._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_8db7fb1f._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_favicon_ico_mjs_243aa161._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40tanstack_query-devtools_build_3e58a6c1._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_aab6bb42._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_lib_react-query_tsx_3367ec50._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_layout_tsx_0a548d63._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_edeb6af7._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_dc98a3aa._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_af562a27._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_56b6fd65._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_date-fns_c037cd43._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_zod_v4_c91902d9._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_motion-dom_dist_es_da948acf._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_framer-motion_dist_es_9fef178b._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_62430da0._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_calendar_page_tsx_db00fff5._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_components_builtin_global-error_db00fff5.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_build_polyfills_polyfill-nomodule.js",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_7f3ebca3._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40tanstack_query-devtools_build_DevtoolsComponent_6ELMOJL2_11d8363e.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c8c997ce._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_285433b7._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_57d40746._.js",
+        "async": true,
+        "defer": false
+      }
+    ],
+    "accessibilityIssues": [],
+    "seoAnalysis": {
+      "title": "Engaged - Discover Local Events",
+      "titleLength": 31,
+      "description": "",
+      "descriptionLength": 0,
+      "h1Count": 1,
+      "hasViewport": true,
+      "hasLangAttribute": true,
+      "canonical": "",
+      "ogTags": [],
+      "twitterTags": []
+    },
+    "resourceRequests": [],
+    "timestamp": "2025-09-26T15:40:31.202Z"
+  },
+  {
+    "url": "http://localhost:3000/auth/signin",
+    "pageName": "Sign In",
+    "status": 200,
+    "metrics": {
+      "domContentLoaded": 0.3999999985098839,
+      "loadComplete": 0,
+      "firstPaint": 248,
+      "firstContentfulPaint": 248,
+      "resourceCount": 32,
+      "usedJSHeapSize": 24500000,
+      "totalJSHeapSize": 27600000,
+      "totalTransferSize": 1246858,
+      "responseTime": 20.100000001490116,
+      "domNodes": 112,
+      "images": 0,
+      "scripts": 47,
+      "stylesheets": 1
+    },
+    "bundleAnalysis": [
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_a9cb0712.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_5150ccfd._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_cf1d9188._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_b0daae9a._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40swc_helpers_cjs_b3dc30d6._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/_a0ff3932._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/turbopack-_cdba956c._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_8db7fb1f._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_favicon_ico_mjs_243aa161._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40tanstack_query-devtools_build_3e58a6c1._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_aab6bb42._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_lib_react-query_tsx_3367ec50._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_layout_tsx_0a548d63._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_88eac2e4._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_3dff8eb6._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_af562a27._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_zod_v4_c91902d9._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_56b6fd65._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_25222bef._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/src_app_auth_signin_page_tsx_db00fff5._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_components_builtin_global-error_db00fff5.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_build_polyfills_polyfill-nomodule.js",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_7f3ebca3._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/node_modules_%40tanstack_query-devtools_build_DevtoolsComponent_6ELMOJL2_11d8363e.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c8c997ce._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_285433b7._.js",
+        "async": true,
+        "defer": false
+      },
+      {
+        "src": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_57d40746._.js",
+        "async": true,
+        "defer": false
+      }
+    ],
+    "accessibilityIssues": [
+      "1 buttons without accessible names"
+    ],
+    "seoAnalysis": {
+      "title": "Engaged - Discover Local Events",
+      "titleLength": 31,
+      "description": "",
+      "descriptionLength": 0,
+      "h1Count": 0,
+      "hasViewport": true,
+      "hasLangAttribute": true,
+      "canonical": "",
+      "ogTags": [],
+      "twitterTags": []
+    },
+    "resourceRequests": [],
+    "timestamp": "2025-09-26T15:40:36.802Z"
+  }
+]

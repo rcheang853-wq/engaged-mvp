@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Home",
+    "url": "http://localhost:3000/",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"networkidle\"\u001b[22m\n",
+    "timestamp": "2025-09-26T15:45:37.908Z"
+  },
+  {
+    "name": "Discover",
+    "url": "http://localhost:3000/discover",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/discover\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/discover\", waiting until \"networkidle\"\u001b[22m\n",
+    "timestamp": "2025-09-26T15:45:37.951Z"
+  },
+  {
+    "name": "Calendar",
+    "url": "http://localhost:3000/calendar",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/calendar\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/calendar\", waiting until \"networkidle\"\u001b[22m\n",
+    "timestamp": "2025-09-26T15:45:37.992Z"
+  },
+  {
+    "name": "Sign In",
+    "url": "http://localhost:3000/auth/signin",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3000/auth/signin\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/auth/signin\", waiting until \"networkidle\"\u001b[22m\n",
+    "timestamp": "2025-09-26T15:45:38.035Z"
+  }
+]

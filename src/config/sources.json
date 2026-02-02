@@ -1,0 +1,337 @@
+{
+  "sources": [
+    {
+      "id": "eventbrite-macau",
+      "name": "Eventbrite Macau",
+      "baseUrl": "https://www.eventbrite.com/d/macau/events/",
+      "sourceType": "website",
+      "scrapeConfig": {
+        "selectors": {
+          "title": "[data-testid='event-title']",
+          "description": "[data-testid='event-description']",
+          "startTime": "[data-testid='event-datetime']",
+          "location": "[data-testid='event-location']",
+          "price": "[data-testid='event-price']",
+          "image": "[data-testid='event-image'] img",
+          "link": "[data-testid='event-link']"
+        },
+        "waitFor": {
+          "selector": "[data-testid='event-title']",
+          "timeout": 10000,
+          "networkIdle": true
+        },
+        "pagination": {
+          "enabled": true,
+          "nextButtonSelector": "[data-testid='pagination-next']",
+          "maxPages": 5
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "delay": 2000,
+        "retries": 3
+      },
+      "scrapeFrequencyHours": 6,
+      "isActive": true,
+      "errorCount": 0
+    },
+    {
+      "id": "macau-venues",
+      "name": "Macau Cultural Venues",
+      "baseUrl": "https://www.icm.gov.mo/en/events",
+      "sourceType": "website",
+      "scrapeConfig": {
+        "selectors": {
+          "title": ".event-title",
+          "description": ".event-description",
+          "startTime": ".event-date",
+          "location": ".event-venue",
+          "image": ".event-poster img",
+          "link": ".event-link"
+        },
+        "waitFor": {
+          "selector": ".event-title",
+          "timeout": 8000
+        },
+        "pagination": {
+          "enabled": false
+        },
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "delay": 1500,
+        "retries": 2
+      },
+      "scrapeFrequencyHours": 12,
+      "isActive": true,
+      "errorCount": 0
+    },
+    {
+      "id": "hong-kong-events",
+      "name": "Hong Kong Events Hub",
+      "baseUrl": "https://www.discoverhongkong.com/eng/see-do/events-festivals/",
+      "sourceType": "website",
+      "scrapeConfig": {
+        "selectors": {
+          "title": ".event-card-title",
+          "description": ".event-card-description",
+          "startTime": ".event-card-date",
+          "location": ".event-card-location",
+          "image": ".event-card-image img",
+          "link": ".event-card a"
+        },
+        "waitFor": {
+          "selector": ".event-card-title",
+          "timeout": 12000,
+          "networkIdle": true
+        },
+        "pagination": {
+          "enabled": true,
+          "nextButtonSelector": ".pagination-next",
+          "maxPages": 3
+        },
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+        "viewport": {
+          "width": 375,
+          "height": 812
+        },
+        "delay": 3000,
+        "retries": 3
+      },
+      "scrapeFrequencyHours": 8,
+      "isActive": true,
+      "errorCount": 0
+    },
+    {
+      "id": "mgto",
+      "name": "MGTO City Events",
+      "baseUrl": "https://www.macaotourism.gov.mo/en/events/calendar",
+      "sourceType": "website",
+      "scrapeConfig": {
+        "selectors": {
+          "title": ".m-calendar__event-name, .cx-t20.m-calendar__event-name",
+          "description": ".m-calendar__item article .cx-col:last-child",
+          "startTime": ".cx-list__item:has(.fa-calendar), .cx-t01.cx-list--sm",
+          "location": ".m-calendar__item",
+          "image": ".cx-media__img--round",
+          "link": ".m-calendar__item a, a[href*='event']"
+        },
+        "waitFor": {
+          "selector": ".m-calendar__event-name",
+          "timeout": 10000,
+          "networkIdle": true
+        },
+        "pagination": {
+          "enabled": false
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "delay": 2000,
+        "rateLimit": "0.5 req/sec",
+        "retries": 3
+      },
+      "scrapeFrequencyHours": 12,
+      "isActive": true,
+      "errorCount": 0
+    },
+    {
+      "id": "londoner",
+      "name": "The Londoner Macao Events",
+      "baseUrl": "https://www.londonermacao.com/macau-events-shows",
+      "sourceType": "website",
+      "scrapeConfig": {
+        "selectors": {
+          "title": ".event-title, .show-title, h2, h3",
+          "description": ".event-description, .show-description, .description",
+          "startTime": ".event-date, .show-date, .date",
+          "location": ".event-venue, .venue, .location",
+          "image": ".event-image img, .show-image img, img",
+          "link": "a[href*='event'], a[href*='show']"
+        },
+        "waitFor": {
+          "selector": ".event-title, .show-title, h2",
+          "timeout": 8000,
+          "networkIdle": true
+        },
+        "pagination": {
+          "enabled": false
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "delay": 1000,
+        "rateLimit": "1 req/sec",
+        "retries": 3
+      },
+      "scrapeFrequencyHours": 6,
+      "isActive": true,
+      "errorCount": 0
+    },
+    {
+      "id": "venetian",
+      "name": "The Venetian Macao Entertainment",
+      "baseUrl": "https://www.venetianmacao.com/entertainment.html",
+      "sourceType": "website",
+      "scrapeConfig": {
+        "selectors": {
+          "title": ".entertainment-title, .show-title, h2, h3",
+          "description": ".entertainment-description, .show-description, .description",
+          "startTime": ".entertainment-date, .show-date, .date",
+          "location": ".entertainment-venue, .venue, .location",
+          "image": ".entertainment-image img, .show-image img, img",
+          "link": "a[href*='entertainment'], a[href*='show']"
+        },
+        "waitFor": {
+          "selector": ".entertainment-title, .show-title, h2",
+          "timeout": 8000,
+          "networkIdle": true
+        },
+        "pagination": {
+          "enabled": false
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "delay": 1000,
+        "rateLimit": "1 req/sec",
+        "retries": 3
+      },
+      "scrapeFrequencyHours": 6,
+      "isActive": true,
+      "errorCount": 0
+    },
+    {
+      "id": "galaxy",
+      "name": "Galaxy Macau Events",
+      "baseUrl": "https://www.galaxymacau.com/ticketing/event-list/",
+      "sourceType": "website",
+      "scrapeConfig": {
+        "selectors": {
+          "title": ".event-title, .ticket-title, h2, h3",
+          "description": ".event-description, .ticket-description, .description",
+          "startTime": ".event-date, .ticket-date, .date",
+          "location": ".event-venue, .venue, .location",
+          "image": ".event-image img, .ticket-image img, img",
+          "link": "a[href*='event'], a[href*='ticket']"
+        },
+        "waitFor": {
+          "selector": ".event-title, .ticket-title, h2",
+          "timeout": 10000,
+          "networkIdle": true
+        },
+        "pagination": {
+          "enabled": false
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "delay": 1000,
+        "rateLimit": "1 req/sec",
+        "retries": 3
+      },
+      "scrapeFrequencyHours": 6,
+      "isActive": true,
+      "errorCount": 0
+    },
+    {
+      "id": "mice",
+      "name": "Macao MICE Portal",
+      "baseUrl": "https://www.mice.gov.mo/en/events.aspx",
+      "sourceType": "website",
+      "scrapeConfig": {
+        "selectors": {
+          "title": ".event-title, .mice-title, h2, h3",
+          "description": ".event-description, .mice-description, .description",
+          "startTime": ".event-date, .mice-date, .date",
+          "location": ".event-venue, .venue, .location",
+          "image": ".event-image img, .mice-image img, img",
+          "link": "a[href*='event'], a[href*='mice']"
+        },
+        "waitFor": {
+          "selector": ".event-title, .mice-title, h2",
+          "timeout": 10000,
+          "networkIdle": true
+        },
+        "pagination": {
+          "enabled": false
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "delay": 2000,
+        "rateLimit": "0.5 req/sec",
+        "retries": 3
+      },
+      "scrapeFrequencyHours": 12,
+      "isActive": true,
+      "errorCount": 0
+    },
+    {
+      "id": "broadway",
+      "name": "Broadway Macau Events",
+      "baseUrl": "https://www.broadwaymacau.com.mo/upcoming-events-and-concerts/",
+      "sourceType": "website",
+      "scrapeConfig": {
+        "selectors": {
+          "title": ".event-title, .concert-title, h2, h3",
+          "description": ".event-description, .concert-description, .description",
+          "startTime": ".event-date, .concert-date, .date",
+          "location": ".event-venue, .venue, .location",
+          "image": ".event-image img, .concert-image img, img",
+          "link": "a[href*='event'], a[href*='concert']"
+        },
+        "waitFor": {
+          "selector": ".event-title, .concert-title, h2",
+          "timeout": 8000,
+          "networkIdle": true
+        },
+        "pagination": {
+          "enabled": false
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "delay": 1000,
+        "rateLimit": "1 req/sec",
+        "retries": 3
+      },
+      "scrapeFrequencyHours": 6,
+      "isActive": true,
+      "errorCount": 0
+    }
+  ],
+  "defaultConfig": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "delay": 2000,
+    "retries": 3,
+    "waitFor": {
+      "timeout": 10000,
+      "networkIdle": false
+    },
+    "pagination": {
+      "enabled": false,
+      "maxPages": 5
+    }
+  }
+}

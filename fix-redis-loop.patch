@@ -1,0 +1,26 @@
+--- a/src/workers/event-scraper.ts
++++ b/src/workers/event-scraper.ts
+@@ -11,18 +11,10 @@ export class EventScraperWorker {
+
+   constructor() {
+     this.scrapingService = new ScrapingService()
+-
+-    try {
+-      this.queue = new Bull('event-scraping', {
+-        redis: SCRAPING_CONFIG.queue.redis,
+-        defaultJobOptions: SCRAPING_CONFIG.queue.defaultJobOptions,
+-      })
+-
+-      this.setupProcessors()
+-      this.setupEventHandlers()
+-    } catch (error) {
+-      console.warn('EventScraperWorker: Redis queue unavailable, running without queue:', error)
+-      this.queue = null
+-    }
++
++    // Skip Bull queue - Redis not available
++    console.warn('⚠️  Running scraper in DIRECT MODE (no Redis queue)')
++    this.queue = null
+   }
+
+   async initialize(): Promise<void> {

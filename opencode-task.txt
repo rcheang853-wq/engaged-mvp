@@ -1,0 +1,55 @@
+You are the primary agent. Work spec-first.
+
+Goal: Engaged MVP rewrite focusing on:
+- Auth C: Supabase Email/Password with email confirmation required + Google OAuth
+- Basic calendar UI
+- Event CRUD
+- Public share links that show title/time/location but hide notes
+
+Phase 0:
+- Confirm app runs locally (already: npm run dev)
+- Document MVP scope in MVP_PLAN.md (avoid scope creep)
+
+Phase 1 — Trim to core routes/pages:
+Keep only:
+- /auth/signin
+- /auth/signup
+- /auth/reset-password
+- /calendar (main logged-in page)
+- /e/[shareSlug] (public view)
+
+Disable/remove from nav and routes:
+- ai-match
+- discover
+- onboarding (optional)
+- organizer
+- admin
+- scraping UI
+
+Phase 2 — Auth C implementation:
+Reuse existing auth scaffolding (AuthProvider, hooks, Supabase SSR client patterns):
+- Email/Password signup (email confirmation required before login)
+- Sign in/out
+- Reset password (email → recovery link)
+- Update password via Supabase recovery flow
+- Google OAuth: "Continue with Google" button on sign-in page
+- Document Supabase console settings + redirect URLs for local + prod
+
+Phase 3 — Calendar + events CRUD:
+- Calendar UI using react-big-calendar
+- Events stored in Supabase table events
+- CRUD: create/update/delete/list per logged-in user
+- Fields: title, start/end, location, notes
+
+Phase 4 — Public sharing:
+- Add share_slug to each event (random)
+- Public page /e/[shareSlug]
+- Public view shows title/start/end/general location label; notes hidden
+
+Constraints:
+- Windows dev environment; avoid bash-specific scripts.
+- Keep changes small/coherent.
+
+Output:
+- After each phase: summarize changes + next steps.
+- When finished: print a short summary and stop.

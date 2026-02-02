@@ -1,0 +1,246 @@
+{
+  "totalJS": 2030579,
+  "totalCSS": 72681,
+  "chunks": [
+    {
+      "file": "framework-0ec77431829313a4.js",
+      "size": 741328,
+      "sizeKB": "723.95",
+      "type": "framework"
+    },
+    {
+      "file": "react-query-7e98b78af1127186.js",
+      "size": 310044,
+      "sizeKB": "302.78",
+      "type": "chunk"
+    },
+    {
+      "file": "ui-libraries-ec576d66cd0fa2a9.js",
+      "size": 152738,
+      "sizeKB": "149.16",
+      "type": "chunk"
+    },
+    {
+      "file": "vendors-84f829b2-5d48398ef4d8f07e.js",
+      "size": 132564,
+      "sizeKB": "129.46",
+      "type": "vendor"
+    },
+    {
+      "file": "supabase-9b20bc545dd7a161.js",
+      "size": 131166,
+      "sizeKB": "128.09",
+      "type": "chunk"
+    },
+    {
+      "file": "6893-6bbaa15e3220cddc.js",
+      "size": 125370,
+      "sizeKB": "122.43",
+      "type": "chunk"
+    },
+    {
+      "file": "polyfills-42372ed130431b0a.js",
+      "size": 112594,
+      "sizeKB": "109.96",
+      "type": "chunk"
+    },
+    {
+      "file": "vendors-fbd10709-a3c044863617ed14.js",
+      "size": 85015,
+      "sizeKB": "83.02",
+      "type": "vendor"
+    },
+    {
+      "file": "common-85aee4ad59cfcfcf.js",
+      "size": 50863,
+      "sizeKB": "49.67",
+      "type": "chunk"
+    },
+    {
+      "file": "vendors-6185be05-33796ec32f62d3f6.js",
+      "size": 41868,
+      "sizeKB": "40.89",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-8cbd2506-41ee6ba236d9e427.js",
+      "size": 31643,
+      "sizeKB": "30.90",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-c0d76f48-21d82667a2fd6834.js",
+      "size": 26757,
+      "sizeKB": "26.13",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-73800021-dc4111b16627809e.js",
+      "size": 24583,
+      "sizeKB": "24.01",
+      "type": "vendor"
+    },
+    {
+      "file": "calendar-libs-5c4c90c707d23d2f.js",
+      "size": 24492,
+      "sizeKB": "23.92",
+      "type": "chunk"
+    },
+    {
+      "file": "vendors-493c5c7c-b50bf55869cb6154.js",
+      "size": 24273,
+      "sizeKB": "23.70",
+      "type": "vendor"
+    },
+    {
+      "file": "main-d23564cf10b944ec.js",
+      "size": 4391,
+      "sizeKB": "4.29",
+      "type": "chunk"
+    },
+    {
+      "file": "webpack-715c64821046fa6c.js",
+      "size": 3481,
+      "sizeKB": "3.40",
+      "type": "chunk"
+    },
+    {
+      "file": "vendors-dffb3b7f-86eb8b35d66d9427.js",
+      "size": 2949,
+      "sizeKB": "2.88",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-377fed06-bc1a96fae3762ec8.js",
+      "size": 2858,
+      "sizeKB": "2.79",
+      "type": "vendor"
+    },
+    {
+      "file": "main-app-d3b98e5efe587589.js",
+      "size": 1602,
+      "sizeKB": "1.56",
+      "type": "chunk"
+    }
+  ],
+  "vendors": [
+    {
+      "file": "framework-0ec77431829313a4.js",
+      "size": 741328,
+      "sizeKB": "723.95",
+      "type": "framework"
+    },
+    {
+      "file": "vendors-84f829b2-5d48398ef4d8f07e.js",
+      "size": 132564,
+      "sizeKB": "129.46",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-fbd10709-a3c044863617ed14.js",
+      "size": 85015,
+      "sizeKB": "83.02",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-6185be05-33796ec32f62d3f6.js",
+      "size": 41868,
+      "sizeKB": "40.89",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-8cbd2506-41ee6ba236d9e427.js",
+      "size": 31643,
+      "sizeKB": "30.90",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-c0d76f48-21d82667a2fd6834.js",
+      "size": 26757,
+      "sizeKB": "26.13",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-73800021-dc4111b16627809e.js",
+      "size": 24583,
+      "sizeKB": "24.01",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-493c5c7c-b50bf55869cb6154.js",
+      "size": 24273,
+      "sizeKB": "23.70",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-dffb3b7f-86eb8b35d66d9427.js",
+      "size": 2949,
+      "sizeKB": "2.88",
+      "type": "vendor"
+    },
+    {
+      "file": "vendors-377fed06-bc1a96fae3762ec8.js",
+      "size": 2858,
+      "sizeKB": "2.79",
+      "type": "vendor"
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "error",
+      "title": "Total JavaScript Bundle Too Large",
+      "message": "Total JS size (1.94MB) exceeds recommended limit (1MB)",
+      "solutions": [
+        "Implement code splitting with dynamic imports",
+        "Remove unused dependencies",
+        "Use tree shaking for libraries",
+        "Consider lazy loading for non-critical components"
+      ]
+    },
+    {
+      "type": "warning",
+      "title": "Large Chunks Detected",
+      "message": "2 chunks exceed 244KB limit",
+      "chunks": [
+        {
+          "file": "framework-0ec77431829313a4.js",
+          "size": 741328,
+          "sizeKB": "723.95",
+          "type": "framework"
+        },
+        {
+          "file": "react-query-7e98b78af1127186.js",
+          "size": 310044,
+          "sizeKB": "302.78",
+          "type": "chunk"
+        }
+      ],
+      "solutions": [
+        "Split large chunks into smaller pieces",
+        "Review if all code in chunk is necessary",
+        "Consider moving vendor code to separate chunks"
+      ]
+    },
+    {
+      "type": "warning",
+      "title": "Large Vendor Bundle",
+      "message": "Vendor bundles total 1087.73KB",
+      "solutions": [
+        "Audit dependencies for unnecessary libraries",
+        "Use more lightweight alternatives",
+        "Implement selective imports from large libraries"
+      ]
+    },
+    {
+      "type": "info",
+      "title": "Large CSS Bundle",
+      "message": "CSS size (70.98KB) could be optimized",
+      "solutions": [
+        "Use CSS purging to remove unused styles",
+        "Consider CSS-in-JS for component-scoped styles",
+        "Minify and compress CSS files"
+      ]
+    }
+  ],
+  "passed": false
+}

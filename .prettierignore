@@ -1,0 +1,11 @@
+node_modules
+.next
+.turbo
+out
+dist
+build
+*.tsbuildinfo
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.env*
