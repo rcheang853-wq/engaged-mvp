@@ -5,7 +5,10 @@ import { Calendar, dateFnsLocalizer, View, Views } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth, endOfWeek, addMonths, subMonths, addDays, subDays } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { PersonalEventModal, PersonalEvent } from './personal-event-modal';
+import { PersonalEventModalV2, PersonalEventV2 } from './personal-event-modal-v2';
+
+// Legacy imports for backward compatibility
+import type { PersonalEvent } from './personal-event-modal';
 import { Button } from '@/components/ui/button';
 import { Loader2, Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -271,15 +274,13 @@ export function PersonalEventsCalendar({
         )}
       </div>
 
-      <PersonalEventModal
+      <PersonalEventModalV2
         isOpen={modalOpen}
         onClose={handleCloseModal}
-        event={selectedEvent}
+        event={selectedEvent as any /* TODO: update to PersonalEventV2 after DB migration */}
         isCreating={isCreating}
         onSave={isCreating ? handleCreateEvent : handleUpdateEvent}
         {...(defaultDate ? { defaultDate } : {})}
-        {...(defaultStartTime ? { defaultStartTime } : {})}
-        {...(defaultEndTime ? { defaultEndTime } : {})}
         {...(!isCreating && onDeleteEvent ? { onDelete: handleDeleteEvent } : {})}
         loading={localLoading}
       />
