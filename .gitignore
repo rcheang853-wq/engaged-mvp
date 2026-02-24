@@ -30,6 +30,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# local dev logs
+/dev-server.log
+
+# design working exports (keep canonical design file only)
+/design/pencil-*/
+/Pencil_Design_Package.zip
+
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example

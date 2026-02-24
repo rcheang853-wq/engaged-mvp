@@ -2,13 +2,19 @@ import { createMiddlewareSupabaseClient } from '@/lib/supabase/auth';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Define protected and auth routes
-const protectedRoutes = ['/calendar'];
+const protectedRoutes = ['/calendar', '/calendars'];
 
 const authRoutes = ['/auth/signin', '/auth/signup', '/auth/reset-password'];
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const pathname = request.nextUrl.pathname;
+
+  // Dev bypass: check for dev-bypass cookie
+  const devBypass = request.cookies.get('dev-bypass')?.value === 'true';
+  if (devBypass && pathname.startsWith('/calendars')) {
+    return response;
+  }
 
   try {
     // Create Supabase client for middleware
@@ -30,9 +36,14 @@ export async function middleware(request: NextRequest) {
     );
     const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
+    // Allow dev-login page without auth
+    if (pathname.startsWith('/dev-login')) {
+      return response;
+    }
+
     // Redirect authenticated users away from auth pages
     if (isAuthenticated && isAuthRoute) {
-      const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/calendar';
+      const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/calendars';
       return NextResponse.redirect(new URL(redirectTo, request.url));
     }
 

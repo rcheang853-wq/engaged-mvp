@@ -16,6 +16,7 @@
     "type-check": "tsc --noEmit",
     "prepare": "husky install || exit 0",
     "db:setup": "node scripts/setup-database.js",
+    "ingest:macauticket": "node workers/macauticket-ingest/index.js",
     "build:production": "cross-env NODE_ENV=production npm run build",
     "start:production": "cross-env NODE_ENV=production npm run start",
     "deploy:check": "npm run type-check && npm run lint && npm run test && npm run build:production",

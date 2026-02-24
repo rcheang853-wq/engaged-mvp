@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     if (isLoading) return;
-    window.location.href = isAuthenticated ? '/calendar' : '/auth/signin';
+    window.location.href = isAuthenticated ? '/calendars' : '/auth/signin';
   }, [isLoading, isAuthenticated]);
 
   return (

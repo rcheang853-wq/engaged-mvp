@@ -1,0 +1,6 @@
+{
+  "name": "macauticket-ingest",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Ingestion worker — uses root node_modules"
+}
