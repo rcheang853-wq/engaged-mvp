@@ -1,15 +1,26 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
-import { PasswordResetForm } from '@/components/auth';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { PasswordResetForm } from '@/components/auth';
+import { useAuth } from '@/hooks/use-auth';
 import { authClient } from '@/lib/supabase/auth';
 
 type ResetMode = 'request' | 'reset';
 
-export default function ResetPasswordPage() {
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading } = useAuth();
@@ -23,12 +34,15 @@ export default function ResetPasswordPage() {
     const code = searchParams?.get('code');
     const typeFromQuery = searchParams?.get('type');
     const errorDescription = searchParams?.get('error_description');
+
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const hashParams = hash ? new URLSearchParams(hash.replace('#', '')) : null;
     const typeFromHash = hashParams?.get('type');
     const errorFromHash = hashParams?.get('error_description');
+
     const errorMessage = errorDescription || errorFromHash;
-    const hasRecovery = !errorMessage && (typeFromQuery === 'recovery' || typeFromHash === 'recovery' || !!code);
+    const hasRecovery =
+      !errorMessage && (typeFromQuery === 'recovery' || typeFromHash === 'recovery' || !!code);
 
     if (errorMessage) {
       setRecoveryError(decodeURIComponent(errorMessage.replace(/\+/g, ' ')));
@@ -66,10 +80,13 @@ export default function ResetPasswordPage() {
           return;
         }
 
+        // Clean the URL (remove ?code=...) after exchange
         router.replace('/auth/reset-password');
       }
 
-      const { data: { session } } = await authClient.getSession();
+      const {
+        data: { session },
+      } = await authClient.getSession();
 
       if (!session && isActive) {
         setRecoveryError('Your password reset link is invalid or has expired. Please request a new one.');
@@ -93,19 +110,10 @@ export default function ResetPasswordPage() {
     router.push('/auth/signin');
   };
 
-  // Show loading state while checking authentication
   if (isLoading || isCheckingRecovery) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingFallback />;
   }
 
-  // Don't render the form if user is authenticated (will redirect)
   if (isAuthenticated && !isRecoveryFlow) {
     return null;
   }
@@ -127,7 +135,11 @@ export default function ResetPasswordPage() {
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3">
@@ -137,13 +149,17 @@ export default function ResetPasswordPage() {
             </div>
           )}
 
-          <PasswordResetForm
-            mode={mode}
-            onSuccess={handleBackToSignIn}
-            onBackToSignIn={handleBackToSignIn}
-          />
+          <PasswordResetForm mode={mode} onSuccess={handleBackToSignIn} onBackToSignIn={handleBackToSignIn} />
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
