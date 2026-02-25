@@ -38,7 +38,7 @@ function AuthCallbackContent() {
           return;
         }
 
-        router.replace('/calendar');
+        router.replace('/calendars');
       } catch (err) {
         console.error('Callback error:', err);
         setError('An unexpected error occurred during authentication');

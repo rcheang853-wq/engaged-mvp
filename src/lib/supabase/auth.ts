@@ -114,6 +114,10 @@ export class SupabaseAuth {
         };
       }
 
+      // IMPORTANT: our app relies on a row in `public.profiles` for "isAuthenticated".
+      // If that row isn't created, the UI will look like login is "stuck".
+      await this.ensureProfileForCurrentUser();
+
       return { success: true };
     } catch (error) {
       return {
@@ -136,7 +140,8 @@ export class SupabaseAuth {
           data: {
             full_name: data.fullName || '',
           },
-          emailRedirectTo: `${origin}/auth/signin`,
+          // Send confirmation links back to our callback handler so it can exchange the code for a session.
+          emailRedirectTo: `${origin}/auth/callback`,
         },
       });
 
@@ -154,6 +159,10 @@ export class SupabaseAuth {
           data: { requiresConfirmation: true },
         };
       }
+
+      // If confirmation is disabled (or user already confirmed), Supabase gives us a session.
+      // Create the `profiles` row immediately so the app can treat the user as authenticated.
+      await this.ensureProfileForCurrentUser();
 
       return { success: true };
     } catch (error) {
@@ -325,13 +334,29 @@ export class SupabaseAuth {
 
       if (!user) return null;
 
+      // Ensure a matching `profiles` row exists.
+      // This fixes the "can't get past login" symptom when auth is successful but profile wasn't created.
+      await this.ensureProfileForCurrentUser(user);
+
       const { data: profile } = await this.client
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (!profile) return null;
+      // If we STILL can't read the profile (RLS / transient), fall back to minimal auth user info.
+      if (!profile) {
+        return {
+          id: user.id,
+          email: user.email || '',
+          fullName: (user.user_metadata as any)?.full_name || (user.user_metadata as any)?.fullName || null,
+          avatarUrl: (user.user_metadata as any)?.avatar_url || null,
+          preferences: {},
+          isPro: false,
+          createdAt: user.created_at ? new Date(user.created_at) : new Date(),
+          updatedAt: new Date(),
+        };
+      }
 
       return this.mapProfileFromDatabase(profile);
     } catch (error) {
@@ -451,6 +476,39 @@ export class SupabaseAuth {
         error: 'Network error occurred',
       };
     }
+  }
+
+  private async ensureProfileForCurrentUser(passedUser?: any) {
+    const { data: { user } } = passedUser
+      ? { data: { user: passedUser } }
+      : await this.client.auth.getUser();
+
+    if (!user) return;
+
+    // Check if profile exists
+    const { data: existing } = await this.client
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (existing?.id) return;
+
+    // Create minimal profile row
+    const fullName = (user.user_metadata as any)?.full_name || (user.user_metadata as any)?.fullName || null;
+    const avatarUrl = (user.user_metadata as any)?.avatar_url || null;
+    const emailVerified = !!(user.email_confirmed_at || (user as any).confirmed_at);
+
+    // Best-effort insert; ignore conflicts
+    await this.client
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email: user.email || '',
+        full_name: fullName,
+        avatar_url: avatarUrl,
+        email_verified: emailVerified,
+      } as any);
   }
 
   private mapAuthError(message: string): string {

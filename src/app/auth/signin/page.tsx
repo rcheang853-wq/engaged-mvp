@@ -10,7 +10,7 @@ function SignInPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading } = useAuth();
-  const redirectTo = searchParams?.get('redirectTo') || '/calendar';
+  const redirectTo = searchParams?.get('redirectTo') || '/calendars';
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -29,7 +29,7 @@ function SignInPageContent() {
 
   const handleSignUp = () => {
     const signUpUrl = new URL('/auth/signup', window.location.origin);
-    if (redirectTo !== '/calendar') {
+    if (redirectTo !== '/calendars') {
       signUpUrl.searchParams.set('redirectTo', redirectTo);
     }
     router.push(signUpUrl.toString());

@@ -55,7 +55,7 @@ function ResetPasswordContent() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !isRecoveryFlow) {
-      router.replace('/calendar');
+      router.replace('/calendars');
     }
   }, [isAuthenticated, isLoading, isRecoveryFlow, router]);
 
