@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 import BottomTabBar from '@/components/BottomTabBar';
 import { supabase } from '@/lib/supabase/client';
 
@@ -52,9 +54,20 @@ export default function NewCalendarPage() {
         type: 'shared' as const,
       };
 
+      // Force JWT onto the PostgREST request (fixes RLS failures when client session isn't attached)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+      const authed = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: { Authorization: `Bearer ${sessionData.session!.access_token}` },
+        },
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+
       // Retry once if the browser aborts the request (common on mobile when tab switches)
       const createCalendarOnce = async () =>
-        supabase.from('calendars').insert(payload).select().single();
+        authed.from('calendars').insert(payload).select().single();
 
       let calendarRes = await createCalendarOnce();
       const errMsg = calendarRes.error
