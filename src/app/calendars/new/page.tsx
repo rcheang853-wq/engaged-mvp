@@ -3,8 +3,6 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
 import BottomTabBar from '@/components/BottomTabBar';
 import { supabase } from '@/lib/supabase/client';
 
@@ -54,41 +52,65 @@ export default function NewCalendarPage() {
         type: 'shared' as const,
       };
 
-      // Force JWT onto the PostgREST request (fixes RLS failures when client session isn't attached)
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      // Direct PostgREST call with Authorization header (avoids env var issues)
+      const supabaseUrl = 'https://hrwcwledehtkqlrzeqiq.supabase.co';
+      const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyd2N3bGVkZWh0a3FscnplcWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1MDY2MzEsImV4cCI6MjA4NzA4MjYzMX0.W3Q_UsbkLNbF6l-oK05hVHp9meHicj5glUU1DRm0BiA';
 
-      const authed = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-        global: {
-          headers: { Authorization: `Bearer ${sessionData.session!.access_token}` },
-        },
-        auth: { persistSession: false, autoRefreshToken: false },
-      });
+      const createCalendarOnce = async () => {
+        const res = await fetch(`${supabaseUrl}/rest/v1/calendars`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': anonKey,
+            'Authorization': `Bearer ${sessionData.session!.access_token}`,
+            'Prefer': 'return=representation',
+          },
+          body: JSON.stringify(payload),
+        });
 
-      // Retry once if the browser aborts the request (common on mobile when tab switches)
-      const createCalendarOnce = async () =>
-        authed.from('calendars').insert(payload).select().single();
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || `HTTP ${res.status}`);
+        }
 
-      let calendarRes = await createCalendarOnce();
-      const errMsg = calendarRes.error
-        ? String((calendarRes.error as any).message ?? calendarRes.error)
-        : '';
-      if (calendarRes.error && errMsg.toLowerCase().includes('aborted')) {
-        calendarRes = await createCalendarOnce();
+        const data = await res.json();
+        return data[0];
+      };
+
+      let calendar;
+      try {
+        calendar = await createCalendarOnce();
+      } catch (err: any) {
+        const errMsg = String(err.message ?? err);
+        if (errMsg.toLowerCase().includes('aborted')) {
+          calendar = await createCalendarOnce();
+        } else {
+          throw err;
+        }
       }
 
-      const calendar = calendarRes.data;
-      const calErr = calendarRes.error;
-      if (calErr) throw calErr;
-      if (!calendar) throw new Error('Calendar created but missing id');
+      if (!calendar || !calendar.id) throw new Error('Calendar created but missing id');
 
-      const { error: memErr } = await supabase
-        .from('calendar_members')
-        .upsert(
-          { calendar_id: calendar.id, user_id: userId, role: 'owner' },
-          { onConflict: 'calendar_id,user_id' }
-        );
-      if (memErr) throw memErr;
+      // Insert membership via REST API
+      const memRes = await fetch(`${supabaseUrl}/rest/v1/calendar_members`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+          'Authorization': `Bearer ${sessionData.session!.access_token}`,
+          'Prefer': 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({
+          calendar_id: calendar.id,
+          user_id: userId,
+          role: 'owner',
+        }),
+      });
+
+      if (!memRes.ok) {
+        const memErrText = await memRes.text();
+        throw new Error(`Membership insert failed: ${memErrText}`);
+      }
 
       router.push(`/calendars/${calendar.id}`);
     } catch (err: any) {
