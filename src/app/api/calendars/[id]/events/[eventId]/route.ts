@@ -15,17 +15,19 @@ const updateEventSchema = z.object({
 });
 
 // GET /api/calendars/[id]/events/[eventId]
-export async function GET(_req: NextRequest, { params }: { params: { id: string; eventId: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
+    const { id } = await params;
+
     const { data, error } = await supabase
       .from('calendar_events')
       .select(`*, profiles:created_by(id, full_name, avatar_url), event_comments(id, body, created_at, profiles:user_id(id, full_name, avatar_url))`)
-      .eq('id', params.eventId)
-      .eq('calendar_id', params.id)
+      .eq('id', eventId)
+      .eq('calendar_id', id)
       .single();
 
     if (error) return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
@@ -36,7 +38,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string;
 }
 
 // PATCH /api/calendars/[id]/events/[eventId]
-export async function PATCH(request: NextRequest, { params }: { params: { id: string; eventId: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -49,8 +51,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const { data, error } = await supabase
       .from('calendar_events')
       .update({ ...parsed.data, updated_at: new Date().toISOString() })
-      .eq('id', params.eventId)
-      .eq('calendar_id', params.id)
+      .eq('id', eventId)
+      .eq('calendar_id', id)
       .select()
       .single();
 
@@ -62,7 +64,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 }
 
 // DELETE /api/calendars/[id]/events/[eventId]
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string; eventId: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -71,8 +73,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     const { error } = await supabase
       .from('calendar_events')
       .delete()
-      .eq('id', params.eventId)
-      .eq('calendar_id', params.id);
+      .eq('id', eventId)
+      .eq('calendar_id', id);
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     return NextResponse.json({ success: true, message: 'Event deleted' });

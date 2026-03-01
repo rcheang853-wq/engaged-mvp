@@ -39,24 +39,6 @@ enable_confirmations = false
 enable_signup = false
 enable_confirmations = false
 
-# Use pre-defined map of claims
-[auth.jwt]
-default_group_name = ""
-admin_group_name = ""
-namespace = ""
-
-# Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
-# `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin`, `notion`, `twitch`,
-# `twitter`, `slack`, `spotify`, `workos`, `zoom`.
-[auth.external.google]
-enabled = true
-client_id = "env(GOOGLE_CLIENT_ID)"
-secret = "env(GOOGLE_SECRET)"
-# Overrides the default auth redirectUrl.
-redirect_uri = ""
-# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
-# or any other third-party OIDC providers.
-url = ""
 
 [auth.external.facebook]
 enabled = true
@@ -105,12 +87,6 @@ port = 54324
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
-[edge-runtime]
-enabled = true
-# Port to use for the Edge Runtime API.
-port = 54325
-# IP to bind the Edge Runtime server to.
-ip = "127.0.0.1"
 
 [analytics]
 enabled = false

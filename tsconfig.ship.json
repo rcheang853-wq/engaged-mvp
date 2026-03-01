@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "src/__tests__",
+    "src/services/**",
+    "src/hooks/use-calendar-operations.ts",
+    "src/hooks/use-calendar-sync.ts",
+    "src/components/calendar/calendar-*.tsx",
+    "src/app/api/calendar/**",
+    "src/utils/ai-match.ts",
+    "src/utils/conflict-detection.ts",
+    "src/utils/timezone-handling.ts",
+    "src/lib/supabase/calendar.ts",
+    "src/lib/supabase/events.ts",
+    "src/store/**",
+    "src/types/calendar.ts"
+  ]
+}

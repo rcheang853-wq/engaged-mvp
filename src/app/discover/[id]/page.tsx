@@ -160,14 +160,14 @@ function HeroCarousel({ images }: { images: string[] }) {
 
   if (ordered.length === 0) {
     return (
-      <div className="w-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center" style={{ height: 220 }}>
+      <div className="w-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center aspect-[4/5] sm:aspect-[16/9] lg:aspect-[21/9]">
         <span className="text-6xl">🎭</span>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: 220 }}>
+    <div className="relative w-full overflow-hidden aspect-[4/5] sm:aspect-[16/9] lg:aspect-[21/9]">
       {/* Images */}
       <div
         className="flex h-full transition-transform duration-300 ease-in-out"

@@ -11,15 +11,30 @@ const createEventSchema = z.object({
   end_at: z.string().datetime().optional(),
   all_day: z.boolean().optional().default(false),
   location: z.string().max(500).optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
 });
 
 // GET /api/calendars/[id]/events — list events (with optional date range)
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user)
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+
+    const { id } = await params;
 
     const { searchParams } = new URL(request.url);
     const start = searchParams.get('start');
@@ -28,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     let query = supabase
       .from('calendar_events')
       .select(`*, profiles:created_by(id, full_name, avatar_url)`)
-      .eq('calendar_id', params.id)
+      .eq('calendar_id', id)
       .order('start_at');
 
     if (start) query = query.gte('start_at', start);
@@ -38,30 +53,52 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (error) throw error;
     return NextResponse.json({ success: true, data });
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: err.message },
+      { status: 500 }
+    );
   }
 }
 
 // POST /api/calendars/[id]/events — create event
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user)
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+
+    const { id } = await params;
 
     const body = await request.json();
     const parsed = createEventSchema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.errors }, { status: 400 });
+    if (!parsed.success)
+      return NextResponse.json(
+        { success: false, error: parsed.error.errors },
+        { status: 400 }
+      );
 
     const { data, error } = await supabase
       .from('calendar_events')
-      .insert({ ...parsed.data, calendar_id: params.id, created_by: user.id })
+      .insert({ ...parsed.data, calendar_id: id, created_by: user.id })
       .select()
       .single();
 
     if (error) throw error;
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: err.message },
+      { status: 500 }
+    );
   }
 }

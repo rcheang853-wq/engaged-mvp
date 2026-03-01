@@ -4,17 +4,19 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 // POST /api/calendars/[id]/invite — get (or regenerate) invite code
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
+    const { id } = await params;
+
     // Verify caller is owner or editor
     const { data: member } = await supabase
       .from('calendar_members')
       .select('role')
-      .eq('calendar_id', params.id)
+      .eq('calendar_id', id)
       .eq('user_id', user.id)
       .single();
 
@@ -28,7 +30,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     const { data, error } = await supabase
       .from('calendars')
       .update({ invite_code, updated_at: new Date().toISOString() })
-      .eq('id', params.id)
+      .eq('id', id)
       .select('id, name, invite_code')
       .single();
 

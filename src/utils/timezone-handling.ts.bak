@@ -345,8 +345,12 @@ export function getWorkingHoursInTimezone(
 ): { start: string; end: string; isNextDay: boolean } {
   try {
     // Create dates for working hours in the original timezone
-    const [startHour, startMinute] = workingHours.start.split(':').map(Number);
-    const [endHour, endMinute] = workingHours.end.split(':').map(Number);
+    const [startHour = 0, startMinute = 0] = workingHours.start
+      .split(':')
+      .map(Number);
+    const [endHour = 0, endMinute = 0] = workingHours.end
+      .split(':')
+      .map(Number);
 
     const startDate = new Date(date);
     startDate.setHours(startHour, startMinute, 0, 0);

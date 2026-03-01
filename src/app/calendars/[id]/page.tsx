@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Plus, Settings, ChevronLeft, ChevronRight, List, Calendar, Search } from 'lucide-react';
+import BottomTabBar from '@/components/BottomTabBar';
+import CalendarSwitcher from '@/components/CalendarSwitcher';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths } from 'date-fns';
 
 interface CalendarEvent {
@@ -39,6 +41,8 @@ export default function CalendarViewPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
+  const calendarId = Array.isArray(id) ? id[0] : id;
+
   useEffect(() => {
     Promise.all([
       fetch(`/api/calendars/${id}`).then(r => r.json()),
@@ -64,14 +68,14 @@ export default function CalendarViewPage() {
   if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" /></div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
       {/* Header */}
       <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
         <button onClick={() => router.back()} className="text-gray-500 hover:text-gray-700">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="font-bold text-gray-900">{calendar?.name}</h1>
+          <CalendarSwitcher currentCalendarId={calendarId} />
           {/* Member avatars */}
           <div className="flex -space-x-1 mt-0.5">
             {calendar?.calendar_members?.slice(0, 6).map((m, i) => (
@@ -91,6 +95,20 @@ export default function CalendarViewPage() {
             ))}
           </div>
         </div>
+        <Link
+          href="/search"
+          className="text-gray-400 hover:text-gray-600"
+          title="Search events"
+        >
+          <Search size={20} />
+        </Link>
+        <Link
+          href={`/calendars/${id}/agenda`}
+          className="text-gray-400 hover:text-gray-600"
+          title="Agenda view"
+        >
+          <List size={20} />
+        </Link>
         <Link href={`/calendars/${id}/settings`} className="text-gray-400 hover:text-gray-600">
           <Settings size={20} />
         </Link>
@@ -159,6 +177,7 @@ export default function CalendarViewPage() {
           })}
         </div>
       </div>
+    <BottomTabBar />
     </div>
   );
 }

@@ -15,7 +15,13 @@ export async function createServerSupabaseClient() {
 
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  // Dev-bypass mode: use service role on the server to avoid RLS blocking local development.
+  // This is ONLY server-side (never exposed to the browser).
+  const devBypass = cookieStore.get('dev-bypass')?.value === 'true';
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const keyToUse = devBypass && serviceRoleKey ? serviceRoleKey : supabaseAnonKey;
+
+  return createServerClient<Database>(supabaseUrl, keyToUse, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

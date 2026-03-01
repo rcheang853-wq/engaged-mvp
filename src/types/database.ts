@@ -144,6 +144,134 @@ export interface Database {
           created_at?: string;
         };
       };
+      calendars: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          color: string;
+          type: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          color?: string;
+          type?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          color?: string;
+          type?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      calendar_members: {
+        Row: {
+          id: string;
+          calendar_id: string;
+          user_id: string;
+          role: string;
+          joined_at: string;
+        };
+        Insert: {
+          id?: string;
+          calendar_id: string;
+          user_id: string;
+          role?: string;
+          joined_at?: string;
+        };
+        Update: {
+          id?: string;
+          calendar_id?: string;
+          user_id?: string;
+          role?: string;
+          joined_at?: string;
+        };
+      };
+      calendar_events: {
+        Row: {
+          id: string;
+          calendar_id: string;
+          title: string;
+          description: string | null;
+          start_at: string;
+          end_at: string | null;
+          all_day: boolean;
+          location: string | null;
+          color: string | null;
+          linked_event_id: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          calendar_id: string;
+          title: string;
+          description?: string | null;
+          start_at: string;
+          end_at?: string | null;
+          all_day?: boolean;
+          location?: string | null;
+          color?: string | null;
+          linked_event_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          calendar_id?: string;
+          title?: string;
+          description?: string | null;
+          start_at?: string;
+          end_at?: string | null;
+          all_day?: boolean;
+          location?: string | null;
+          color?: string | null;
+          linked_event_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      event_comments: {
+        Row: {
+          id: string;
+          calendar_event_id: string;
+          user_id: string;
+          body: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          calendar_event_id: string;
+          user_id: string;
+          body: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          calendar_event_id?: string;
+          user_id?: string;
+          body?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       venues: {
         Row: {
           id: string;
