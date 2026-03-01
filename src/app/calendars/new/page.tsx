@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BottomTabBar from '@/components/BottomTabBar';
+import { supabase } from '@/lib/supabase/client';
 
 const COLORS = [
   '#3B82F6',
@@ -33,36 +34,37 @@ export default function NewCalendarPage() {
       setSubmitting(true);
       setError(null);
 
-      const res = await fetch('/api/calendars', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() ? description.trim() : undefined,
-          color,
-        }),
-      });
-
-      if (res.status === 401) {
-        // Session expired / not signed in
+      // Client-side mutation (mobile-safe): uses browser session from localStorage
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth.user;
+      if (!user) {
         router.push('/auth/signin?redirectTo=/calendars/new');
         return;
       }
 
-      const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.success) {
-        const msg = json?.error ? String(json.error) : 'Failed to create calendar';
-        if (msg.toLowerCase().includes('row-level security')) {
-          router.push('/auth/signin?redirectTo=/calendars/new');
-          return;
-        }
-        throw new Error(msg);
-      }
+      const { data: calendar, error: calErr } = await supabase
+        .from('calendars')
+        .insert({
+          name: name.trim(),
+          description: description.trim() ? description.trim() : null,
+          color,
+          created_by: user.id,
+          type: 'shared',
+        })
+        .select()
+        .single();
 
-      const id = json.data?.id;
-      if (!id) throw new Error('Calendar created but missing id');
+      if (calErr) throw calErr;
 
-      router.push(`/calendars/${id}`);
+      const { error: memErr } = await supabase
+        .from('calendar_members')
+        .upsert(
+          { calendar_id: calendar.id, user_id: user.id, role: 'owner' },
+          { onConflict: 'calendar_id,user_id' }
+        );
+      if (memErr) throw memErr;
+
+      router.push(`/calendars/${calendar.id}`);
     } catch (err: any) {
       setError(err?.message ?? 'Failed to create calendar');
     } finally {
