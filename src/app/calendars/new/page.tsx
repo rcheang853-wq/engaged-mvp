@@ -35,31 +35,44 @@ export default function NewCalendarPage() {
       setError(null);
 
       // Client-side mutation (mobile-safe): uses browser session from localStorage
-      const { data: auth } = await supabase.auth.getUser();
-      const user = auth.user;
-      if (!user) {
+      // Avoid auth.getUser() here (network call) — on iOS it can be aborted unexpectedly.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+
+      if (!userId) {
         router.push('/auth/signin?redirectTo=/calendars/new');
         return;
       }
 
-      const { data: calendar, error: calErr } = await supabase
-        .from('calendars')
-        .insert({
-          name: name.trim(),
-          description: description.trim() ? description.trim() : null,
-          color,
-          created_by: user.id,
-          type: 'shared',
-        })
-        .select()
-        .single();
+      const payload = {
+        name: name.trim(),
+        description: description.trim() ? description.trim() : null,
+        color,
+        created_by: userId,
+        type: 'shared' as const,
+      };
 
+      // Retry once if the browser aborts the request (common on mobile when tab switches)
+      const createCalendarOnce = async () =>
+        supabase.from('calendars').insert(payload).select().single();
+
+      let calendarRes = await createCalendarOnce();
+      const errMsg = calendarRes.error
+        ? String((calendarRes.error as any).message ?? calendarRes.error)
+        : '';
+      if (calendarRes.error && errMsg.toLowerCase().includes('aborted')) {
+        calendarRes = await createCalendarOnce();
+      }
+
+      const calendar = calendarRes.data;
+      const calErr = calendarRes.error;
       if (calErr) throw calErr;
+      if (!calendar) throw new Error('Calendar created but missing id');
 
       const { error: memErr } = await supabase
         .from('calendar_members')
         .upsert(
-          { calendar_id: calendar.id, user_id: user.id, role: 'owner' },
+          { calendar_id: calendar.id, user_id: userId, role: 'owner' },
           { onConflict: 'calendar_id,user_id' }
         );
       if (memErr) throw memErr;
