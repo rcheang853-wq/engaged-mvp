@@ -70,15 +70,15 @@ export default function DiscoverFilterModal({
     <div className="fixed inset-0 z-50">
       <button className="absolute inset-0 bg-black/30" onClick={onClose} aria-label="Close" />
 
-      <div className="absolute inset-x-0 top-0 mx-auto max-w-md bg-[#F6F3EE] min-h-[100dvh] shadow-xl">
-        <div className="px-4 pt-12 pb-3 flex items-center justify-between">
+      <div className="absolute inset-x-0 top-0 mx-auto max-w-md bg-[#F6F3EE] h-[100dvh] shadow-xl flex flex-col">
+        <div className="px-4 pt-12 pb-3 flex items-center justify-between flex-shrink-0">
           <h1 className="text-lg font-bold text-[#111827]">Filter</h1>
           <button onClick={onClose} className="w-10 h-10 rounded-full flex items-center justify-center" aria-label="Close">
             <X size={18} className="text-[#111827]" />
           </button>
         </div>
 
-        <div className="px-4 pb-24 space-y-8">
+        <div className="px-4 pb-28 space-y-8 flex-1 overflow-y-auto">
           <section>
             <h2 className="text-sm font-semibold text-[#111827] mb-3">Date</h2>
             <div className="space-y-3">
@@ -267,7 +267,7 @@ export default function DiscoverFilterModal({
           </section>
         </div>
 
-        <div className="fixed bottom-0 inset-x-0 mx-auto max-w-md px-4 py-4 bg-[#F6F3EE] border-t border-[#E5E7EB] flex items-center justify-between">
+        <div className="absolute bottom-0 inset-x-0 mx-auto max-w-md px-4 py-4 bg-[#F6F3EE] border-t border-[#E5E7EB] flex items-center justify-between flex-shrink-0">
           <button onClick={reset} className="text-sm font-semibold text-[#9CA3AF]">Reset</button>
           <button onClick={onApply} className="bg-[#111827] text-white text-sm font-semibold px-6 py-3 rounded-full">Apply filters</button>
         </div>
