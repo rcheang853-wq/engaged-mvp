@@ -1,47 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/dev-auth';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/calendars/[id]/invite — get (or regenerate) invite code
-export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+const inviteSchema = z.object({
+  email: z.string().email(),
+});
+
+// POST /api/calendars/[id]/invite
+// Owner-only (enforced via RLS). Creates a pending invite by email.
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const supabase = await createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const {
+      data: { user },
+      error: authError,
+    } = await getAuthUser(supabase);
 
-    const { id } = await params;
-
-    // Verify caller is owner or editor
-    const { data: member } = await supabase
-      .from('calendar_members')
-      .select('role')
-      .eq('calendar_id', id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!member || !['owner', 'editor'].includes(member.role)) {
-      return NextResponse.json({ success: false, error: 'Only owners or editors can generate invite links' }, { status: 403 });
+    if (authError || !user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Generate a new invite code
-    const invite_code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const { id: calendarId } = await params;
+
+    const body = await req.json();
+    const parsed = inviteSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error.message }, { status: 400 });
+    }
+
+    const email = parsed.data.email.trim().toLowerCase();
+
+    // Prevent duplicate pending invites
+    const { data: existing } = await supabase
+      .from('calendar_invites')
+      .select('id')
+      .eq('calendar_id', calendarId)
+      .eq('invited_email', email)
+      .eq('status', 'pending')
+      .maybeSingle();
+
+    if (existing?.id) {
+      return NextResponse.json({ success: false, error: 'Invite already pending' }, { status: 409 });
+    }
 
     const { data, error } = await supabase
-      .from('calendars')
-      .update({ invite_code, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select('id, name, invite_code')
+      .from('calendar_invites')
+      .insert({
+        calendar_id: calendarId,
+        invited_email: email,
+        invited_by: user.id,
+        status: 'pending',
+      })
+      .select('id, calendar_id, invited_email, status, created_at, expires_at')
       .single();
 
-    if (error) throw error;
-    return NextResponse.json({
-      success: true,
-      data: {
-        invite_code: data.invite_code,
-        invite_url: `${process.env.NEXT_PUBLIC_SITE_URL || ''}/join/${data.invite_code}`,
-      }
-    });
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

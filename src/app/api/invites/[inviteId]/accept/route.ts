@@ -4,10 +4,11 @@ import { getAuthUser } from '@/lib/dev-auth';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/calendars/[id]/members
-export async function GET(
+// POST /api/invites/[inviteId]/accept
+// Accepts a calendar invite for the current user.
+export async function POST(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ inviteId: string }> }
 ) {
   try {
     const supabase = await createServerSupabaseClient();
@@ -20,19 +21,17 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: calendarId } = await params;
+    const { inviteId } = await params;
 
-    const { data, error } = await supabase
-      .from('calendar_members')
-      .select('id, calendar_id, user_id, role, joined_at, profiles(id, full_name, avatar_url, email)')
-      .eq('calendar_id', calendarId)
-      .order('joined_at', { ascending: true });
+    const { error } = await supabase.rpc('accept_calendar_invite', {
+      invite_id: inviteId,
+    } as any);
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, data: data ?? [], meta: { currentUserId: user.id } });
+    return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

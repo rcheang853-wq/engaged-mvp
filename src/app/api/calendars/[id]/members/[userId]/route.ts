@@ -4,10 +4,11 @@ import { getAuthUser } from '@/lib/dev-auth';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/calendars/[id]/members
-export async function GET(
+// DELETE /api/calendars/[id]/members/[userId]
+// Owner can remove anyone; user can remove self (enforced via RLS).
+export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
   try {
     const supabase = await createServerSupabaseClient();
@@ -20,19 +21,19 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: calendarId } = await params;
+    const { id: calendarId, userId } = await params;
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('calendar_members')
-      .select('id, calendar_id, user_id, role, joined_at, profiles(id, full_name, avatar_url, email)')
+      .delete()
       .eq('calendar_id', calendarId)
-      .order('joined_at', { ascending: true });
+      .eq('user_id', userId);
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, data: data ?? [], meta: { currentUserId: user.id } });
+    return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
