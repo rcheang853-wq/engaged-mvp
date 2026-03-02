@@ -1,16 +1,16 @@
-# 🚀 Deployment Quick Start Guide
+﻿# ðŸš€ Deployment Quick Start Guide
 
 ## Current Status
-✅ **Code is ready for deployment** - All commits pushed to GitHub
+âœ… **Code is ready for deployment** - All commits pushed to GitHub
 
 ## Your Mission: Get the Calendar Working with Real Events
 
-### 🎯 Goal
-Complete the flow: **Scraping → Database → Calendar Display**
+### ðŸŽ¯ Goal
+Complete the flow: **Scraping â†’ Database â†’ Calendar Display**
 
 ---
 
-## 📋 Step-by-Step Instructions
+## ðŸ“‹ Step-by-Step Instructions
 
 ### Step 1: Check Vercel Auto-Deploy (2 minutes)
 Your project is likely already deployed automatically!
@@ -19,9 +19,9 @@ Your project is likely already deployed automatically!
 2. **Find your project**: `prj_aH3hzCL8n5HgahtGNpKTpiURS49C`
 3. **Click "Deployments" tab**
 4. **Check latest deployment**:
-   - ✅ **Status: Ready** → Proceed to Step 2
-   - 🔄 **Status: Building** → Wait 2-3 minutes
-   - ❌ **Status: Failed** → Check logs, may need environment variables
+   - âœ… **Status: Ready** â†’ Proceed to Step 2
+   - ðŸ”„ **Status: Building** â†’ Wait 2-3 minutes
+   - âŒ **Status: Failed** â†’ Check logs, may need environment variables
 
 **Your deployment URL**: Will be shown in Vercel dashboard (something like `engaged-app-xyz.vercel.app`)
 
@@ -30,31 +30,31 @@ Your project is likely already deployed automatically!
 ### Step 2: Configure Environment Variables (3 minutes)
 **Critical for scraping and database access**
 
-1. In Vercel dashboard, go to: **Settings → Environment Variables**
+1. In Vercel dashboard, go to: **Settings â†’ Environment Variables**
 2. Add these 4 variables (click "Add" for each):
 
 ```
 Name: NEXT_PUBLIC_SUPABASE_URL
 Value: https://emwdopcuoulfgdojxasi.supabase.co
-Environments: ☑️ Production ☑️ Preview ☑️ Development
+Environments: â˜‘ï¸ Production â˜‘ï¸ Preview â˜‘ï¸ Development
 ```
 
 ```
 Name: NEXT_PUBLIC_SUPABASE_ANON_KEY
-Value: [Get from Supabase Dashboard → Settings → API → anon public key]
-Environments: ☑️ Production ☑️ Preview ☑️ Development
+Value: [Get from Supabase Dashboard â†’ Settings â†’ API â†’ anon public key]
+Environments: â˜‘ï¸ Production â˜‘ï¸ Preview â˜‘ï¸ Development
 ```
 
 ```
 Name: SUPABASE_SERVICE_ROLE_KEY
-Value: [Get from Supabase Dashboard → Settings → API → service_role secret key]
-Environments: ☑️ Production ☑️ Preview ☑️ Development
+Value: [Get from Supabase Dashboard â†’ Settings â†’ API â†’ service_role secret key]
+Environments: â˜‘ï¸ Production â˜‘ï¸ Preview â˜‘ï¸ Development
 ```
 
 ```
 Name: NEXT_PUBLIC_USE_MOCK_SUPABASE
 Value: false
-Environments: ☑️ Production ☑️ Preview ☑️ Development
+Environments: â˜‘ï¸ Production â˜‘ï¸ Preview â˜‘ï¸ Development
 ```
 
 3. **Redeploy**: After adding variables, click "Redeploy" on latest deployment
@@ -65,10 +65,10 @@ Environments: ☑️ Production ☑️ Preview ☑️ Development
 **This tells the scraper where to find events**
 
 1. **Open Supabase Dashboard**: https://supabase.com/dashboard/project/emwdopcuoulfgdojxasi
-2. **Go to**: SQL Editor → New Query
+2. **Go to**: SQL Editor â†’ New Query
 3. **Copy and paste** the entire contents from: `claudedocs/event-sources-sql.sql`
 4. **Click**: Run
-5. **Verify**: Should see 3 rows inserted (Eventbrite, Meetup, Time Out)
+5. **Verify**: Should see 3 rows inserted (public events directory, Meetup, Time Out)
 
 ---
 
@@ -91,7 +91,7 @@ Environments: ☑️ Production ☑️ Preview ☑️ Development
 4. **Result**: Should see "Successfully scraped X events"
 
 **Troubleshooting**:
-- **Timeout**: Increase `maxDuration` in `vercel.json` → redeploy
+- **Timeout**: Increase `maxDuration` in `vercel.json` â†’ redeploy
 - **No events found**: Selectors may need updating (websites change)
 - **Error**: Check browser console (F12) for details
 
@@ -108,14 +108,14 @@ Environments: ☑️ Production ☑️ Preview ☑️ Development
    - Navigate between dates
 
 **Success looks like**:
-- 📅 Events showing in calendar grid
-- 🎨 Different colored event blocks
-- 🖱️ Clickable events with details
-- 🔄 Smooth navigation between views
+- ðŸ“… Events showing in calendar grid
+- ðŸŽ¨ Different colored event blocks
+- ðŸ–±ï¸ Clickable events with details
+- ðŸ”„ Smooth navigation between views
 
 ---
 
-## 🎉 Success Criteria
+## ðŸŽ‰ Success Criteria
 
 You've completed the mission when:
 - [ ] Vercel deployment shows "Ready"
@@ -128,28 +128,28 @@ You've completed the mission when:
 
 ---
 
-## 🆘 Troubleshooting
+## ðŸ†˜ Troubleshooting
 
 ### "Cannot connect to Supabase"
-→ Check environment variables are set correctly in Vercel
+â†’ Check environment variables are set correctly in Vercel
 
 ### "No events found" after scraping
-→ Run test events SQL to verify calendar works first
-→ Check event_sources table has active sources
-→ Selectors may need updating
+â†’ Run test events SQL to verify calendar works first
+â†’ Check event_sources table has active sources
+â†’ Selectors may need updating
 
 ### Deployment fails
-→ Check Vercel logs: Deployments → Click deployment → View logs
-→ Common: Missing environment variables or TypeScript errors
+â†’ Check Vercel logs: Deployments â†’ Click deployment â†’ View logs
+â†’ Common: Missing environment variables or TypeScript errors
 
 ### Calendar shows empty
-→ Check Supabase: Table Editor → events table
-→ Should have rows with start_time in future
-→ Run test events SQL to quickly populate
+â†’ Check Supabase: Table Editor â†’ events table
+â†’ Should have rows with start_time in future
+â†’ Run test events SQL to quickly populate
 
 ---
 
-## 📚 Additional Resources
+## ðŸ“š Additional Resources
 
 - **Full Deployment Guide**: `claudedocs/deployment-checklist.md`
 - **Command Reference**: `claudedocs/deployment-commands.md`
@@ -158,7 +158,7 @@ You've completed the mission when:
 
 ---
 
-## ⏭️ What's Next?
+## â­ï¸ What's Next?
 
 After getting this working:
 1. Set up automated scraping (cron job)
@@ -172,4 +172,5 @@ After getting this working:
 **Estimated Total Time**: 10-15 minutes
 **Difficulty**: Easy - just follow the steps!
 
-Good luck! 🚀
+Good luck! ðŸš€
+

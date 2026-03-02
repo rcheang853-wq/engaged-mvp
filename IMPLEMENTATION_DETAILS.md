@@ -1,4 +1,4 @@
-# Implementation Details — Calendar Creation Fix
+﻿# Implementation Details â€” Calendar Creation Fix
 
 ## The Two Files That Were Changed
 
@@ -75,7 +75,7 @@ async function ensurePersonalCalendar(
   return cal.id;
 }
 
-// Always uses SUPABASE_SERVICE_ROLE_KEY — bypasses RLS.
+// Always uses SUPABASE_SERVICE_ROLE_KEY â€” bypasses RLS.
 // Safe because every query is explicitly scoped to the authenticated user.id.
 function createServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -98,7 +98,7 @@ export async function GET() {
       );
     }
 
-    // Use service role for DB ops — user is already validated by getUser() above.
+    // Use service role for DB ops â€” user is already validated by getUser() above.
     // All queries are explicitly scoped to user.id so RLS bypass is safe here.
     const db = createServiceClient();
 
@@ -219,7 +219,7 @@ export default function NewCalendarPage() {
         color,
       };
 
-      // Route through the Next.js API (server-side auth via cookies — always fresh)
+      // Route through the Next.js API (server-side auth via cookies â€” always fresh)
       const createCalendarOnce = async () => {
         const res = await fetch('/api/calendars', {
           method: 'POST',
@@ -269,7 +269,7 @@ export default function NewCalendarPage() {
       <div className={'bg-white border-b px-4 py-4 flex items-center justify-between'}>
         <div>
           <h1 className={'text-xl font-bold text-gray-900'}>New Calendar</h1>
-          <p className={'text-xs text-gray-500 mt-1'}>Creates a shared calendar (TimeTree-style)</p>
+          <p className={'text-xs text-gray-500 mt-1'}>Creates a shared calendar (Calendar-style)</p>
         </div>
         <Link href={'/calendars'} className={'text-sm text-gray-600 hover:text-gray-900'}>
           Cancel
@@ -334,7 +334,7 @@ export default function NewCalendarPage() {
             (canSubmit ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-200 text-gray-500')
           }
         >
-          {submitting ? 'Creating…' : 'Create shared calendar'}
+          {submitting ? 'Creatingâ€¦' : 'Create shared calendar'}
         </button>
 
         <p className={'text-xs text-gray-500 text-center'}>
@@ -350,21 +350,22 @@ export default function NewCalendarPage() {
 
 ---
 
-## Why This Works — Key Points for OpenClaw
+## Why This Works â€” Key Points for OpenClaw
 
 ### Problem
 The original `new/page.tsx` called the Supabase PostgREST REST API **directly from the browser**:
 - Used `supabase.auth.getSession()` to get the user's JWT client-side
 - Sent that JWT as `Authorization: Bearer <token>` to `https://<project>.supabase.co/rest/v1/calendars`
-- The JWT was stale/expired → PostgREST set `auth.uid() = null` → RLS policy `(created_by = auth.uid())` failed with `42501`
+- The JWT was stale/expired â†’ PostgREST set `auth.uid() = null` â†’ RLS policy `(created_by = auth.uid())` failed with `42501`
 
-A previous attempt tried fixing this in the API route by calling `supabase.auth.getSession()` server-side to extract a fresh JWT. This also failed because **`@supabase/ssr` v0.7's `getSession()` does not reliably reconstruct the full session object from chunked request cookies in Next.js Route Handlers** — it returns `null` even when the user is authenticated.
+A previous attempt tried fixing this in the API route by calling `supabase.auth.getSession()` server-side to extract a fresh JWT. This also failed because **`@supabase/ssr` v0.7's `getSession()` does not reliably reconstruct the full session object from chunked request cookies in Next.js Route Handlers** â€” it returns `null` even when the user is authenticated.
 
 ### Solution
 
 **`new/page.tsx`**: Stop calling Supabase directly. Call `POST /api/calendars` instead. Same-origin `fetch()` automatically sends all browser cookies, so the server always receives the latest auth cookies.
 
 **`route.ts`**: Stop fighting with `getSession()` to get a JWT. Instead:
-1. Call `getAuthUser(supabase)` → internally calls `supabase.auth.getUser()` which makes a **real round-trip to Supabase Auth** to validate the JWT — this always works regardless of cookie format
-2. Use a **service role client** (`SUPABASE_SERVICE_ROLE_KEY`) for all DB writes — this bypasses RLS entirely, so there is no JWT needed for the DB call
-3. Manually enforce the same security constraints in code: `created_by: user.id`, `.eq('calendar_members.user_id', user.id)` — the `user.id` comes from the server-validated `getUser()` call, not user input
+1. Call `getAuthUser(supabase)` â†’ internally calls `supabase.auth.getUser()` which makes a **real round-trip to Supabase Auth** to validate the JWT â€” this always works regardless of cookie format
+2. Use a **service role client** (`SUPABASE_SERVICE_ROLE_KEY`) for all DB writes â€” this bypasses RLS entirely, so there is no JWT needed for the DB call
+3. Manually enforce the same security constraints in code: `created_by: user.id`, `.eq('calendar_members.user_id', user.id)` â€” the `user.id` comes from the server-validated `getUser()` call, not user input
+
