@@ -70,7 +70,7 @@ export default function DiscoverFilterModal({
     <div className="fixed inset-0 z-50">
       <button className="absolute inset-0 bg-black/30" onClick={onClose} aria-label="Close" />
 
-      <div className="absolute inset-x-0 top-0 mx-auto max-w-md bg-[#F6F3EE] h-[100dvh] shadow-xl flex flex-col">
+      <div className="absolute inset-x-0 top-0 mx-auto max-w-md bg-[#F6F3EE] h-[100dvh] shadow-xl flex flex-col relative">
         <div className="px-4 pt-12 pb-3 flex items-center justify-between flex-shrink-0">
           <h1 className="text-lg font-bold text-[#111827]">Filter</h1>
           <button onClick={onClose} className="w-10 h-10 rounded-full flex items-center justify-center" aria-label="Close">
@@ -267,7 +267,7 @@ export default function DiscoverFilterModal({
           </section>
         </div>
 
-        <div className="absolute bottom-0 inset-x-0 mx-auto max-w-md px-4 py-4 bg-[#F6F3EE] border-t border-[#E5E7EB] flex items-center justify-between flex-shrink-0">
+        <div className="absolute bottom-0 inset-x-0 mx-auto max-w-md px-4 py-4 bg-[#F6F3EE] border-t border-[#E5E7EB] flex items-center justify-between flex-shrink-0 z-10">
           <button onClick={reset} className="text-sm font-semibold text-[#9CA3AF]">Reset</button>
           <button onClick={onApply} className="bg-[#111827] text-white text-sm font-semibold px-6 py-3 rounded-full">Apply filters</button>
         </div>
