@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -21,12 +21,12 @@ const calendar = {
 
 // Mock events - spread throughout the month
 const mockEvents = [
-  { id: '1', title: "Dad's Birthday 🎂", start_at: '2026-02-23T00:00:00Z', all_day: true, color: '#EF4444', profiles: { id: '1' } },
+  { id: '1', title: "Dad's Birthday ðŸŽ‚", start_at: '2026-02-23T00:00:00Z', all_day: true, color: '#EF4444', profiles: { id: '1' } },
   { id: '2', title: 'Dentist Appointment', start_at: '2026-02-23T14:00:00Z', all_day: false, color: '#10B981', profiles: { id: '2' } },
   { id: '3', title: 'Soccer Practice', start_at: '2026-02-24T16:00:00Z', all_day: false, color: '#F59E0B', profiles: { id: '3' } },
-  { id: '4', title: 'Movie Night 🎬', start_at: '2026-02-28T19:00:00Z', all_day: false, color: '#8B5CF6', profiles: { id: '1' } },
+  { id: '4', title: 'Movie Night ðŸŽ¬', start_at: '2026-02-28T19:00:00Z', all_day: false, color: '#8B5CF6', profiles: { id: '1' } },
   { id: '5', title: 'School Meeting', start_at: '2026-02-25T10:00:00Z', all_day: false, color: '#10B981', profiles: { id: '2' } },
-  { id: '6', title: 'Weekend Trip 🏖️', start_at: '2026-02-27T00:00:00Z', all_day: true, color: '#3B82F6', profiles: { id: '1' } },
+  { id: '6', title: 'Weekend Trip ðŸ–ï¸', start_at: '2026-02-27T00:00:00Z', all_day: true, color: '#3B82F6', profiles: { id: '1' } },
   { id: '7', title: 'Team Dinner', start_at: '2026-02-26T18:30:00Z', all_day: false, color: '#F59E0B', profiles: { id: '1' } },
   { id: '8', title: 'Yoga Class', start_at: '2026-02-22T09:00:00Z', all_day: false, color: '#EC4899', profiles: { id: '2' } },
 ];
@@ -135,9 +135,10 @@ export default function DemoCalendarViewPage() {
       {/* Demo notice */}
       <div className="p-4 bg-blue-50 border-t border-blue-200">
         <p className="text-xs text-blue-700 text-center">
-          🎨 <strong>Demo:</strong> TimeTree-style calendar view with color-coded events per member
+          ðŸŽ¨ <strong>Demo:</strong> shared calendar calendar view with color-coded events per member
         </p>
       </div>
     </div>
   );
 }
+

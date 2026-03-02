@@ -1,4 +1,4 @@
-# Discover (Public Events) — Architecture Reference
+﻿# Discover (Public Events) â€” Architecture Reference
 
 **Status:** MVP complete  
 **Last updated:** 2026-02-25
@@ -7,7 +7,7 @@
 
 ## Overview
 
-The **Discover** tab ("Nearby") powers a public event feed for Macau — like a local Eventbrite.  
+The **Discover** tab ("Nearby") powers a public event feed for Macau â€” like a local public events directory.  
 Users can browse upcoming events, save (heart) them, and add them to any of their personal calendars.
 
 No GPS required. MVP scope is fixed to Macau.
@@ -17,22 +17,22 @@ No GPS required. MVP scope is fixed to Macau.
 ## Data Flow
 
 ```
-MacauTicket.com (Kong Seng)         — source of truth for ~90% of Macau ticketed events
-        │
-        │  GET /TicketWeb2023/en          → __NEXT_DATA__ JSON (full event list, no scraping)
-        │  GET /TicketWeb2023/en/programme/{ProCode}  → detail __NEXT_DATA__ (venue, description)
-        ▼
-workers/macauticket-ingest/index.js  — Node.js ingestion worker (ESM)
-        │  runs every 12h via OpenClaw cron (model: openai/gpt-4o-mini, thinking: off)
-        │  normalizes dates → Asia/Macau (UTC+8 fixed, no DST) → UTC timestamptz
-        ▼
-Supabase: public_events              — canonical normalized events table
-        │
-        ▼
-API routes (/api/discover/*)        — Next.js App Router API
-        │
-        ▼
-UI pages (/discover, /discover/[id], /saved)  — Next.js client components
+MacauTicket.com (Kong Seng)         â€” source of truth for ~90% of Macau ticketed events
+        â”‚
+        â”‚  GET /TicketWeb2023/en          â†’ __NEXT_DATA__ JSON (full event list, no scraping)
+        â”‚  GET /TicketWeb2023/en/programme/{ProCode}  â†’ detail __NEXT_DATA__ (venue, description)
+        â–¼
+workers/macauticket-ingest/index.js  â€” Node.js ingestion worker (ESM)
+        â”‚  runs every 12h via OpenClaw cron (model: openai/gpt-4o-mini, thinking: off)
+        â”‚  normalizes dates â†’ Asia/Macau (UTC+8 fixed, no DST) â†’ UTC timestamptz
+        â–¼
+Supabase: public_events              â€” canonical normalized events table
+        â”‚
+        â–¼
+API routes (/api/discover/*)        â€” Next.js App Router API
+        â”‚
+        â–¼
+UI pages (/discover, /discover/[id], /saved)  â€” Next.js client components
 ```
 
 ---
@@ -59,8 +59,8 @@ MacauTicket.com (Kong Seng) is the official ticketing partner of MGTO, Cultural 
 **Schedule:** Every 12h via OpenClaw cron (gpt-4o-mini, thinking off, announces to Telegram)
 
 ### What it does
-1. `GET /TicketWeb2023/en` → parse `__NEXT_DATA__.props.pageProps.showListData`
-2. For each `ProCode`, `GET /TicketWeb2023/en/programme/{ProCode}` → parse `__NEXT_DATA__` for venue + description
+1. `GET /TicketWeb2023/en` â†’ parse `__NEXT_DATA__.props.pageProps.showListData`
+2. For each `ProCode`, `GET /TicketWeb2023/en/programme/{ProCode}` â†’ parse `__NEXT_DATA__` for venue + description
 3. Rate limit: 1.2s delay between detail fetches
 4. Upsert into `public_events` (UNIQUE on `source_id, source_event_id`)
 5. Log run to `public_event_source_runs`
@@ -77,16 +77,16 @@ MacauTicket.com (Kong Seng) is the official ticketing partner of MGTO, Cultural 
 ```sql
 event_sources            -- source config (scrape_config JSONB)
 public_events            -- normalized canonical events
-public_event_saves       -- user saves (heart) — scoped by auth.uid()
+public_event_saves       -- user saves (heart) â€” scoped by auth.uid()
 public_event_source_runs -- ingestion run log (success/partial/failed)
 public_event_ingest_errors -- per-URL error log
 calendar_events          -- existing table; added: public_event_id, timezone
 ```
 
 ### Key constraints
-- `public_events`: `UNIQUE(source_id, source_event_id)` — safe to re-run ingestion
-- `public_event_saves`: `PRIMARY KEY (user_id, public_event_id)` — no duplicate saves
-- `calendar_events.timezone` NOT NULL DEFAULT `'Asia/Macau'` — timezone preserved at creation time
+- `public_events`: `UNIQUE(source_id, source_event_id)` â€” safe to re-run ingestion
+- `public_event_saves`: `PRIMARY KEY (user_id, public_event_id)` â€” no duplicate saves
+- `calendar_events.timezone` NOT NULL DEFAULT `'Asia/Macau'` â€” timezone preserved at creation time
 
 ### Timezone policy
 - `public_events.timezone` = `Asia/Macau` (always, for MVP)
@@ -118,16 +118,16 @@ calendar_events          -- existing table; added: public_event_id, timezone
 | Saved | `/saved` | Segmented tabs: Public / Calendars; 401 shows friendly auth CTA |
 
 ### Image ordering
-- `images[0]` = `PictureS` (thumbnail, 370×310, landscape) — hero first slide
-- `images[1]` = `PictureP` (portrait poster, 400×566) — hero second slide
+- `images[0]` = `PictureS` (thumbnail, 370Ã—310, landscape) â€” hero first slide
+- `images[1]` = `PictureP` (portrait poster, 400Ã—566) â€” hero second slide
 - Max 3 images in carousel
 
 ### "Add to calendar" flow
 1. User taps "Add to calendar" on detail page
-2. Bottom sheet appears → lists user's calendars (from `/api/calendars`)
-3. User picks calendar → `POST /api/discover/[id]/add-to-calendar` with `{ calendar_id }`
+2. Bottom sheet appears â†’ lists user's calendars (from `/api/calendars`)
+3. User picks calendar â†’ `POST /api/discover/[id]/add-to-calendar` with `{ calendar_id }`
 4. Creates `calendar_events` row with correct `start_at`, `timezone`, and `public_event_id` (provenance)
-5. UI shows ✅ "Added to {calendarName}"
+5. UI shows âœ… "Added to {calendarName}"
 
 ---
 
@@ -142,8 +142,9 @@ calendar_events          -- existing table; added: public_event_id, timezone
 ## Known gaps (post-MVP)
 
 - [ ] MGTO government events (JS-rendered, need Playwright)
-- [ ] Eventbrite Macau (thin coverage, needs OAuth API key)
-- [ ] Star/save calendar events (Saved → Calendars tab)
+- [ ] public events directory Macau (thin coverage, needs OAuth API key)
+- [ ] Star/save calendar events (Saved â†’ Calendars tab)
 - [ ] GPS / location filtering (deliberately deferred)
 - [ ] Event categories filter
 - [ ] Past events cleanup job (remove `start_at < now - 7d`)
+

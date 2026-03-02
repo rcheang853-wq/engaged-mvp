@@ -1,9 +1,9 @@
-{
+﻿{
   "sources": [
     {
-      "id": "eventbrite-macau",
-      "name": "Eventbrite Macau",
-      "baseUrl": "https://www.eventbrite.com/d/macau/events/",
+      "id": "macau-events-source",
+      "name": "Macau events source",
+      "baseUrl": "https://www.Events source.com/d/macau/events/",
       "sourceType": "website",
       "scrapeConfig": {
         "selectors": {

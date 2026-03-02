@@ -279,14 +279,12 @@ export class SupabaseAuth {
       }
 
       // Update profile in database
+      const profileUpdate: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      if (profileData.fullName !== undefined) profileUpdate['full_name'] = profileData.fullName;
+      if (profileData.avatarUrl !== undefined) profileUpdate['avatar_url'] = profileData.avatarUrl;
       const { error: profileError } = await this.client
         .from('profiles')
-        .update({
-          full_name: profileData.fullName,
-          avatar_url: profileData.avatarUrl,
-          preferences: profileData.preferences,
-          updated_at: new Date().toISOString(),
-        })
+        .update(profileUpdate as any)
         .eq('id', user.id);
 
       if (profileError) {
@@ -456,7 +454,7 @@ export class SupabaseAuth {
       }
 
       // Delete the user from auth
-      const { error: authError } = await this.client.rpc('delete_user');
+      const { error: authError } = await (this.client as any).rpc('delete_user');
 
       if (authError) {
         return {

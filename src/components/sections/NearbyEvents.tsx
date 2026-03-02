@@ -291,7 +291,7 @@ export function NearbyEvents({
               event={event}
               variant="default"
               showDistance={!!(event as EventWithDistance).distance}
-              distance={(event as EventWithDistance).distance}
+              {...((event as EventWithDistance).distance !== undefined && { distance: (event as EventWithDistance).distance })}
               className="h-full"
             />
           ))}

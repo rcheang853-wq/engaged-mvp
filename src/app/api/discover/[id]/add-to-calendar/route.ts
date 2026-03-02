@@ -23,7 +23,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const parsed = bodySchema.safeParse(await request.json());
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ success: false, error: parsed.error.issues }, { status: 400 });
     }
 
     // Fetch public event

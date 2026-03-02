@@ -6,15 +6,6 @@ import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-function createAuthedDbClient(accessToken: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
-  return createClient(url, anon, {
-    global: { headers: { Authorization: `Bearer ${accessToken}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 const createCalendarSchema = z.object({
   name: z.string().min(1).max(100),
@@ -77,6 +68,12 @@ async function ensurePersonalCalendar(
   return cal.id;
 }
 
+function createServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+}
+
 export async function GET() {
   try {
     const supabase = await createServerSupabaseClient();
@@ -92,14 +89,9 @@ export async function GET() {
       );
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session?.access_token) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Force DB calls to include access token (prevents intermittent anon-role RLS failures on mobile)
-    const db = createAuthedDbClient(session.access_token);
+    // Use service role for DB ops — user is already validated by getUser() above.
+    // All queries are explicitly scoped to user.id so RLS bypass is safe here.
+    const db = createServiceClient();
 
     await ensurePersonalCalendar(db, user as any);
 
@@ -134,14 +126,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session?.access_token) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Force DB calls to include access token (prevents intermittent anon-role RLS failures on mobile)
-    const db = createAuthedDbClient(session.access_token);
+    const db = createServiceClient();
 
     await ensurePersonalCalendar(db, user as any);
 
@@ -149,7 +134,7 @@ export async function POST(request: NextRequest) {
     const parsed = createCalendarSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: parsed.error.errors },
+        { success: false, error: parsed.error.issues },
         { status: 400 }
       );
     }

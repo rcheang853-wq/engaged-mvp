@@ -150,29 +150,32 @@ export default function CalendarViewPage() {
             const isToday = isSameDay(day, new Date());
 
             return (
-              <Link key={day.toISOString()} href={`/calendars/${id}/events/new?date=${format(day, 'yyyy-MM-dd')}`}>
-                <div className={`min-h-[60px] rounded-xl p-1 cursor-pointer hover:bg-gray-100 transition-colors ${isToday ? 'bg-blue-50' : 'bg-white'}`}>
-                  <div className={`text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center mb-0.5 ${isToday ? 'bg-blue-500 text-white' : 'text-gray-700'}`}>
-                    {format(day, 'd')}
-                  </div>
-                  {/* Event dots */}
-                  <div className="space-y-0.5">
-                    {dayEvents.slice(0, 3).map(evt => (
-                      <Link key={evt.id} href={`/calendars/${id}/events/${evt.id}`} onClick={e => e.stopPropagation()}>
-                        <div
-                          className="text-[10px] truncate rounded px-1 text-white leading-4"
-                          style={{ backgroundColor: evt.color || memberColor(evt.profiles?.id ?? '') || calendar?.color || '#3B82F6' }}
-                        >
-                          {evt.title}
-                        </div>
-                      </Link>
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <div className="text-[10px] text-gray-400">+{dayEvents.length - 3} more</div>
-                    )}
-                  </div>
+              // Use div+onClick instead of Link so event-chip Links below aren't nested inside an <a>
+              <div
+                key={day.toISOString()}
+                className={`min-h-[60px] rounded-xl p-1 cursor-pointer hover:bg-gray-100 transition-colors ${isToday ? 'bg-blue-50' : 'bg-white'}`}
+                onClick={() => router.push(`/calendars/${id}/events/new?date=${format(day, 'yyyy-MM-dd')}`)}
+              >
+                <div className={`text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center mb-0.5 ${isToday ? 'bg-blue-500 text-white' : 'text-gray-700'}`}>
+                  {format(day, 'd')}
                 </div>
-              </Link>
+                {/* Event chips */}
+                <div className="space-y-0.5">
+                  {dayEvents.slice(0, 3).map(evt => (
+                    <Link key={evt.id} href={`/calendars/${id}/events/${evt.id}`} onClick={e => e.stopPropagation()}>
+                      <div
+                        className="text-[10px] truncate rounded px-1 text-white leading-4"
+                        style={{ backgroundColor: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calendar?.color || '#3B82F6' }}
+                      >
+                        {evt.title}
+                      </div>
+                    </Link>
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <div className="text-[10px] text-gray-400">+{dayEvents.length - 3} more</div>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>

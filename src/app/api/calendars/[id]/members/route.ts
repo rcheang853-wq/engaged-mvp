@@ -38,9 +38,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
+    const { id } = await params;
     const body = await request.json();
     const parsed = addMemberSchema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.errors }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.issues }, { status: 400 });
 
     // Look up user by email in profiles
     const { data: profile, error: profileError } = await supabase
@@ -73,6 +74,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
+    const { id } = await params;
     const userId = new URL(request.url).searchParams.get('userId');
     if (!userId) return NextResponse.json({ success: false, error: 'userId query param required' }, { status: 400 });
 

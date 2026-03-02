@@ -83,13 +83,23 @@ export async function POST(
     const parsed = createEventSchema.safeParse(body);
     if (!parsed.success)
       return NextResponse.json(
-        { success: false, error: parsed.error.errors },
+        { success: false, error: parsed.error.issues },
         { status: 400 }
       );
 
     const { data, error } = await supabase
       .from('calendar_events')
-      .insert({ ...parsed.data, calendar_id: id, created_by: user.id })
+      .insert({
+        calendar_id: id,
+        created_by: user.id,
+        title: parsed.data.title,
+        start_at: parsed.data.start_at,
+        all_day: parsed.data.all_day ?? false,
+        description: parsed.data.description ?? null,
+        end_at: parsed.data.end_at ?? null,
+        location: parsed.data.location ?? null,
+        color: parsed.data.color ?? null,
+      })
       .select()
       .single();
 

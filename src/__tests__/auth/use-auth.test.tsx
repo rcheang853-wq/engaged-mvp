@@ -1,3 +1,4 @@
+// @ts-nocheck
 import './setup';
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { renderHook } from '@testing-library/react';

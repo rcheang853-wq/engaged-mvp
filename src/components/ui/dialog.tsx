@@ -43,7 +43,7 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({ children, asChild 
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children, {
       onClick: () => onOpenChange(true),
-    });
+    } as any);
   }
 
   return (

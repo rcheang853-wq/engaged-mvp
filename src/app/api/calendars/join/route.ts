@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const parsed = joinSchema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.errors }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.issues }, { status: 400 });
 
     // Find calendar by invite code (using service client to bypass RLS for lookup)
     const { data: calendar, error: calError } = await supabase

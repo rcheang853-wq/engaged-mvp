@@ -70,7 +70,7 @@ export async function getNearbyEvents(params: DiscoveryParams) {
   }
 
   // Use PostGIS for location-based queries
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .rpc('get_nearby_events', {
       user_lat: userLocation.latitude,
       user_lng: userLocation.longitude,

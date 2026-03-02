@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { Calendar, Users, Plus } from 'lucide-react';
@@ -107,9 +107,9 @@ export default function DemoPage() {
 
         {/* Demo notice */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
-          <h3 className="font-semibold text-blue-900 mb-2">🎨 Demo Mode</h3>
+          <h3 className="font-semibold text-blue-900 mb-2">ðŸŽ¨ Demo Mode</h3>
           <p className="text-sm text-blue-700 mb-3">
-            This is a static preview showing the TimeTree-style UI design. The calendar list, member avatars, and color-coded cards match TimeTree's visual style.
+            This is a static preview showing the shared calendar UI design. The calendar list, member avatars, and color-coded cards match shared calendar app's visual style.
           </p>
           <p className="text-xs text-blue-600">
             To see the live version with working calendar/events, fix the auth and visit <code className="bg-blue-100 px-1 rounded">/calendars</code>
@@ -119,3 +119,4 @@ export default function DemoPage() {
     </div>
   );
 }
+

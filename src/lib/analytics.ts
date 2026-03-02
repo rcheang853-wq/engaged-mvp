@@ -156,9 +156,10 @@ export function setupPerformanceMonitoring() {
     // Largest Contentful Paint
     const lcpObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
+        const e = entry as any;
         trackPerformance('LCP', entry.startTime, {
-          element: entry.element?.tagName,
-          url: entry.url,
+          element: e.element?.tagName,
+          url: e.url,
         });
       }
     });
@@ -167,7 +168,8 @@ export function setupPerformanceMonitoring() {
     // First Input Delay
     const fidObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const fid = entry.processingStart - entry.startTime;
+        const e = entry as any;
+        const fid = e.processingStart - entry.startTime;
         trackPerformance('FID', fid, {
           event_type: entry.name,
         });
@@ -179,8 +181,9 @@ export function setupPerformanceMonitoring() {
     let clsValue = 0;
     const clsObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        if (!entry.hadRecentInput) {
-          clsValue += entry.value;
+        const e = entry as any;
+        if (!e.hadRecentInput) {
+          clsValue += e.value;
         }
       }
     });

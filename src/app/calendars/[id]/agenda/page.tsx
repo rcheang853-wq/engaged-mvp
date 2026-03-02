@@ -215,7 +215,7 @@ export default function CalendarAgendaPage() {
                         href={`/calendars/${id}/events/${evt.id}`}
                         className="block bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border-l-4"
                         style={{
-                          borderLeftColor: evt.color || memberColor(evt.profiles?.id ?? '') || calendar?.color || '#3B82F6',
+                          borderLeftColor: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calendar?.color || '#3B82F6',
                         }}
                       >
                         <div className="flex items-start gap-3">
@@ -234,7 +234,7 @@ export default function CalendarAgendaPage() {
                           {/* Creator avatar */}
                           <div
                             className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-semibold text-white overflow-hidden"
-                            style={{ backgroundColor: evt.color || memberColor(evt.profiles?.id ?? '') || calendar?.color || '#3B82F6' }}
+                            style={{ backgroundColor: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calendar?.color || '#3B82F6' }}
                           >
                             {evt.profiles?.avatar_url ? (
                               <img src={evt.profiles.avatar_url} alt="" className="w-full h-full object-cover" />

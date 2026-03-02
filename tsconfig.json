@@ -32,5 +32,5 @@
     ".next/types/**/*.ts",
     "src/__tests__/globals.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/services.bak/**", "src/store.bak/**"]
 }

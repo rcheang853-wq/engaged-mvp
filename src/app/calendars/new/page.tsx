@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import BottomTabBar from '@/components/BottomTabBar';
-import { supabase } from '@/lib/supabase/client';
 
 const COLORS = [
   '#3B82F6',
@@ -34,39 +33,24 @@ export default function NewCalendarPage() {
       setSubmitting(true);
       setError(null);
 
-      // Client-side mutation (mobile-safe): uses browser session from localStorage
-      // Avoid auth.getUser() here (network call) — on iOS it can be aborted unexpectedly.
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-
-      if (!userId) {
-        router.push('/auth/signin?redirectTo=/calendars/new');
-        return;
-      }
-
       const payload = {
         name: name.trim(),
-        description: description.trim() ? description.trim() : null,
+        description: description.trim() || undefined,
         color,
-        created_by: userId,
-        type: 'shared' as const,
       };
 
-      // Direct PostgREST call with Authorization header (avoids env var issues)
-      const supabaseUrl = 'https://hrwcwledehtkqlrzeqiq.supabase.co';
-      const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyd2N3bGVkZWh0a3FscnplcWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1MDY2MzEsImV4cCI6MjA4NzA4MjYzMX0.W3Q_UsbkLNbF6l-oK05hVHp9meHicj5glUU1DRm0BiA';
-
+      // Route through the Next.js API (server-side auth via cookies — always fresh)
       const createCalendarOnce = async () => {
-        const res = await fetch(`${supabaseUrl}/rest/v1/calendars`, {
+        const res = await fetch('/api/calendars', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': anonKey,
-            'Authorization': `Bearer ${sessionData.session!.access_token}`,
-            'Prefer': 'return=representation',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
+
+        if (res.status === 401) {
+          router.push('/auth/signin?redirectTo=/calendars/new');
+          return null;
+        }
 
         if (!res.ok) {
           const errText = await res.text();
@@ -74,7 +58,7 @@ export default function NewCalendarPage() {
         }
 
         const data = await res.json();
-        return data[0];
+        return data.data;
       };
 
       let calendar;
@@ -89,28 +73,8 @@ export default function NewCalendarPage() {
         }
       }
 
-      if (!calendar || !calendar.id) throw new Error('Calendar created but missing id');
-
-      // Insert membership via REST API
-      const memRes = await fetch(`${supabaseUrl}/rest/v1/calendar_members`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': anonKey,
-          'Authorization': `Bearer ${sessionData.session!.access_token}`,
-          'Prefer': 'resolution=merge-duplicates',
-        },
-        body: JSON.stringify({
-          calendar_id: calendar.id,
-          user_id: userId,
-          role: 'owner',
-        }),
-      });
-
-      if (!memRes.ok) {
-        const memErrText = await memRes.text();
-        throw new Error(`Membership insert failed: ${memErrText}`);
-      }
+      if (!calendar) return; // redirected to signin
+      if (!calendar.id) throw new Error('Calendar created but missing id');
 
       router.push(`/calendars/${calendar.id}`);
     } catch (err: any) {
@@ -125,7 +89,7 @@ export default function NewCalendarPage() {
       <div className={'bg-white border-b px-4 py-4 flex items-center justify-between'}>
         <div>
           <h1 className={'text-xl font-bold text-gray-900'}>New Calendar</h1>
-          <p className={'text-xs text-gray-500 mt-1'}>Creates a shared calendar (TimeTree-style)</p>
+          <p className={'text-xs text-gray-500 mt-1'}>Creates a shared calendar</p>
         </div>
         <Link href={'/calendars'} className={'text-sm text-gray-600 hover:text-gray-900'}>
           Cancel
@@ -202,3 +166,4 @@ export default function NewCalendarPage() {
     </div>
   );
 }
+

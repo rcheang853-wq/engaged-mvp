@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -94,7 +94,7 @@ export default function AccountPage() {
                   onClick={() => router.push('/dev-login')}
                   className="text-xs font-medium text-[#3B82F6]"
                 >
-                  Dev login →
+                  Dev login â†’
                 </button>
               </div>
             </>
@@ -130,7 +130,7 @@ export default function AccountPage() {
 
         {/* App version */}
         <p className="text-center text-[10px] font-medium text-[#9CA3AF] pt-2">
-          Engage Timetree · v0.1.0-beta
+          Engage Calendar Â· v0.1.0-beta
         </p>
       </div>
 
@@ -138,3 +138,4 @@ export default function AccountPage() {
     </div>
   );
 }
+

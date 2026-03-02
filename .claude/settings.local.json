@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm run:*)",
+      "Bash(xargs grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(rm:*)",
+      "Bash(node:*)",
+      "Bash(sed:*)",
+      "Bash(grep:*)",
+      "Bash(npm test:*)",
+      "Bash(findstr :3000:*)",
+      "Bash(npx supabase:*)",
+      "Bash(psql:*)",
+      "WebFetch(domain:hrwcwledehtkqlrzeqiq.supabase.co)"
+    ]
+  }
+}

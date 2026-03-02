@@ -9,8 +9,9 @@ const createCommentSchema = z.object({
 });
 
 // GET /api/calendars/[id]/events/[eventId]/comments
-export async function GET(_req: NextRequest, { params }: { params: { id: string; eventId: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
+    const { eventId } = await params;
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -18,7 +19,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string;
     const { data, error } = await supabase
       .from('event_comments')
       .select(`id, body, created_at, updated_at, profiles:user_id(id, full_name, avatar_url)`)
-      .eq('calendar_event_id', params.eventId)
+      .eq('calendar_event_id', eventId)
       .order('created_at');
 
     if (error) throw error;
@@ -29,19 +30,20 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string;
 }
 
 // POST /api/calendars/[id]/events/[eventId]/comments
-export async function POST(request: NextRequest, { params }: { params: { id: string; eventId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
+    const { eventId } = await params;
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
     const parsed = createCommentSchema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.errors }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.issues }, { status: 400 });
 
     const { data, error } = await supabase
       .from('event_comments')
-      .insert({ body: parsed.data.body, calendar_event_id: params.eventId, user_id: user.id })
+      .insert({ body: parsed.data.body, calendar_event_id: eventId, user_id: user.id })
       .select(`id, body, created_at, profiles:user_id(id, full_name, avatar_url)`)
       .single();
 
@@ -53,8 +55,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 }
 
 // DELETE /api/calendars/[id]/events/[eventId]/comments?commentId=xxx
-export async function DELETE(request: NextRequest, { params }: { params: { id: string; eventId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string; eventId: string }> }) {
   try {
+    const { eventId } = await params;
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -67,7 +70,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       .from('event_comments')
       .delete()
       .eq('id', commentId)
-      .eq('calendar_event_id', params.eventId)
+      .eq('calendar_event_id', eventId)
       .eq('user_id', user.id);
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 400 });

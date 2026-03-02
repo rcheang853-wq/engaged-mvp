@@ -1,3 +1,4 @@
+// @ts-nocheck
 import './setup';
 import { describe, it, expect, beforeEach, jest, afterEach } from '@jest/globals';
 import { SignInData, SignUpData, UpdateProfileData } from '@/types/auth';

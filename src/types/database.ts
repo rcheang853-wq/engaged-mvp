@@ -108,6 +108,7 @@ export interface Database {
           updated_at?: string;
           published_at?: string | null;
         };
+        Relationships: [];
       };
       event_categories: {
         Row: {
@@ -143,6 +144,7 @@ export interface Database {
           sort_order?: number;
           created_at?: string;
         };
+        Relationships: [];
       };
       calendars: {
         Row: {
@@ -151,6 +153,7 @@ export interface Database {
           description: string | null;
           color: string;
           type: string | null;
+          invite_code: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -161,6 +164,7 @@ export interface Database {
           description?: string | null;
           color?: string;
           type?: string | null;
+          invite_code?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -171,10 +175,12 @@ export interface Database {
           description?: string | null;
           color?: string;
           type?: string | null;
+          invite_code?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       calendar_members: {
         Row: {
@@ -198,6 +204,7 @@ export interface Database {
           role?: string;
           joined_at?: string;
         };
+        Relationships: [];
       };
       calendar_events: {
         Row: {
@@ -245,6 +252,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       event_comments: {
         Row: {
@@ -271,6 +279,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       venues: {
         Row: {
@@ -324,6 +333,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       organizers: {
         Row: {
@@ -371,6 +381,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       profiles: {
         Row: {
@@ -436,6 +447,7 @@ export interface Database {
           is_public?: boolean;
           email_verified?: boolean;
         };
+        Relationships: [];
       };
       user_events: {
         Row: {
@@ -477,6 +489,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       subscriptions: {
         Row: {
@@ -521,6 +534,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       payments: {
         Row: {
@@ -553,6 +567,7 @@ export interface Database {
           status?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       user_usage: {
         Row: {
@@ -588,6 +603,7 @@ export interface Database {
           early_alerts_sent?: number;
           created_at?: string;
         };
+        Relationships: [];
       };
       user_calendar_events: {
         Row: {
@@ -668,6 +684,7 @@ export interface Database {
           updated_at?: string;
           last_sync_at?: string | null;
         };
+        Relationships: [];
       };
       calendar_invitations: {
         Row: {
@@ -727,6 +744,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       external_calendar_sync: {
         Row: {
@@ -786,6 +804,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       calendar_conflicts: {
         Row: {
@@ -833,6 +852,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       personal_events: {
         Row: {
@@ -874,6 +894,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {

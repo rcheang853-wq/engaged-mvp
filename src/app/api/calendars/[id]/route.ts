@@ -84,7 +84,12 @@ export async function PATCH(
 
     const { data, error } = await supabase
       .from('calendars')
-      .update({ ...parsed.data, updated_at: new Date().toISOString() })
+      .update({
+        updated_at: new Date().toISOString(),
+        ...(parsed.data.name !== undefined && { name: parsed.data.name }),
+        ...(parsed.data.description !== undefined && { description: parsed.data.description ?? null }),
+        ...(parsed.data.color !== undefined && { color: parsed.data.color }),
+      })
       .eq('id', id)
       .select()
       .single();

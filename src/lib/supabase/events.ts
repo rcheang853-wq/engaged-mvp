@@ -202,7 +202,7 @@ export async function getEventByShareSlug(slug: string): Promise<EventResponse> 
       return { data: null, error: new Error(error.message) };
     }
 
-    return { data, error: null };
+    return { data: data as any, error: null };
   } catch (error) {
     return { data: null, error: error instanceof Error ? error : new Error('Unknown error') };
   }

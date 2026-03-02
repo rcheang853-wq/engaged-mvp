@@ -193,7 +193,7 @@ const PasswordInput = React.forwardRef<
         ref={ref}
         type={showPassword ? 'text' : 'password'}
         className={cn('pr-10', className)}
-        error={error}
+        {...(error !== undefined && { error })}
         {...props}
       />
       {showToggle && (

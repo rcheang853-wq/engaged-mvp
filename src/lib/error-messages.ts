@@ -283,7 +283,7 @@ export function formatErrorForDisplay(error: any): {
   return {
     title: friendlyError.title,
     message: friendlyError.message,
-    action: friendlyError.action,
+    ...(friendlyError.action !== undefined && { action: friendlyError.action }),
     variant: friendlyError.type
   };
 }

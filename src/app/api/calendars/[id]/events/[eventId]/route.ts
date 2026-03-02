@@ -21,7 +21,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    const { id } = await params;
+    const { id, eventId } = await params;
 
     const { data, error } = await supabase
       .from('calendar_events')
@@ -44,13 +44,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
+    const { id, eventId } = await params;
     const body = await request.json();
     const parsed = updateEventSchema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.errors }, { status: 400 });
+    if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.issues }, { status: 400 });
 
     const { data, error } = await supabase
       .from('calendar_events')
-      .update({ ...parsed.data, updated_at: new Date().toISOString() })
+      .update({
+        updated_at: new Date().toISOString(),
+        ...(parsed.data.title !== undefined && { title: parsed.data.title }),
+        ...(parsed.data.description !== undefined && { description: parsed.data.description ?? null }),
+        ...(parsed.data.start_at !== undefined && { start_at: parsed.data.start_at }),
+        ...(parsed.data.end_at !== undefined && { end_at: parsed.data.end_at ?? null }),
+        ...(parsed.data.all_day !== undefined && { all_day: parsed.data.all_day }),
+        ...(parsed.data.location !== undefined && { location: parsed.data.location ?? null }),
+        ...(parsed.data.color !== undefined && { color: parsed.data.color ?? null }),
+      })
       .eq('id', eventId)
       .eq('calendar_id', id)
       .select()
@@ -70,6 +80,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
+    const { id, eventId } = await params;
     const { error } = await supabase
       .from('calendar_events')
       .delete()

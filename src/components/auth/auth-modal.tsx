@@ -136,7 +136,7 @@ export function AuthModalTrigger({
         open={open}
         onOpenChange={setOpen}
         initialMode={mode}
-        onSuccess={onSuccess}
+        {...(onSuccess !== undefined && { onSuccess })}
       />
     </>
   );

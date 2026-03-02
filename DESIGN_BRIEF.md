@@ -1,8 +1,8 @@
-# Engage_Timetree Design Brief
+﻿# Engage_shared calendar app Design Brief
 **For Pencil Desktop App Mockups**
 
 ## Project Overview
-Building a TimeTree-style shared calendar app called **Engage_Timetree**.
+Building a shared calendar shared calendar app called **Engage_shared calendar app**.
 
 ## Current Design System
 
@@ -29,7 +29,7 @@ Each member gets assigned a color from the palette above (rotating). This color 
 ### Spacing
 - **Card padding**: 16px
 - **Gap between cards**: 12px
-- **Border radius (cards)**: 16px (very rounded, TimeTree-style)
+- **Border radius (cards)**: 16px (very rounded, shared calendar)
 - **Border radius (buttons)**: 8-12px
 - **Border radius (avatars)**: Full circle
 
@@ -77,7 +77,7 @@ Each member gets assigned a color from the palette above (rotating). This color 
    - "Month Year" (centered, bold)
    - Right arrow
 
-3. **Calendar grid** (7 columns × ~5 rows)
+3. **Calendar grid** (7 columns Ã— ~5 rows)
    - **Day headers**: Sun-Sat (small, gray)
    - **Day cells**: 
      - Date number (top-left, small)
@@ -184,11 +184,11 @@ Each member gets assigned a color from the palette above (rotating). This color 
 ---
 
 ## Design Goals
-✅ **Feel like TimeTree**: Rounded corners, soft shadows, friendly colors  
-✅ **Member color-coding**: Consistent throughout  
-✅ **Clean & minimal**: Lots of white space  
-✅ **Mobile-first**: Design for 375px width (iPhone SE size)  
-✅ **Touch-friendly**: Large tap targets (44px minimum)  
+âœ… **Feel like shared calendar app**: Rounded corners, soft shadows, friendly colors  
+âœ… **Member color-coding**: Consistent throughout  
+âœ… **Clean & minimal**: Lots of white space  
+âœ… **Mobile-first**: Design for 375px width (iPhone SE size)  
+âœ… **Touch-friendly**: Large tap targets (44px minimum)  
 
 ## What to Export
 For each screen, save as PNG with filename:
@@ -203,3 +203,4 @@ For each screen, save as PNG with filename:
 2. Export as PNGs
 3. Send the images back
 4. I'll code the changes into the real app
+

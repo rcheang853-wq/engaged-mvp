@@ -138,10 +138,8 @@ export function generateEventSEO(event: {
       title: event.title,
       description: event.description,
       type: 'article',
-      article: {
-        publishedTime: event.startDate,
-        authors: [event.organizer],
-      },
+      publishedTime: event.startDate,
+      authors: [event.organizer],
       images: event.image ? [{ url: event.image, width: 1200, height: 630 }] : undefined,
     },
     twitter: {
