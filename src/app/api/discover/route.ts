@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       // best-effort search across common text fields
       const safe = q.replace(/[,%]/g, ' ');
       qb = qb.or(
-        `title.ilike.%${safe}%,venue_name.ilike.%${safe}%,address.ilike.%${safe}%,organizer_name.ilike.%${safe}%`
+        `title.ilike.%${safe}%,description.ilike.%${safe}%,venue_name.ilike.%${safe}%,address.ilike.%${safe}%,region.ilike.%${safe}%,city.ilike.%${safe}%,organizer_name.ilike.%${safe}%`
       );
     }
 
