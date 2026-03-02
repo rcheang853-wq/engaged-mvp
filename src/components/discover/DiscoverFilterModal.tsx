@@ -67,7 +67,7 @@ export default function DiscoverFilterModal({
   const reset = () => onChange(DEFAULT_DISCOVER_FILTERS);
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[999]">
       <button className="absolute inset-0 bg-black/30" onClick={onClose} aria-label="Close" />
 
       <div className="absolute inset-x-0 top-0 mx-auto max-w-md bg-[#F6F3EE] h-[100dvh] shadow-xl flex flex-col relative">

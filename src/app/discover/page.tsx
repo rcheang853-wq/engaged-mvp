@@ -266,6 +266,8 @@ export default function DiscoverPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Find things to do"
+              autoComplete="off"
+              suppressHydrationWarning
               className="flex-1 text-sm font-medium text-[#111827] placeholder:text-[#9CA3AF] bg-transparent outline-none min-w-0"
             />
           </div>
