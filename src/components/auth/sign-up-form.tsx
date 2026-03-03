@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -60,6 +61,8 @@ export function SignUpForm({
   redirectTo,
   className
 }: SignUpFormProps) {
+  const router = useRouter();
+
   const { signUp, resendConfirmation, signInWithGoogle, isLoading } = useAuth();
   const [isResending, setIsResending] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
@@ -93,12 +96,11 @@ export function SignUpForm({
         return;
       }
 
-      // Success - show confirmation message
+      // Success - user needs email confirmation
       if (result.data?.requiresConfirmation) {
-        setPendingConfirmation(true);
-        setSuccessMessage(
-          'Account created successfully! Please check your email for a confirmation link.'
-        );
+        const params = new URLSearchParams();
+        params.set('email', data.email);
+        router.push(`/auth/check-email?${params.toString()}`);
         return;
       }
 
