@@ -127,11 +127,16 @@ export class SupabaseAuth {
     }
   }
 
+  private getSiteUrl() {
+    const env = process.env.NEXT_PUBLIC_SITE_URL;
+    if (env) return env.replace(/\/$/, '');
+    if (typeof window !== 'undefined') return window.location.origin;
+    return 'http://localhost:3000';
+  }
+
   async signUp(data: SignUpData): Promise<AuthResult> {
     try {
-      const origin = typeof window !== 'undefined'
-        ? window.location.origin
-        : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+      const origin = this.getSiteUrl();
 
       const { data: authData, error } = await this.client.auth.signUp({
         email: data.email,
@@ -179,10 +184,7 @@ export class SupabaseAuth {
 
   async resetPassword(email: string): Promise<AuthResult> {
     try {
-      // Safely get the origin for redirect URL
-      const origin = typeof window !== 'undefined'
-        ? window.location.origin
-        : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+      const origin = this.getSiteUrl();
 
       const { error } = await this.client.auth.resetPasswordForEmail(email, {
         redirectTo: `${origin}/auth/reset-password`,
@@ -387,16 +389,21 @@ export class SupabaseAuth {
     }
   }
 
-  async signInWithOAuth(provider: 'google'): Promise<{ success: boolean; error?: string; url?: string }> {
+  async signInWithOAuth(
+    provider: 'google',
+    redirectToPath?: string
+  ): Promise<{ success: boolean; error?: string; url?: string }> {
     try {
-      const origin = typeof window !== 'undefined'
-        ? window.location.origin
-        : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+      const origin = this.getSiteUrl();
+      const callbackUrl = new URL('/auth/callback', origin);
+      if (redirectToPath) {
+        callbackUrl.searchParams.set('redirectTo', redirectToPath);
+      }
 
       const { data, error } = await this.client.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${origin}/auth/callback`,
+          redirectTo: callbackUrl.toString(),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

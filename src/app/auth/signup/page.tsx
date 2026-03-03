@@ -10,7 +10,7 @@ function SignUpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading } = useAuth();
-  const redirectTo = searchParams?.get('redirectTo') || '/calendar';
+  const redirectTo = searchParams?.get('redirectTo') || '/calendars';
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -27,7 +27,7 @@ function SignUpPageContent() {
 
   const handleSignIn = () => {
     const signInUrl = new URL('/auth/signin', window.location.origin);
-    if (redirectTo !== '/calendar') {
+    if (redirectTo !== '/calendars') {
       signInUrl.searchParams.set('redirectTo', redirectTo);
     }
     router.push(signInUrl.toString());
@@ -65,6 +65,7 @@ function SignUpPageContent() {
           <SignUpForm
             onSuccess={handleSuccess}
             onSignIn={handleSignIn}
+            redirectTo={redirectTo}
           />
         </div>
 

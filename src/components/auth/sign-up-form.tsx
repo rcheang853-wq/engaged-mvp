@@ -50,12 +50,14 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 interface SignUpFormProps {
   onSuccess?: () => void;
   onSignIn?: () => void;
+  redirectTo?: string;
   className?: string;
 }
 
 export function SignUpForm({
   onSuccess,
   onSignIn,
+  redirectTo,
   className
 }: SignUpFormProps) {
   const { signUp, resendConfirmation, signInWithGoogle, isLoading } = useAuth();
@@ -322,7 +324,7 @@ export function SignUpForm({
             try {
               setError(null);
               setIsGoogleLoading(true);
-              const result = await signInWithGoogle();
+              const result = await signInWithGoogle(redirectTo);
               if (!result.success) {
                 setError(result.error || 'Failed to sign up with Google');
               }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createBrowserSupabaseClient } from '@/lib/supabase/auth';
+import { authClient } from '@/lib/supabase/auth';
 
 function AuthCallbackContent() {
   const router = useRouter();
@@ -13,8 +13,8 @@ function AuthCallbackContent() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const supabase = createBrowserSupabaseClient();
         const code = searchParams.get('code');
+        const redirectTo = searchParams.get('redirectTo') || '/calendars';
         const errorParam = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
 
@@ -30,15 +30,17 @@ function AuthCallbackContent() {
           return;
         }
 
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-
-        if (exchangeError) {
-          setError(exchangeError.message || 'Failed to complete authentication');
+        const exchangeResult = await authClient.exchangeCodeForSession(code);
+        if (!exchangeResult.success) {
+          setError(exchangeResult.error || 'Failed to complete authentication');
           setIsProcessing(false);
           return;
         }
 
-        router.replace('/calendars');
+        // Ensure `profiles` row exists for the newly signed-in user (OAuth often skips our normal signIn path)
+        await authClient.getCurrentUser();
+
+        router.replace(redirectTo);
       } catch (err) {
         console.error('Callback error:', err);
         setError('An unexpected error occurred during authentication');

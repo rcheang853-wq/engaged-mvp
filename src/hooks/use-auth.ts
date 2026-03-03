@@ -53,7 +53,7 @@ export function useAuthStoreOnly() {
     deleteAccount: async (): Promise<AuthResult> => {
       throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
     },
-    signInWithGoogle: async (): Promise<{ success: boolean; error?: string }> => {
+    signInWithGoogle: async (_redirectTo?: string): Promise<{ success: boolean; error?: string }> => {
       throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
     },
   };

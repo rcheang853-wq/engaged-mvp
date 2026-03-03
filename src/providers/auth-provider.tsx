@@ -273,10 +273,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [setLoading, setUser]);
 
-  const signInWithGoogle = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+  const signInWithGoogle = useCallback(async (redirectTo?: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true);
-      const result = await authClient.signInWithOAuth('google');
+      const result = await authClient.signInWithOAuth('google', redirectTo);
 
       if (result.success && result.url) {
         window.location.href = result.url;

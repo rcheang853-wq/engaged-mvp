@@ -33,6 +33,7 @@ interface SignInFormProps {
   onSuccess?: () => void;
   onForgotPassword?: () => void;
   onSignUp?: () => void;
+  redirectTo?: string;
   className?: string;
 }
 
@@ -40,6 +41,7 @@ export function SignInForm({
   onSuccess,
   onForgotPassword,
   onSignUp,
+  redirectTo,
   className
 }: SignInFormProps) {
   const { signIn, resendConfirmation, signInWithGoogle, isLoading } = useAuth();
@@ -225,7 +227,7 @@ export function SignInForm({
             try {
               setError(null);
               setIsGoogleLoading(true);
-              const result = await signInWithGoogle();
+              const result = await signInWithGoogle(redirectTo);
               if (!result.success) {
                 setError(result.error || 'Failed to sign in with Google');
               }

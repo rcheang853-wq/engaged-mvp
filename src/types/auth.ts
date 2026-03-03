@@ -47,7 +47,7 @@ export interface AuthActions {
   updateProfile: (profile: Partial<UserProfile>) => Promise<AuthResult>;
   resendConfirmation: (email: string) => Promise<AuthResult>;
   deleteAccount: () => Promise<AuthResult>;
-  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: (redirectTo?: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 // Authentication results

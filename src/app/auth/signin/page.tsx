@@ -68,6 +68,7 @@ function SignInPageContent() {
             onSuccess={handleSuccess}
             onForgotPassword={handleForgotPassword}
             onSignUp={handleSignUp}
+            redirectTo={redirectTo}
           />
         </div>
 
