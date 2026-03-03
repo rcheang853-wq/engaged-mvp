@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MapPin, ChevronDown, Search, SlidersHorizontal } from 'lucide-react';
 import EventCard, { PublicEvent } from '@/components/discover/EventCard';
+import PrivateEventCard, { type PrivateEvent } from '@/components/discover/PrivateEventCard';
 import BottomTabBar from '@/components/BottomTabBar';
 import DiscoverFilterModal, {
   DEFAULT_DISCOVER_FILTERS,
@@ -102,7 +103,10 @@ export default function DiscoverClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const mode = (searchParams.get('mode') === 'private' ? 'private' : 'public') as 'public' | 'private';
+
   const [events, setEvents] = useState<PublicEvent[]>([]);
+  const [privateEvents, setPrivateEvents] = useState<PrivateEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [offset, setOffset] = useState(0);
@@ -154,6 +158,42 @@ export default function DiscoverClient() {
     [searchParams]
   );
 
+  const fetchPrivateEvents = useCallback(
+    async (nextOffset = 0, replace = true) => {
+      if (nextOffset === 0) setLoading(true);
+      else setLoadingMore(true);
+
+      try {
+        const sp = new URLSearchParams();
+        sp.set('limit', String(PAGE_SIZE));
+        sp.set('offset', String(nextOffset));
+
+        const q = (searchParams.get('q') ?? '').trim();
+        if (q) sp.set('q', q);
+
+        const now = new Date();
+        const start = new Date(now);
+        const end = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+        sp.set('start', start.toISOString());
+        sp.set('end', end.toISOString());
+
+        const res = await fetch('/api/private-events?' + sp.toString());
+        const json = await res.json();
+        if (json.success) {
+          setPrivateEvents((prev) => (replace ? json.data : [...prev, ...json.data]));
+          setTotal(json.total ?? null);
+          setOffset(nextOffset + (json.data?.length ?? 0));
+        }
+      } catch {
+        // silent
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [searchParams]
+  );
+
   const fetchHolidays = useCallback(async () => {
     const sp = new URLSearchParams(searchParams.toString());
     const enabled = sp.get('holidays') === '1';
@@ -182,12 +222,21 @@ export default function DiscoverClient() {
   }, [searchParams]);
 
   useEffect(() => {
-    fetchEvents(0, true);
-  }, [fetchEvents]);
+    setOffset(0);
+    setTotal(null);
+    if (mode === 'private') {
+      setPrivateEvents([]);
+      fetchPrivateEvents(0, true);
+    } else {
+      setEvents([]);
+      fetchEvents(0, true);
+    }
+  }, [fetchEvents, fetchPrivateEvents, mode]);
 
   useEffect(() => {
-    fetchHolidays();
-  }, [fetchHolidays]);
+    if (mode === 'public') fetchHolidays();
+    else setHolidayEvents([]);
+  }, [fetchHolidays, mode]);
 
   const availableNeighborhoods = useMemo(() => {
     return uniqSorted(events.map((e) => (e as any).region ?? (e as any).city ?? null));
@@ -249,11 +298,13 @@ export default function DiscoverClient() {
   return (
     <div className="min-h-screen bg-[#F9FAFB] pb-20">
       <div className="sticky top-0 z-10 bg-[#F9FAFB] px-4 pt-12 pb-3 space-y-3">
-        <div className="flex items-center gap-2 h-6">
-          <MapPin size={16} className="text-[#374151] flex-shrink-0" />
-          <span className="text-sm font-semibold text-[#111827]">Nearby</span>
-          <ChevronDown size={16} className="text-[#6B7280]" />
-        </div>
+        {mode === 'public' && (
+          <div className="flex items-center gap-2 h-6">
+            <MapPin size={16} className="text-[#374151] flex-shrink-0" />
+            <span className="text-sm font-semibold text-[#111827]">Nearby</span>
+            <ChevronDown size={16} className="text-[#6B7280]" />
+          </div>
+        )}
 
         <div className="flex items-center gap-2">
           <div className="flex-1 flex items-center gap-2 bg-white border border-[#E5E7EB] rounded-full h-11 px-3">
@@ -262,25 +313,59 @@ export default function DiscoverClient() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Find things to do"
+              placeholder={mode === 'public' ? 'Find things to do' : 'Search private events'}
               autoComplete="off"
               suppressHydrationWarning
               className="flex-1 text-sm font-medium text-[#111827] placeholder:text-[#9CA3AF] bg-transparent outline-none min-w-0"
             />
           </div>
 
+          {mode === 'public' && (
+            <button
+              onClick={() => setFilterOpen(true)}
+              className="w-10 h-10 flex items-center justify-center bg-white border border-[#E5E7EB] rounded-full flex-shrink-0"
+              aria-label="Open filters"
+            >
+              <SlidersHorizontal size={16} className="text-[#6B7280]" />
+            </button>
+          )}
+        </div>
+
+        <div className="inline-flex bg-white border border-[#E5E7EB] rounded-full p-1 w-fit">
           <button
-            onClick={() => setFilterOpen(true)}
-            className="w-10 h-10 flex items-center justify-center bg-white border border-[#E5E7EB] rounded-full flex-shrink-0"
-            aria-label="Open filters"
+            className={`px-4 h-9 rounded-full text-sm font-semibold transition-colors ${
+              mode === 'public' ? 'bg-[#111827] text-white' : 'text-[#111827]'
+            }`}
+            onClick={() => {
+              const next = new URLSearchParams(searchParams.toString());
+              next.set('mode', 'public');
+              next.delete('offset');
+              router.replace('/discover?' + next.toString());
+            }}
           >
-            <SlidersHorizontal size={16} className="text-[#6B7280]" />
+            Public
+          </button>
+          <button
+            className={`px-4 h-9 rounded-full text-sm font-semibold transition-colors ${
+              mode === 'private' ? 'bg-[#111827] text-white' : 'text-[#111827]'
+            }`}
+            onClick={() => {
+              const next = new URLSearchParams(searchParams.toString());
+              next.set('mode', 'private');
+              next.delete('offset');
+              // Private mode doesn't use discover filters
+              next.delete('holidays');
+              next.delete('holidayLocale');
+              router.replace('/discover?' + next.toString());
+            }}
+          >
+            Private
           </button>
         </div>
       </div>
 
       <div className="px-4 space-y-3">
-        <h2 className="text-base font-bold text-[#111827]">Popular near you</h2>
+        {mode === 'public' && <h2 className="text-base font-bold text-[#111827]">Popular near you</h2>}
 
         {loading && (
           <div className="space-y-3">
@@ -300,7 +385,7 @@ export default function DiscoverClient() {
           </div>
         )}
 
-        {!loading && mergedEvents.length === 0 && (
+        {!loading && mode === 'public' && mergedEvents.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="text-5xl mb-4">🎭</span>
             <h3 className="text-base font-semibold text-[#111827] mb-1">No events right now</h3>
@@ -308,7 +393,14 @@ export default function DiscoverClient() {
           </div>
         )}
 
-        {!loading && (
+        {!loading && mode === 'private' && privateEvents.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <h3 className="text-base font-semibold text-[#111827] mb-1">No private events</h3>
+            <p className="text-sm text-[#6B7280]">Create an event or join a shared calendar to see them here</p>
+          </div>
+        )}
+
+        {!loading && mode === 'public' && (
           <div className="space-y-3">
             {mergedEvents.map((event) => (
               <EventCard key={event.id} event={event} />
@@ -316,9 +408,17 @@ export default function DiscoverClient() {
           </div>
         )}
 
+        {!loading && mode === 'private' && (
+          <div className="space-y-3">
+            {privateEvents.map((event) => (
+              <PrivateEventCard key={event.id} event={event} />
+            ))}
+          </div>
+        )}
+
         {!loading && hasMore && (
           <button
-            onClick={() => fetchEvents(offset, false)}
+            onClick={() => (mode === 'public' ? fetchEvents(offset, false) : fetchPrivateEvents(offset, false))}
             disabled={loadingMore}
             className="w-full py-3 text-sm font-semibold text-[#3B82F6] disabled:text-gray-400"
           >
@@ -326,20 +426,22 @@ export default function DiscoverClient() {
           </button>
         )}
 
-        {!loading && total != null && events.length > 0 && (
-          <p className="text-center text-xs text-[#9CA3AF] pb-2">{`${total} event${total !== 1 ? 's' : ''} in Macau`}</p>
+        {!loading && total != null && ((mode === 'public' && events.length > 0) || (mode === 'private' && privateEvents.length > 0)) && (
+          <p className="text-center text-xs text-[#9CA3AF] pb-2">{`${total} event${total !== 1 ? 's' : ''}`}</p>
         )}
       </div>
 
-      <DiscoverFilterModal
-        open={filterOpen}
-        onClose={() => setFilterOpen(false)}
-        value={filters}
-        onChange={setFilters}
-        onApply={onApplyFilters}
-        availableNeighborhoods={availableNeighborhoods}
-        availableCategories={availableCategories}
-      />
+      {mode === 'public' && (
+        <DiscoverFilterModal
+          open={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          value={filters}
+          onChange={setFilters}
+          onApply={onApplyFilters}
+          availableNeighborhoods={availableNeighborhoods}
+          availableCategories={availableCategories}
+        />
+      )}
 
       <BottomTabBar />
     </div>
