@@ -48,6 +48,8 @@ export default function CalendarSwitcher({ currentCalendarId, className = '' }: 
 
     if (pathname.includes('/agenda')) {
       router.push(`/calendars/${calendarId}/agenda`);
+    } else if (pathname.includes('/3day')) {
+      router.push(`/calendars/${calendarId}/3day`);
     } else {
       router.push(`/calendars/${calendarId}`);
     }

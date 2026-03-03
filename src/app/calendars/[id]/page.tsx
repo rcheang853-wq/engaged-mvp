@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Settings, ChevronLeft, ChevronRight, List, Calendar, Search, X, UserPlus, Trash2, LogOut } from 'lucide-react';
+import { ArrowLeft, Plus, Settings, ChevronLeft, ChevronRight, Search, X, UserPlus, Trash2, LogOut } from 'lucide-react';
 import BottomTabBar from '@/components/BottomTabBar';
 import CalendarSwitcher from '@/components/CalendarSwitcher';
+import CalendarViewTabs from '@/components/calendar/calendar-view-tabs';
 import { authClient } from '@/lib/supabase/auth';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
 
 interface CalendarEvent {
   id: string;
@@ -37,6 +38,7 @@ const MEMBER_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#
 export default function CalendarViewPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [calendar, setCalendar] = useState<SharedCalendar | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -74,6 +76,12 @@ export default function CalendarViewPage() {
       })
       .catch(() => setLoading(false));
   }, [id, currentMonth]);
+
+  const selectedDate = useMemo(() => {
+    const qp = searchParams.get('date');
+    if (qp && /^\d{4}-\d{2}-\d{2}$/.test(qp)) return qp;
+    return format(new Date(), 'yyyy-MM-dd');
+  }, [searchParams]);
 
   const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
   const firstDayOfWeek = startOfMonth(currentMonth).getDay();
@@ -163,66 +171,62 @@ export default function CalendarViewPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
-        <button onClick={() => router.back()} className="text-gray-500 hover:text-gray-700">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex-1">
-          <CalendarSwitcher currentCalendarId={calendarId} />
-          {/* Member avatars */}
-          <button
-            className="flex -space-x-1 mt-0.5"
-            onClick={() => setMembersOpen(true)}
-            title="Members"
-          >
-            {calendar?.calendar_members?.slice(0, 6).map((m, i) => (
-              <div
-                key={i}
-                className="w-5 h-5 rounded-full border-2 border-white overflow-hidden bg-gray-200 flex items-center justify-center"
-                style={{ backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length] + '40' }}
-              >
-                {m.profiles?.avatar_url ? (
-                  <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span
-                    className="text-[8px] font-semibold"
-                    style={{ color: MEMBER_COLORS[i % MEMBER_COLORS.length] }}
-                  >
-                    {m.profiles?.full_name?.[0] ?? m.profiles?.email?.[0] ?? '?'}
-                  </span>
-                )}
-              </div>
-            ))}
-
-            {/* Add hint */}
-            <div className="w-5 h-5 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center">
-              <UserPlus size={12} className="text-gray-500" />
-            </div>
+      <div className="bg-white border-b px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.back()} className="text-gray-500 hover:text-gray-700">
+            <ArrowLeft size={20} />
           </button>
+          <div className="flex-1">
+            <CalendarSwitcher currentCalendarId={calendarId} />
+            {/* Member avatars */}
+            <button
+              className="flex -space-x-1 mt-0.5"
+              onClick={() => setMembersOpen(true)}
+              title="Members"
+            >
+              {calendar?.calendar_members?.slice(0, 6).map((m, i) => (
+                <div
+                  key={i}
+                  className="w-5 h-5 rounded-full border-2 border-white overflow-hidden bg-gray-200 flex items-center justify-center"
+                  style={{ backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length] + '40' }}
+                >
+                  {m.profiles?.avatar_url ? (
+                    <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span
+                      className="text-[8px] font-semibold"
+                      style={{ color: MEMBER_COLORS[i % MEMBER_COLORS.length] }}
+                    >
+                      {m.profiles?.full_name?.[0] ?? '?'}
+                    </span>
+                  )}
+                </div>
+              ))}
+
+              {/* Add hint */}
+              <div className="w-5 h-5 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center">
+                <UserPlus size={12} className="text-gray-500" />
+              </div>
+            </button>
+          </div>
+          <Link
+            href="/search"
+            className="text-gray-400 hover:text-gray-600"
+            title="Search events"
+          >
+            <Search size={20} />
+          </Link>
+          <Link href={`/calendars/${id}/settings`} className="text-gray-400 hover:text-gray-600">
+            <Settings size={20} />
+          </Link>
+          <Link
+            href={`/calendars/${id}/events/new?date=${selectedDate}`}
+            className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-600"
+          >
+            <Plus size={18} />
+          </Link>
         </div>
-        <Link
-          href="/search"
-          className="text-gray-400 hover:text-gray-600"
-          title="Search events"
-        >
-          <Search size={20} />
-        </Link>
-        <Link
-          href={`/calendars/${id}/agenda`}
-          className="text-gray-400 hover:text-gray-600"
-          title="Agenda view"
-        >
-          <List size={20} />
-        </Link>
-        <Link href={`/calendars/${id}/settings`} className="text-gray-400 hover:text-gray-600">
-          <Settings size={20} />
-        </Link>
-        <Link
-          href={`/calendars/${id}/events/new`}
-          className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-600"
-        >
-          <Plus size={18} />
-        </Link>
+        <CalendarViewTabs calendarId={calendarId} active="month" date={selectedDate} className="mt-3 ml-8" />
       </div>
 
       {/* Month navigator */}
@@ -258,8 +262,13 @@ export default function CalendarViewPage() {
               // Use div+onClick instead of Link so event-chip Links below aren't nested inside an <a>
               <div
                 key={day.toISOString()}
-                className={`min-h-[60px] rounded-xl p-1 cursor-pointer hover:bg-gray-100 transition-colors ${isToday ? 'bg-blue-50' : 'bg-white'}`}
-                onClick={() => router.push(`/calendars/${id}/events/new?date=${format(day, 'yyyy-MM-dd')}`)}
+                className={`min-h-[60px] rounded-xl p-1 cursor-pointer hover:bg-gray-100 transition-colors ${
+                  isToday ? 'bg-blue-50' : 'bg-white'
+                } ${format(day, 'yyyy-MM-dd') === selectedDate ? 'ring-2 ring-blue-500' : ''}`}
+                onClick={() => {
+                  const next = format(day, 'yyyy-MM-dd');
+                  router.replace(`/calendars/${id}?date=${next}`);
+                }}
               >
                 <div className={`text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center mb-0.5 ${isToday ? 'bg-blue-500 text-white' : 'text-gray-700'}`}>
                   {format(day, 'd')}
