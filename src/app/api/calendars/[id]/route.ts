@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/dev-auth';
 import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
+
+function createServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+}
+
 
 const updateCalendarSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -33,19 +41,27 @@ export async function GET(
 
     const { id } = await params;
 
-    const { data, error } = await supabase
+    // Use service role for DB read — user is already validated.
+    // Scope query to calendars where the user is a member.
+    const db = createServiceClient();
+
+    const { data, error } = await db
       .from('calendars')
       .select(
-        `*, calendar_members(id, user_id, role, joined_at, profiles(id, full_name, avatar_url, email))`
+        `*,
+         calendar_members!inner(id, user_id, role, joined_at, profiles(id, full_name, avatar_url, email))`
       )
       .eq('id', id)
+      .eq('calendar_members.user_id', user.id)
       .single();
 
-    if (error)
+    if (error || !data) {
       return NextResponse.json(
         { success: false, error: 'Calendar not found' },
         { status: 404 }
       );
+    }
+
     return NextResponse.json({ success: true, data });
   } catch (err: any) {
     return NextResponse.json(
