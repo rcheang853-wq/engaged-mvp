@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, MapPin, Clock, Send, MoreVertical, Check, X, HelpCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Send, MoreVertical, Check, X, HelpCircle, Tag } from 'lucide-react';
 
 interface Comment {
   id: string;
@@ -21,6 +21,8 @@ interface CalendarEvent {
   all_day: boolean;
   location: string | null;
   color: string | null;
+  category_main: string | null;
+  tags: string[] | null;
   created_by: string;
   profiles: { id: string; full_name: string; avatar_url: string | null };
   event_comments: Comment[];
@@ -78,6 +80,7 @@ export default function EventDetailPage() {
   if (!event) return <div className="min-h-screen flex items-center justify-center text-gray-500">Event not found</div>;
 
   const eventColor = event.color || '#3B82F6';
+  const eventTags = event.tags ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -124,6 +127,38 @@ export default function EventDetailPage() {
                 <MapPin size={16} style={{ color: eventColor }} />
               </div>
               <div className="font-medium text-gray-900 pt-1">{event.location}</div>
+            </div>
+          )}
+
+          {/* Category */}
+          {event.category_main && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: eventColor + '20' }}>
+                <Tag size={16} style={{ color: eventColor }} />
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Category</div>
+                <div className="font-medium text-gray-900">{event.category_main}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Tags */}
+          {eventTags.length > 0 && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: eventColor + '20' }}>
+                <Tag size={16} style={{ color: eventColor }} />
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {eventTags.map(tag => (
+                  <span
+                    key={tag}
+                    className="px-2.5 py-1 rounded-full text-xs font-medium border border-gray-200 text-gray-600"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 

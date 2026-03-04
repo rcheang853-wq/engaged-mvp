@@ -12,6 +12,8 @@ const updateEventSchema = z.object({
   all_day: z.boolean().optional(),
   location: z.string().max(500).optional(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  category_main: z.string().max(100).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
 });
 
 // GET /api/calendars/[id]/events/[eventId]
@@ -60,6 +62,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         ...(parsed.data.all_day !== undefined && { all_day: parsed.data.all_day }),
         ...(parsed.data.location !== undefined && { location: parsed.data.location ?? null }),
         ...(parsed.data.color !== undefined && { color: parsed.data.color ?? null }),
+        ...(parsed.data.category_main !== undefined && { category_main: parsed.data.category_main ?? null }),
+        ...(parsed.data.tags !== undefined && { tags: parsed.data.tags ?? [] }),
       })
       .eq('id', eventId)
       .eq('calendar_id', id)

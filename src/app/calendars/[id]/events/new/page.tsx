@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, MapPin, Clock, AlignLeft, Palette, Link as LinkIcon, Bell, Repeat, Paperclip } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, AlignLeft, Palette, Link as LinkIcon, Bell, Repeat, Paperclip, Tag } from 'lucide-react';
+import { PRIVATE_EVENT_TAXONOMY } from '@/lib/private-event-taxonomy';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
 
@@ -27,9 +28,16 @@ export default function NewEventPage() {
   const [color, setColor] = useState(COLORS[0]);
   const [saving, setSaving] = useState(false);
   const [showColors, setShowColors] = useState(false);
+  const [categoryMain, setCategoryMain] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
 
   const [canEdit, setCanEdit] = useState<boolean | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const isReadOnly = canEdit === false;
+
+  const tagsForCategory = useMemo(() => {
+    return PRIVATE_EVENT_TAXONOMY.find(entry => entry.category === categoryMain)?.tags ?? [];
+  }, [categoryMain]);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,6 +90,8 @@ export default function NewEventPage() {
           all_day: allDay,
           location: location.trim() || undefined,
           color,
+          category_main: categoryMain || undefined,
+          tags,
         }),
       });
 
@@ -135,7 +145,11 @@ export default function NewEventPage() {
         <div className="bg-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowColors(!showColors)}
+              onClick={() => {
+                if (isReadOnly) return;
+                setShowColors(!showColors);
+              }}
+              disabled={isReadOnly}
               className="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-white shadow"
               style={{ backgroundColor: color }}
             >
@@ -146,7 +160,8 @@ export default function NewEventPage() {
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Event title"
-              className="flex-1 text-lg font-semibold outline-none placeholder-gray-300 text-gray-900"
+              disabled={isReadOnly}
+              className="flex-1 text-lg font-semibold outline-none placeholder-gray-300 text-gray-900 disabled:text-gray-400"
               autoFocus
             />
           </div>
@@ -157,8 +172,13 @@ export default function NewEventPage() {
               {COLORS.map(c => (
                 <button
                   key={c}
-                  onClick={() => { setColor(c); setShowColors(false); }}
-                  className={`w-8 h-8 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : 'hover:scale-110'}`}
+                  onClick={() => {
+                    if (isReadOnly) return;
+                    setColor(c);
+                    setShowColors(false);
+                  }}
+                  disabled={isReadOnly}
+                  className={`w-8 h-8 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : 'hover:scale-110'} disabled:opacity-60 disabled:hover:scale-100`}
                   style={{ backgroundColor: c }}
                 />
               ))}
@@ -174,13 +194,15 @@ export default function NewEventPage() {
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="flex-1 outline-none text-gray-900 text-sm"
+              disabled={isReadOnly}
+              className="flex-1 outline-none text-gray-900 text-sm disabled:text-gray-400"
             />
             <label className="flex items-center gap-1.5 text-sm text-gray-600">
               <input
                 type="checkbox"
                 checked={allDay}
                 onChange={e => setAllDay(e.target.checked)}
+                disabled={isReadOnly}
                 className="rounded"
               />
               All day
@@ -193,14 +215,16 @@ export default function NewEventPage() {
                 type="time"
                 value={startTime}
                 onChange={e => setStartTime(e.target.value)}
-                className="outline-none text-gray-900 text-sm bg-gray-50 px-3 py-1.5 rounded-lg"
+                disabled={isReadOnly}
+                className="outline-none text-gray-900 text-sm bg-gray-50 px-3 py-1.5 rounded-lg disabled:text-gray-400"
               />
               <span className="text-gray-400 text-sm">to</span>
               <input
                 type="time"
                 value={endTime}
                 onChange={e => setEndTime(e.target.value)}
-                className="outline-none text-gray-900 text-sm bg-gray-50 px-3 py-1.5 rounded-lg"
+                disabled={isReadOnly}
+                className="outline-none text-gray-900 text-sm bg-gray-50 px-3 py-1.5 rounded-lg disabled:text-gray-400"
               />
             </div>
           )}
@@ -215,8 +239,68 @@ export default function NewEventPage() {
               value={location}
               onChange={e => setLocation(e.target.value)}
               placeholder="Add location"
-              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400"
+              disabled={isReadOnly}
+              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 disabled:text-gray-400"
             />
+          </div>
+        </div>
+
+        {/* Category + tags */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+          <div className="flex items-center gap-3">
+            <Tag size={18} className="text-gray-400 flex-shrink-0" />
+            <select
+              value={categoryMain}
+              onChange={(e) => {
+                const nextCategory = e.target.value;
+                setCategoryMain(nextCategory);
+                setTags([]);
+              }}
+              disabled={isReadOnly}
+              className="flex-1 outline-none text-gray-900 text-sm bg-transparent disabled:text-gray-400"
+            >
+              <option value="">Select main category</option>
+              {PRIVATE_EVENT_TAXONOMY.map((entry) => (
+                <option key={entry.category} value={entry.category}>
+                  {entry.category}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="pl-7">
+            <div className="text-xs text-gray-500 mb-2">Tags (optional)</div>
+            {categoryMain ? (
+              <div className="flex flex-wrap gap-2">
+                {tagsForCategory.map((tag) => {
+                  const selected = tags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        if (isReadOnly) return;
+                        setTags((prev) =>
+                          prev.includes(tag)
+                            ? prev.filter((t) => t !== tag)
+                            : [...prev, tag]
+                        );
+                      }}
+                      disabled={isReadOnly}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        selected
+                          ? 'bg-blue-50 border-blue-200 text-blue-700'
+                          : 'bg-white border-gray-200 text-gray-600'
+                      } disabled:opacity-60`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">Pick a category to see available tags.</p>
+            )}
           </div>
         </div>
 
@@ -229,7 +313,8 @@ export default function NewEventPage() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="Add URL"
-              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400"
+              disabled={isReadOnly}
+              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 disabled:text-gray-400"
             />
           </div>
         </div>
@@ -241,7 +326,8 @@ export default function NewEventPage() {
             <select
               value={reminderMinutes == null ? '' : String(reminderMinutes)}
               onChange={(e) => setReminderMinutes(e.target.value ? Number(e.target.value) : null)}
-              className="flex-1 outline-none text-gray-900 text-sm bg-transparent"
+              disabled={isReadOnly}
+              className="flex-1 outline-none text-gray-900 text-sm bg-transparent disabled:text-gray-400"
             >
               <option value="">No reminder</option>
               <option value="5">5 minutes before</option>
@@ -280,7 +366,8 @@ export default function NewEventPage() {
               onChange={e => setDescription(e.target.value)}
               placeholder="Add description"
               rows={3}
-              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 resize-none"
+              disabled={isReadOnly}
+              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 resize-none disabled:text-gray-400"
             />
           </div>
         </div>
@@ -294,7 +381,8 @@ export default function NewEventPage() {
               onChange={e => setNotes(e.target.value)}
               placeholder="Add notes"
               rows={4}
-              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 resize-none"
+              disabled={isReadOnly}
+              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 resize-none disabled:text-gray-400"
             />
           </div>
         </div>
