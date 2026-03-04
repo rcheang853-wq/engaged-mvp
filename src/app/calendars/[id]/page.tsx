@@ -63,6 +63,12 @@ export default function CalendarViewPage() {
   }, []);
 
   useEffect(() => {
+    if (searchParams.get('members') === '1') {
+      setMembersOpen(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     Promise.all([
       fetch(`/api/calendars/${id}`).then((r) => r.json()),
       fetch(
@@ -216,7 +222,17 @@ export default function CalendarViewPage() {
           >
             <Search size={20} />
           </Link>
-          <Link href={`/calendars/${id}/settings`} className="text-gray-400 hover:text-gray-600">
+          {isOwner && (
+            <button
+              onClick={() => setMembersOpen(true)}
+              className="text-gray-400 hover:text-gray-600"
+              title="Invite members"
+              aria-label="Invite members"
+            >
+              <UserPlus size={20} />
+            </button>
+          )}
+          <Link href={`/calendars/${id}/settings`} className="text-gray-400 hover:text-gray-600" title="Settings">
             <Settings size={20} />
           </Link>
           <Link

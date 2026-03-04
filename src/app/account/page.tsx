@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, MapPin, Bell, Puzzle, HelpCircle } from 'lucide-react';
+import { ChevronRight, MapPin, Bell, Puzzle, HelpCircle, Mail } from 'lucide-react';
 import BottomTabBar from '@/components/BottomTabBar';
 
 interface UserProfile {
@@ -12,6 +12,7 @@ interface UserProfile {
 }
 
 const MENU_ROWS = [
+  { label: 'Invites',       icon: Mail,      href: '/account/invites'       },
   { label: 'Location',      icon: MapPin,    href: '/account/location'      },
   { label: 'Notifications', icon: Bell,      href: '/account/notifications' },
   { label: 'Integrations',  icon: Puzzle,    href: '/account/integrations'  },

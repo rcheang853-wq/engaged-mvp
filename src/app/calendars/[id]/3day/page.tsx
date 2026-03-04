@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Settings, Search } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Settings, Search, UserPlus } from 'lucide-react';
 import { addDays, addHours, endOfDay, format, isToday, parseISO, startOfDay } from 'date-fns';
 import BottomTabBar from '@/components/BottomTabBar';
 import CalendarSwitcher from '@/components/CalendarSwitcher';
@@ -177,7 +177,15 @@ export default function CalendarThreeDayPage() {
           <Link href="/search" className="text-gray-400 hover:text-gray-600" title="Search events">
             <Search size={20} />
           </Link>
-          <Link href={`/calendars/${id}/settings`} className="text-gray-400 hover:text-gray-600">
+          <Link
+            href={`/calendars/${id}?members=1`}
+            className="text-gray-400 hover:text-gray-600"
+            title="Invite members"
+            aria-label="Invite members"
+          >
+            <UserPlus size={20} />
+          </Link>
+          <Link href={`/calendars/${id}/settings`} className="text-gray-400 hover:text-gray-600" title="Settings">
             <Settings size={20} />
           </Link>
           <Link
