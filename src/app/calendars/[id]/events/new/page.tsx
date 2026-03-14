@@ -262,7 +262,7 @@ export default function NewEventPage() {
               <option value="">Select main category</option>
               {PRIVATE_EVENT_TAXONOMY.map((entry) => (
                 <option key={entry.category} value={entry.category}>
-                  {entry.category}
+                  {entry.emoji ? `${entry.emoji} ` : ''}{entry.category}
                 </option>
               ))}
             </select>
@@ -271,33 +271,79 @@ export default function NewEventPage() {
           <div className="pl-7">
             <div className="text-xs text-gray-500 mb-2">Tags (optional)</div>
             {categoryMain ? (
-              <div className="flex flex-wrap gap-2">
-                {tagsForCategory.map((tag) => {
-                  const selected = tags.includes(tag);
+              <>
+                {(() => {
+                  const entry = PRIVATE_EVENT_TAXONOMY.find((e) => e.category === categoryMain);
+                  if (!entry) return null;
+
+                  // If tagGroups exist, show grouped layout
+                  if (entry.tagGroups && entry.tagGroups.length > 0) {
+                    return (
+                      <div className="space-y-3">
+                        {entry.tagGroups.map((group) => (
+                          <div key={group.label}>
+                            <div className="text-xs font-medium text-gray-600 mb-1.5">{group.label}</div>
+                            <div className="flex flex-wrap gap-2">
+                              {group.tags.map((tag) => {
+                                const selected = tags.includes(tag);
+                                return (
+                                  <button
+                                    key={tag}
+                                    type="button"
+                                    onClick={() => {
+                                      if (isReadOnly) return;
+                                      setTags((prev) =>
+                                        prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                                      );
+                                    }}
+                                    disabled={isReadOnly}
+                                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                                      selected
+                                        ? 'bg-blue-50 border-blue-200 text-blue-700'
+                                        : 'bg-white border-gray-200 text-gray-600'
+                                    } disabled:opacity-60`}
+                                  >
+                                    {tag}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+
+                  // Otherwise, show flat list (fallback for categories without tagGroups)
                   return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => {
-                        if (isReadOnly) return;
-                        setTags((prev) =>
-                          prev.includes(tag)
-                            ? prev.filter((t) => t !== tag)
-                            : [...prev, tag]
+                    <div className="flex flex-wrap gap-2">
+                      {tagsForCategory.map((tag) => {
+                        const selected = tags.includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => {
+                              if (isReadOnly) return;
+                              setTags((prev) =>
+                                prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                              );
+                            }}
+                            disabled={isReadOnly}
+                            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                              selected
+                                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                                : 'bg-white border-gray-200 text-gray-600'
+                            } disabled:opacity-60`}
+                          >
+                            {tag}
+                          </button>
                         );
-                      }}
-                      disabled={isReadOnly}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                        selected
-                          ? 'bg-blue-50 border-blue-200 text-blue-700'
-                          : 'bg-white border-gray-200 text-gray-600'
-                      } disabled:opacity-60`}
-                    >
-                      {tag}
-                    </button>
+                      })}
+                    </div>
                   );
-                })}
-              </div>
+                })()}
+              </>
             ) : (
               <p className="text-xs text-gray-400">Pick a category to see available tags.</p>
             )}

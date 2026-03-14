@@ -1,47 +1,188 @@
 export type PrivateEventTaxonomyEntry = {
   category: string;
+  emoji?: string;
   tags: string[];
+  tagGroups?: { label: string; tags: string[] }[];
 };
 
 export const PRIVATE_EVENT_TAXONOMY: PrivateEventTaxonomyEntry[] = [
   {
-    category: 'Personal',
-    tags: ['Self-care', 'Appointments', 'Errands', 'Routine', 'Rest', 'Reflection'],
+    category: 'Family & Kids',
+    emoji: '👨‍👩‍👧‍👦',
+    tagGroups: [
+      {
+        label: 'Age',
+        tags: ['Infant (0–2)', 'Toddler (2–4)', 'Kids (5–10)', 'Teen'],
+      },
+      {
+        label: 'Type',
+        tags: ['Educational', 'Creative', 'Physical', 'STEM', 'Montessori', 'Interactive'],
+      },
+    ],
+    tags: [
+      'Infant (0–2)',
+      'Toddler (2–4)',
+      'Kids (5–10)',
+      'Teen',
+      'Educational',
+      'Creative',
+      'Physical',
+      'STEM',
+      'Montessori',
+      'Interactive',
+    ],
   },
   {
-    category: 'Work',
-    tags: ['Meetings', 'Deep work', 'Planning', 'Review', 'Deadline', 'Admin'],
+    category: 'Date & Romance',
+    emoji: '💕',
+    tagGroups: [
+      {
+        label: 'Mood',
+        tags: ['Romantic', 'Fun', 'Cozy', 'Scenic', 'Luxury', 'Surprise'],
+      },
+      {
+        label: 'Occasion',
+        tags: ['Anniversary', 'Proposal', 'Birthday', 'First Date'],
+      },
+    ],
+    tags: [
+      'Romantic',
+      'Fun',
+      'Cozy',
+      'Scenic',
+      'Luxury',
+      'Surprise',
+      'Anniversary',
+      'Proposal',
+      'Birthday',
+      'First Date',
+    ],
   },
   {
-    category: 'Family',
-    tags: ['Kids', 'Parents', 'Family time', 'School', 'Celebration', 'Household'],
+    category: 'Friends & Social',
+    emoji: '🎉',
+    tagGroups: [
+      {
+        label: 'Energy Level',
+        tags: ['Chill', 'Competitive', 'Party', 'Active'],
+      },
+      {
+        label: 'Format',
+        tags: ['Reservation Needed', 'Walk-In', 'Group Booking'],
+      },
+    ],
+    tags: ['Chill', 'Competitive', 'Party', 'Active', 'Reservation Needed', 'Walk-In', 'Group Booking'],
   },
   {
-    category: 'Social',
-    tags: ['Friends', 'Networking', 'Date night', 'Community', 'Party', 'Catch-up'],
+    category: 'Food & Drink',
+    emoji: '🍽️',
+    tagGroups: [
+      {
+        label: 'Cuisine',
+        tags: ['Japanese', 'Korean', 'Italian', 'Street Food', 'Dessert', 'Café'],
+      },
+      {
+        label: 'Experience',
+        tags: ['Tasting Menu', 'Buffet', 'Pop-Up', 'Limited Edition', 'New Opening'],
+      },
+    ],
+    tags: [
+      'Japanese',
+      'Korean',
+      'Italian',
+      'Street Food',
+      'Dessert',
+      'Café',
+      'Tasting Menu',
+      'Buffet',
+      'Pop-Up',
+      'Limited Edition',
+      'New Opening',
+    ],
   },
   {
-    category: 'Health & Fitness',
-    tags: ['Workout', 'Run', 'Yoga', 'Doctor', 'Therapy', 'Wellness'],
+    category: 'Outdoor & Adventure',
+    emoji: '⛰️',
+    tagGroups: [
+      {
+        label: 'Difficulty',
+        tags: ['Easy', 'Moderate', 'Advanced'],
+      },
+      {
+        label: 'Environment',
+        tags: ['Mountain', 'Beach', 'Urban', 'Nature'],
+      },
+    ],
+    tags: ['Easy', 'Moderate', 'Advanced', 'Mountain', 'Beach', 'Urban', 'Nature'],
   },
   {
-    category: 'Education',
-    tags: ['Class', 'Study', 'Workshop', 'Reading', 'Practice', 'Exam'],
+    category: 'Wellness & Fitness',
+    emoji: '🧘',
+    tagGroups: [
+      {
+        label: 'Focus',
+        tags: ['Mindfulness', 'Strength', 'Cardio', 'Flexibility', 'Recovery'],
+      },
+      {
+        label: 'Format',
+        tags: ['Beginner-Friendly', 'Advanced', 'Trial Class', 'Membership Required'],
+      },
+    ],
+    tags: [
+      'Mindfulness',
+      'Strength',
+      'Cardio',
+      'Flexibility',
+      'Recovery',
+      'Beginner-Friendly',
+      'Advanced',
+      'Trial Class',
+      'Membership Required',
+    ],
   },
   {
-    category: 'Travel',
-    tags: ['Flight', 'Hotel', 'Road trip', 'Commute', 'Packing', 'Adventure'],
+    category: 'Culture & Entertainment',
+    emoji: '🎭',
+    tagGroups: [
+      {
+        label: 'Type',
+        tags: ['Live Show', 'Exhibition', 'Festival', 'Movie Screening'],
+      },
+      {
+        label: 'Audience',
+        tags: ['Family', 'Adults Only', 'All Ages'],
+      },
+    ],
+    tags: ['Live Show', 'Exhibition', 'Festival', 'Movie Screening', 'Family', 'Adults Only', 'All Ages'],
   },
   {
-    category: 'Finance',
-    tags: ['Bills', 'Budget', 'Taxes', 'Banking', 'Investing', 'Insurance'],
+    category: 'Workshops & Learning',
+    emoji: '📚',
+    tagGroups: [
+      {
+        label: 'Skill Type',
+        tags: ['Creative', 'Business', 'Tech', 'Cooking', 'Language'],
+      },
+      {
+        label: 'Level',
+        tags: ['Beginner', 'Intermediate', 'Advanced'],
+      },
+    ],
+    tags: ['Creative', 'Business', 'Tech', 'Cooking', 'Language', 'Beginner', 'Intermediate', 'Advanced'],
   },
   {
-    category: 'Home',
-    tags: ['Cleaning', 'Maintenance', 'Repairs', 'Grocery', 'Cooking', 'Pet care'],
-  },
-  {
-    category: 'Other',
-    tags: ['Misc', 'Reminder', 'Goal', 'Project', 'Volunteer', 'Hobby'],
+    category: 'Travel & Short Getaways',
+    emoji: '✈️',
+    tagGroups: [
+      {
+        label: 'Distance',
+        tags: ['Within 1 Hour', '1–3 Hours', 'Overseas'],
+      },
+      {
+        label: 'Style',
+        tags: ['Relaxing', 'Adventure', 'Family', 'Luxury', 'Budget'],
+      },
+    ],
+    tags: ['Within 1 Hour', '1–3 Hours', 'Overseas', 'Relaxing', 'Adventure', 'Family', 'Luxury', 'Budget'],
   },
 ];
