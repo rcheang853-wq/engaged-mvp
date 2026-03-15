@@ -52,6 +52,16 @@ export default function CalendarViewPage() {
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
 
+  // Holidays
+  const [showHolidays, setShowHolidays] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('calendar_show_holidays');
+      return stored !== 'false'; // default true
+    }
+    return true;
+  });
+  const [holidays, setHolidays] = useState<Array<{ date: string; name: string; localName: string }>>([]);
+
   const calendarId = Array.isArray(id) ? id[0] : id;
 
   useEffect(() => {
@@ -83,6 +93,26 @@ export default function CalendarViewPage() {
       .catch(() => setLoading(false));
   }, [id, currentMonth]);
 
+  // Fetch holidays for current month
+  useEffect(() => {
+    if (!showHolidays) {
+      setHolidays([]);
+      return;
+    }
+
+    const year = currentMonth.getFullYear();
+    const countryCode = 'MO'; // Macau - TODO: make this configurable per user
+
+    fetch(`/api/holidays?country=${countryCode}&year=${year}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.holidays)) {
+          setHolidays(data.holidays);
+        }
+      })
+      .catch(() => setHolidays([]));
+  }, [currentMonth, showHolidays]);
+
   const selectedDate = useMemo(() => {
     const qp = searchParams.get('date');
     if (qp && /^\d{4}-\d{2}-\d{2}$/.test(qp)) return qp;
@@ -94,6 +124,11 @@ export default function CalendarViewPage() {
 
   const eventsOnDay = (day: Date) =>
     events.filter(e => isSameDay(new Date(e.start_at), day));
+
+  const holidaysOnDay = (day: Date) => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    return holidays.filter(h => h.date === dateStr);
+  };
 
   const memberColor = (userId: string) => {
     const idx = calendar?.calendar_members?.findIndex((m) => m.user_id === userId) ?? 0;
@@ -250,7 +285,24 @@ export default function CalendarViewPage() {
         <button onClick={() => setCurrentMonth(m => subMonths(m, 1))} className="p-1 text-gray-500 hover:text-gray-700">
           <ChevronLeft size={20} />
         </button>
-        <span className="font-semibold text-gray-900">{format(currentMonth, 'MMMM yyyy')}</span>
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-gray-900">{format(currentMonth, 'MMMM yyyy')}</span>
+          <button
+            onClick={() => {
+              const next = !showHolidays;
+              setShowHolidays(next);
+              localStorage.setItem('calendar_show_holidays', String(next));
+            }}
+            className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
+              showHolidays
+                ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                : 'bg-gray-100 text-gray-500 border border-gray-200'
+            }`}
+            title={showHolidays ? 'Hide holidays' : 'Show holidays'}
+          >
+            🎉 Holidays
+          </button>
+        </div>
         <button onClick={() => setCurrentMonth(m => addMonths(m, 1))} className="p-1 text-gray-500 hover:text-gray-700">
           <ChevronRight size={20} />
         </button>
@@ -272,7 +324,11 @@ export default function CalendarViewPage() {
 
           {days.map(day => {
             const dayEvents = eventsOnDay(day);
+            const dayHolidays = holidaysOnDay(day);
             const isToday = isSameDay(day, new Date());
+
+            const totalItems = dayHolidays.length + dayEvents.length;
+            const maxVisible = 3;
 
             return (
               // Use div+onClick instead of Link so event-chip Links below aren't nested inside an <a>
@@ -289,9 +345,20 @@ export default function CalendarViewPage() {
                 <div className={`text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center mb-0.5 ${isToday ? 'bg-blue-500 text-white' : 'text-gray-700'}`}>
                   {format(day, 'd')}
                 </div>
-                {/* Event chips */}
+                {/* Holiday + Event chips */}
                 <div className="space-y-0.5">
-                  {dayEvents.slice(0, 3).map(evt => (
+                  {/* Holidays */}
+                  {dayHolidays.slice(0, maxVisible).map((h, i) => (
+                    <div
+                      key={`holiday-${i}`}
+                      className="text-[10px] truncate rounded px-1 leading-4 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-medium"
+                      title={h.localName || h.name}
+                    >
+                      🎉 {h.localName || h.name}
+                    </div>
+                  ))}
+                  {/* Events */}
+                  {dayEvents.slice(0, Math.max(0, maxVisible - dayHolidays.length)).map(evt => (
                     <Link key={evt.id} href={`/calendars/${id}/events/${evt.id}`} onClick={e => e.stopPropagation()}>
                       <div
                         className="text-[10px] truncate rounded px-1 text-white leading-4"
@@ -301,8 +368,8 @@ export default function CalendarViewPage() {
                       </div>
                     </Link>
                   ))}
-                  {dayEvents.length > 3 && (
-                    <div className="text-[10px] text-gray-400">+{dayEvents.length - 3} more</div>
+                  {totalItems > maxVisible && (
+                    <div className="text-[10px] text-gray-400">+{totalItems - maxVisible} more</div>
                   )}
                 </div>
               </div>
