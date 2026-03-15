@@ -96,13 +96,13 @@ export default function CalendarViewPage() {
     events.filter(e => isSameDay(new Date(e.start_at), day));
 
   const memberColor = (userId: string) => {
-    const idx = calendar?.calendar_members?.findIndex((m) => m.profiles.id === userId) ?? 0;
+    const idx = calendar?.calendar_members?.findIndex((m) => m.user_id === userId) ?? 0;
     return MEMBER_COLORS[idx % MEMBER_COLORS.length];
   };
 
   const myRole =
     currentUserId && calendar?.calendar_members
-      ? calendar.calendar_members.find((m) => m.profiles.id === currentUserId)?.role
+      ? calendar.calendar_members.find((m) => m.user_id === currentUserId)?.role
       : null;
 
   const isOwner = myRole === 'owner';
@@ -369,7 +369,7 @@ export default function CalendarViewPage() {
                 <h3 className="text-sm font-semibold text-gray-900">Members</h3>
                 <div className="space-y-2">
                   {calendar?.calendar_members?.map((m, i) => {
-                    const isMe = currentUserId && m.profiles.id === currentUserId;
+                    const isMe = currentUserId && m.user_id === currentUserId;
                     const canRemove = isOwner && m.role !== 'owner' && !isMe;
                     const canLeave = isMe && m.role !== 'owner';
 
@@ -404,8 +404,8 @@ export default function CalendarViewPage() {
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {canRemove && (
                             <button
-                              onClick={() => removeMember(m.profiles.id)}
-                              disabled={removingUserId === m.profiles.id}
+                              onClick={() => removeMember(m.user_id)}
+                              disabled={removingUserId === m.user_id}
                               className="h-9 px-3 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 disabled:opacity-50"
                             >
                               <span className="inline-flex items-center gap-1">
@@ -417,8 +417,8 @@ export default function CalendarViewPage() {
 
                           {canLeave && (
                             <button
-                              onClick={() => removeMember(m.profiles.id)}
-                              disabled={removingUserId === m.profiles.id}
+                              onClick={() => removeMember(m.user_id)}
+                              disabled={removingUserId === m.user_id}
                               className="h-9 px-3 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 disabled:opacity-50"
                             >
                               <span className="inline-flex items-center gap-1">
