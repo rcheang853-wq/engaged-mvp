@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/dev-auth';
 import { z } from 'zod';
+import { sendEmail } from '@/lib/email/send';
+import { getCalendarInviteEmailHtml, getCalendarInviteEmailText } from '@/lib/email/templates/calendar-invite';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +65,41 @@ export async function POST(
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
+
+    // Fetch calendar + inviter details for email
+    const { data: calendar } = await supabase
+      .from('calendars')
+      .select('name')
+      .eq('id', calendarId)
+      .single();
+
+    const { data: inviter } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single();
+
+    // Send invitation email
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://engage-calendar-nu.vercel.app';
+    const acceptUrl = `${siteUrl}/account/invites`;
+    const expiresInDays = 14;
+
+    const emailParams = {
+      inviterName: inviter?.full_name || inviter?.email || 'Someone',
+      calendarName: calendar?.name || 'Shared Calendar',
+      acceptUrl,
+      expiresInDays,
+    };
+
+    // Send email (non-blocking - don't fail invite creation if email fails)
+    sendEmail({
+      to: email,
+      subject: `${emailParams.inviterName} invited you to ${emailParams.calendarName}`,
+      html: getCalendarInviteEmailHtml(emailParams),
+      text: getCalendarInviteEmailText(emailParams),
+    }).catch((err) => {
+      console.error('[POST /api/calendars/:id/invite] Email send error:', err);
+    });
 
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (err: any) {
