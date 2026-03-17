@@ -9,6 +9,10 @@ import CalendarSwitcher from '@/components/CalendarSwitcher';
 import CalendarViewTabs from '@/components/calendar/calendar-view-tabs';
 import { authClient } from '@/lib/supabase/auth';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
+import { CalendarSkeleton } from '@/components/ui/skeleton';
+import { EventCardCompact } from '@/components/calendar/event-card';
+import { NoCalendarEvents } from '@/components/ui/empty-state';
+import { useToast } from '@/hooks/use-toast';
 
 interface CalendarEvent {
   id: string;
@@ -39,6 +43,7 @@ export default function CalendarViewPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const toast = useToast();
   const [calendar, setCalendar] = useState<SharedCalendar | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -171,13 +176,18 @@ export default function CalendarViewPage() {
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
-        setInviteError(json.error ?? 'Failed to invite');
+        const errorMsg = json.error ?? 'Failed to invite';
+        setInviteError(errorMsg);
+        toast.error(errorMsg);
         return;
       }
       setInviteSuccess('Invite sent');
+      toast.success(`Invitation sent to ${email}`);
       setInviteEmail('');
     } catch {
-      setInviteError('Failed to invite');
+      const errorMsg = 'Failed to invite';
+      setInviteError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setInviting(false);
     }
@@ -207,7 +217,17 @@ export default function CalendarViewPage() {
     }
   }
 
-  if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" /></div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
+        <div className="bg-white border-b px-4 py-3 h-16" />
+        <CalendarSkeleton />
+        <BottomTabBar />
+      </div>
+    );
+  }
+
+  const hasEvents = events.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
@@ -359,14 +379,13 @@ export default function CalendarViewPage() {
                   ))}
                   {/* Events */}
                   {dayEvents.slice(0, Math.max(0, maxVisible - dayHolidays.length)).map(evt => (
-                    <Link key={evt.id} href={`/calendars/${id}/events/${evt.id}`} onClick={e => e.stopPropagation()}>
-                      <div
-                        className="text-[10px] truncate rounded px-1 text-white leading-4"
-                        style={{ backgroundColor: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calendar?.color || '#3B82F6' }}
-                      >
-                        {evt.title}
-                      </div>
-                    </Link>
+                    <EventCardCompact
+                      key={evt.id}
+                      event={evt}
+                      calendarId={calendarId}
+                      onClick={(e) => e.stopPropagation()}
+                      color={evt.color || memberColor((evt.profiles as any)?.id ?? '') || calendar?.color || '#3B82F6'}
+                    />
                   ))}
                   {totalItems > maxVisible && (
                     <div className="text-[10px] text-gray-400">+{totalItems - maxVisible} more</div>

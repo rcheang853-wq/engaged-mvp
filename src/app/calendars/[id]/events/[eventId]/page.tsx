@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, MapPin, Clock, Send, MoreVertical, Check, X, HelpCircle, Tag } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Send, MoreVertical, Check, X, HelpCircle, Tag, Edit, Trash2, Calendar } from 'lucide-react';
+import { EventDetailSkeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 interface Comment {
   id: string;
@@ -37,6 +39,7 @@ const RSVP_OPTIONS = [
 export default function EventDetailPage() {
   const { id, eventId } = useParams<{ id: string; eventId: string }>();
   const router = useRouter();
+  const toast = useToast();
   const [event, setEvent] = useState<CalendarEvent | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
@@ -69,15 +72,42 @@ export default function EventDetailPage() {
       if (d.success) {
         setComments(prev => [...prev, d.data]);
         setCommentText('');
+        toast.success('Comment added');
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      } else {
+        toast.error('Failed to add comment');
       }
+    } catch {
+      toast.error('Failed to add comment');
     } finally {
       setSending(false);
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" /></div>;
-  if (!event) return <div className="min-h-screen flex items-center justify-center text-gray-500">Event not found</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="h-32 bg-blue-500" />
+        <EventDetailSkeleton />
+      </div>
+    );
+  }
+  
+  if (!event) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
+        <Calendar size={48} className="text-gray-300 mb-4" />
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">Event not found</h2>
+        <p className="text-sm text-gray-500 mb-6">This event may have been deleted or you don't have permission to view it.</p>
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   const eventColor = event.color || '#3B82F6';
   const eventTags = event.tags ?? [];

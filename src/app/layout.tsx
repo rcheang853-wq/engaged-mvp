@@ -5,6 +5,7 @@ import AuthProvider from '@/providers/auth-provider';
 import { defaultSEO, generateOrganizationStructuredData, generateWebSiteStructuredData } from '@/lib/seo';
 import { StructuredData } from '@/components/structured-data';
 import PerformanceMonitor from '@/components/performance-monitor';
+import { ToastProvider } from '@/components/toast-provider';
 import './globals.css';
 
 const geistSans = Geist({
@@ -94,6 +95,7 @@ export default function RootLayout({
           <AuthProvider>
             {children}
             <PerformanceMonitor />
+            <ToastProvider />
           </AuthProvider>
         </ReactQueryProvider>
 
