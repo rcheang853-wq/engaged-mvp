@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { ArrowLeft, Check, X, Mail } from 'lucide-react';
 import BottomTabBar from '@/components/BottomTabBar';
 
 interface CalendarInvite {
@@ -80,11 +80,20 @@ export default function InvitesPage() {
   return (
     <div className="min-h-screen bg-[#F9FAFB] pb-20">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex items-center gap-3" style={{ paddingTop: 40 }}>
-        <button onClick={() => router.back()} className="text-gray-500">
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="flex-1 font-bold text-gray-900">Invites</h1>
+      <div className="sticky top-0 z-10 bg-[#F9FAFB] px-4 pt-12 pb-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.back()}
+            className="w-9 h-9 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center hover:bg-[#F9FAFB] transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft size={18} className="text-[#6B7280]" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-base font-bold text-[#111827]">Invites</h1>
+            <p className="text-xs text-[#6B7280]">Accept or decline shared calendars</p>
+          </div>
+        </div>
       </div>
 
       <div className="px-4 py-4 space-y-3">
@@ -103,7 +112,7 @@ export default function InvitesPage() {
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-2xl p-4 animate-pulse">
+              <div key={i} className="bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow animate-pulse">
                 <div className="h-4 bg-gray-100 rounded w-1/2 mb-2" />
                 <div className="h-3 bg-gray-100 rounded w-1/3" />
               </div>
@@ -113,23 +122,25 @@ export default function InvitesPage() {
 
         {!loading && invites.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-5xl mb-4">📬</span>
-            <h3 className="text-base font-semibold text-gray-900 mb-1">No pending invites</h3>
-            <p className="text-sm text-gray-600">Calendar invites will appear here</p>
+            <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+              <Mail size={28} className="text-[#3B82F6]" />
+            </div>
+            <h3 className="text-base font-semibold text-[#111827] mb-1">No pending invites</h3>
+            <p className="text-sm text-[#6B7280]">Calendar invites will appear here</p>
           </div>
         )}
 
         {!loading && invites.length > 0 && (
           <div className="space-y-3">
             {invites.map((invite) => (
-              <div key={invite.id} className="bg-white border border-gray-200 rounded-2xl p-4">
+              <div key={invite.id} className="bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">
+                    <h3 className="font-semibold text-[#111827] mb-1">
                       {invite.calendars?.name ?? 'Shared Calendar'}
                     </h3>
-                    <p className="text-sm text-gray-600">Invited to: {invite.invited_email}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-sm text-[#6B7280]">Invited to: {invite.invited_email}</p>
+                    <p className="text-xs text-[#9CA3AF] mt-1">
                       Expires: {new Date(invite.expires_at).toLocaleDateString()}
                     </p>
                   </div>
@@ -145,7 +156,7 @@ export default function InvitesPage() {
                   <button
                     onClick={() => handleAccept(invite.id)}
                     disabled={actioningId === invite.id}
-                    className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    className="flex-1 bg-[#3B82F6] text-white py-2.5 px-4 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-1.5 hover:bg-[#2563EB] transition-colors"
                   >
                     <Check size={16} />
                     Accept
@@ -153,7 +164,7 @@ export default function InvitesPage() {
                   <button
                     onClick={() => handleDecline(invite.id)}
                     disabled={actioningId === invite.id}
-                    className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    className="flex-1 bg-[#F3F4F6] text-[#374151] py-2.5 px-4 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-1.5 hover:bg-[#E5E7EB] transition-colors"
                   >
                     <X size={16} />
                     Decline
