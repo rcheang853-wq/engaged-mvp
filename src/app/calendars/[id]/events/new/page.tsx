@@ -116,14 +116,14 @@ export default function NewEventPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
-        <button onClick={() => router.back()} className="text-gray-500">
+        <button onClick={() => router.back()} className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
           <ArrowLeft size={20} />
         </button>
         <h1 className="flex-1 font-bold text-gray-900">New Event</h1>
         <button
           onClick={handleSave}
           disabled={!title.trim() || saving || canEdit === false}
-          className="bg-blue-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-40"
+          className="bg-blue-500 text-white px-4 py-1.5 rounded-xl text-sm font-semibold disabled:opacity-40 hover:bg-blue-600 transition-colors"
         >
           {canEdit === false ? 'View only' : saving ? 'Saving...' : 'Save'}
         </button>

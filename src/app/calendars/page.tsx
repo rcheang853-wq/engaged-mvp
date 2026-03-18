@@ -49,7 +49,7 @@ export default function CalendarsPage() {
           </Link>
           <Link
             href="/calendars/new"
-            className="flex items-center gap-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+            className="flex items-center gap-1 bg-blue-500 text-white px-3 py-2 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-colors"
           >
             <Plus size={16} />
             New
@@ -73,10 +73,10 @@ export default function CalendarsPage() {
             <h2 className="text-lg font-semibold text-gray-800 mb-1">No calendars yet</h2>
             <p className="text-gray-500 text-sm mb-6">Create a shared calendar or join one with an invite code</p>
             <div className="flex gap-3">
-              <Link href="/calendars/new" className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/calendars/new" className="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-colors">
                 Create Calendar
               </Link>
-              <Link href="/join" className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/join" className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors">
                 Join with Code
               </Link>
             </div>

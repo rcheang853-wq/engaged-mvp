@@ -346,6 +346,7 @@ export default function CalendarViewPage() {
             const dayEvents = eventsOnDay(day);
             const dayHolidays = holidaysOnDay(day);
             const isToday = isSameDay(day, new Date());
+            const isSelected = format(day, 'yyyy-MM-dd') === selectedDate;
 
             const totalItems = dayHolidays.length + dayEvents.length;
             const maxVisible = 3;
@@ -354,15 +355,19 @@ export default function CalendarViewPage() {
               // Use div+onClick instead of Link so event-chip Links below aren't nested inside an <a>
               <div
                 key={day.toISOString()}
-                className={`min-h-[60px] rounded-xl p-1 cursor-pointer hover:bg-gray-100 transition-colors ${
-                  isToday ? 'bg-blue-50' : 'bg-white'
-                } ${format(day, 'yyyy-MM-dd') === selectedDate ? 'ring-2 ring-blue-500' : ''}`}
+                className={`min-h-[64px] rounded-xl p-1 cursor-pointer transition-colors ${
+                  isSelected
+                    ? 'bg-blue-50 ring-2 ring-blue-400 ring-inset'
+                    : isToday
+                    ? 'bg-blue-50/60'
+                    : 'bg-white hover:bg-gray-50'
+                }`}
                 onClick={() => {
                   const next = format(day, 'yyyy-MM-dd');
                   router.replace(`/calendars/${id}?date=${next}`);
                 }}
               >
-                <div className={`text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center mb-0.5 ${isToday ? 'bg-blue-500 text-white' : 'text-gray-700'}`}>
+                <div className={`text-xs font-semibold w-6 h-6 rounded-full flex items-center justify-center mb-0.5 ${isToday ? 'bg-blue-500 text-white' : isSelected ? 'text-blue-600' : 'text-gray-700'}`}>
                   {format(day, 'd')}
                 </div>
                 {/* Holiday + Event chips */}
@@ -388,7 +393,7 @@ export default function CalendarViewPage() {
                     />
                   ))}
                   {totalItems > maxVisible && (
-                    <div className="text-[10px] text-gray-400">+{totalItems - maxVisible} more</div>
+                    <div className="text-[10px] text-blue-400 font-medium">+{totalItems - maxVisible}</div>
                   )}
                 </div>
               </div>

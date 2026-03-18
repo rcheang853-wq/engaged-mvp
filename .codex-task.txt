@@ -1,0 +1,32 @@
+﻿COMPREHENSIVE UI POLISH - ENGAGED APP
+
+SCOPE (ALL surfaces - work through systematically):
+1. Signup/signin flows (src/app/auth/*)
+2. /discover page
+3. Event detail views  
+4. Calendar views (Month/Week/Agenda)
+5. Organizer portal
+
+POLISH CHECKLIST (every surface):
+- Visual: spacing, alignment, shadows, borders per DESIGN_BRIEF.md
+- Colors: follow COLOR_PALETTE.md (Blue #3B82F6, grays)
+- Typography: proper hierarchy, readable sizes
+- Mobile: responsive at 375px, 768px, 1024px
+- UX: clear errors, helpful placeholders, smooth transitions
+- States: loading spinners, button hover/disabled/success
+
+CONSTRAINTS:
+- Next.js 15 + TypeScript + Tailwind + shadcn/ui
+- Don't touch logic/APIs/routes
+- Must compile: npm run build
+- No console errors
+
+WORKFLOW:
+Work surface-by-surface. After each:
+- Test with npm run dev
+- Commit with clear message
+- Brief summary of changes
+
+When ALL done, run: openclaw system event --text 'UI Polish Complete' --mode now
+
+Start with auth flows. You have 6 hours. Go!

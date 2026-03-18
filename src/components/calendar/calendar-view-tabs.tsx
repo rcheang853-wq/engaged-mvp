@@ -28,15 +28,17 @@ const TABS: Array<{ key: ViewType; label: string; href: (id: string, date?: stri
 
 export default function CalendarViewTabs({ calendarId, active, date, className = '' }: CalendarViewTabsProps) {
   return (
-    <nav className={`flex items-center gap-4 ${className}`} aria-label="Calendar view switcher">
+    <nav className={`flex items-center gap-1 ${className}`} aria-label="Calendar view switcher">
       {TABS.map((tab) => {
         const isActive = tab.key === active;
         return (
           <Link
             key={tab.key}
             href={tab.href(calendarId, date)}
-            className={`text-sm font-medium transition-colors ${
-              isActive ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              isActive
+                ? 'bg-blue-50 text-blue-600 font-semibold'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
             aria-current={isActive ? 'page' : undefined}
           >
