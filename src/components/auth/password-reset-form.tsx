@@ -236,7 +236,7 @@ export function PasswordResetForm({
               <button
                 type="button"
                 onClick={onBackToSignIn}
-                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+                className="text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors"
               >
                 Back to sign in
               </button>
@@ -315,7 +315,7 @@ export function PasswordResetForm({
             <button
               type="button"
               onClick={onBackToSignIn}
-              className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+              className="text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors"
             >
               Back to sign in
             </button>
@@ -325,3 +325,5 @@ export function PasswordResetForm({
     </div>
   );
 }
+
+

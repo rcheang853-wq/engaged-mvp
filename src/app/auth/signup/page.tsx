@@ -38,7 +38,7 @@ function SignUpPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -51,17 +51,18 @@ function SignUpPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
-          <Link href="/" className="text-2xl font-bold text-blue-600">
+          <Link href="/" className="text-2xl font-bold text-blue-500 tracking-tight">
             Engaged
           </Link>
+          <p className="mt-2 text-sm text-gray-500">Create your shared calendar in minutes.</p>
         </div>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-white py-8 px-6 shadow-md border border-gray-100 sm:rounded-2xl sm:px-10 ring-1 ring-black/5">
           <SignUpForm
             onSuccess={handleSuccess}
             onSignIn={handleSignIn}
@@ -74,7 +75,7 @@ function SignUpPageContent() {
             Already have an account?{' '}
             <button
               onClick={handleSignIn}
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-blue-500 hover:text-blue-600 transition-colors"
             >
               Sign in
             </button>
@@ -90,7 +91,7 @@ export default function SignUpPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -99,3 +100,5 @@ export default function SignUpPage() {
     </Suspense>
   );
 }
+
+

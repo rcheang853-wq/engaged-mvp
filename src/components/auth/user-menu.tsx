@@ -46,7 +46,7 @@ export function UserMenu({ className }: UserMenuProps) {
             className
           )}
         >
-          <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
@@ -158,7 +158,7 @@ export function UserMenuMobile({ className }: UserMenuProps) {
             className
           )}
         >
-          <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
@@ -213,3 +213,4 @@ export function UserMenuMobile({ className }: UserMenuProps) {
     </DropdownMenu.Root>
   );
 }
+
