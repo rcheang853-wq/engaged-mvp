@@ -9,10 +9,9 @@ import {
   ExternalLink,
   Share2,
   TrendingUp,
-  Calendar,
   Download,
-  Filter,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { EventAnalytics as EventAnalyticsType } from '@/types/organizer';
 
 interface EventAnalyticsProps {
@@ -99,15 +98,15 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-6 bg-gray-100 rounded-lg w-1/4 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              <div key={i} className="h-24 bg-gray-100 rounded-xl"></div>
             ))}
           </div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="h-64 bg-gray-100 rounded-xl"></div>
         </div>
       </div>
     );
@@ -115,17 +114,14 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="text-center">
           <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to load analytics</h3>
           <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={loadAnalytics}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
+          <Button onClick={loadAnalytics} size="sm">
             Try Again
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -138,7 +134,7 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{analytics.eventTitle}</h2>
@@ -151,7 +147,7 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
                 const range = timeRanges.find(r => r.value === e.target.value);
                 if (range) setSelectedTimeRange(range);
               }}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {timeRanges.map((range) => (
                 <option key={range.value} value={range.value}>
@@ -159,15 +155,15 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
                 </option>
               ))}
             </select>
-            <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-              <Download className="w-4 h-4" />
+            <button className="p-2 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+              <Download className="w-4 h-4 text-gray-500" />
             </button>
           </div>
         </div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-blue-50 rounded-lg p-4">
+          <div className="bg-blue-50 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-600">Total Views</p>
@@ -182,7 +178,7 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
             </div>
           </div>
 
-          <div className="bg-red-50 rounded-lg p-4">
+          <div className="bg-red-50 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-red-600">Saves</p>
@@ -197,7 +193,7 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
             </div>
           </div>
 
-          <div className="bg-green-50 rounded-lg p-4">
+          <div className="bg-green-50 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-green-600">RSVPs</p>
@@ -212,7 +208,7 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
             </div>
           </div>
 
-          <div className="bg-purple-50 rounded-lg p-4">
+          <div className="bg-purple-50 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-purple-600">Conversion Rate</p>
@@ -232,7 +228,7 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Engagement Over Time */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Engagement Over Time</h3>
           <div className="h-64 flex items-end justify-between space-x-2">
             {analytics.periodStats.daily.map((day, index) => {
@@ -266,7 +262,7 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
         </div>
 
         {/* Click Sources */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Click Sources</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -309,7 +305,7 @@ export function EventAnalytics({ eventId, organizerId }: EventAnalyticsProps) {
       </div>
 
       {/* Detailed Breakdown */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed Analytics</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>

@@ -189,7 +189,7 @@ export function EventStatusCard({
   const statusInfo = getStatusMessage(status);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-gray-200 rounded-2xl p-4">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center mb-2">
