@@ -105,14 +105,21 @@ export default function CalendarViewPage() {
       return;
     }
 
-    const year = currentMonth.getFullYear();
-    const countryCode = 'MO'; // Macau - TODO: make this configurable per user
+    const locale = 'MO'; // Macau - TODO: make this configurable per user
+    const from = startOfMonth(currentMonth);
+    const to = endOfMonth(currentMonth);
 
-    fetch(`/api/holidays?country=${countryCode}&year=${year}`)
+    fetch(`/api/holidays?locale=${locale}&from=${from.toISOString()}&to=${to.toISOString()}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.success && Array.isArray(data.holidays)) {
-          setHolidays(data.holidays);
+        if (data.success && Array.isArray(data.data)) {
+          // Transform API response to match expected format
+          const transformedHolidays = data.data.map((h: any) => ({
+            date: h.start_at.split('T')[0],
+            name: h.title,
+            localName: h.title,
+          }));
+          setHolidays(transformedHolidays);
         }
       })
       .catch(() => setHolidays([]));
