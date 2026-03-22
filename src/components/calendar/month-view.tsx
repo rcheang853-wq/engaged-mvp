@@ -16,7 +16,8 @@ import {
 } from 'date-fns';
 import { Event } from '@/types';
 import { cn } from '@/lib/utils';
-import EventCard from './event-card';
+import { getEventStyles } from '@/lib/color-utils';
+import { EventCard } from './event-card';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -73,9 +74,14 @@ export const MonthView: React.FC<MonthViewProps> = ({
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className={cn('flex h-full flex-col bg-white', className)}>
+    <div
+      className={cn(
+        'flex flex-col overflow-hidden bg-white lg:min-h-0 lg:flex-1',
+        className
+      )}
+    >
       {/* Week header */}
-      <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
+      <div className="grid flex-shrink-0 grid-cols-7 border-b border-gray-200 bg-gray-50">
         {weekDays.map(day => (
           <div
             key={day}
@@ -87,7 +93,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid flex-1 grid-rows-6">
+      <div className="grid flex-1 grid-rows-6 lg:min-h-0 lg:overflow-auto">
         {Array.from({ length: 6 }).map((_, weekIndex) => (
           <div
             key={weekIndex}
@@ -140,42 +146,35 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
                   {/* Events */}
                   <div className="space-y-1">
-                    {dayEvents.slice(0, 3).map((event, index) => (
-                      <div
-                        key={event.id}
-                        className={cn(
-                          'cursor-pointer truncate rounded p-1 text-xs transition-colors',
-                          'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                        )}
-                        onClick={e => {
-                          e.stopPropagation();
-                          if (onEventClick) {
-                            onEventClick(event);
-                          }
-                        }}
-                        style={{
-                          backgroundColor: event.category
-                            ? `${event.category.color}20`
-                            : undefined,
-                          color: event.category?.color || undefined,
-                        }}
-                      >
-                        <div className="flex items-center">
-                          {event.allDay ? (
-                            <span className="font-medium">{event.title}</span>
-                          ) : (
-                            <>
-                              <span className="mr-1 text-[10px]">
-                                {format(event.startTime, 'h:mm')}
-                              </span>
-                              <span className="truncate font-medium">
-                                {event.title}
-                              </span>
-                            </>
-                          )}
+                    {dayEvents.slice(0, 3).map(event => {
+                      const eventStyles = getEventStyles(event.category?.color);
+                      return (
+                        <div
+                          key={event.id}
+                          className="cursor-pointer truncate rounded p-1 text-xs transition-colors hover:opacity-80"
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (onEventClick) onEventClick(event);
+                          }}
+                          style={eventStyles}
+                        >
+                          <div className="flex items-center">
+                            {event.allDay ? (
+                              <span className="font-medium">{event.title}</span>
+                            ) : (
+                              <>
+                                <span className="mr-1 text-[10px]">
+                                  {format(event.startTime, 'h:mm')}
+                                </span>
+                                <span className="truncate font-medium">
+                                  {event.title}
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
