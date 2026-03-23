@@ -14,7 +14,8 @@ import {
 } from 'date-fns';
 import { Event } from '@/types';
 import { cn } from '@/lib/utils';
-import EventCard from './event-card';
+import { getEventStyles } from '@/lib/color-utils';
+import { EventCard } from './event-card';
 
 interface DayViewProps {
   currentDate: Date;
@@ -160,7 +161,7 @@ export const DayView: React.FC<DayViewProps> = ({
   return (
     <div
       className={cn(
-        'flex h-full flex-col overflow-hidden bg-white lg:min-h-0',
+        'flex flex-col overflow-hidden bg-white lg:min-h-0 lg:flex-1',
         className
       )}
     >
@@ -195,29 +196,24 @@ export const DayView: React.FC<DayViewProps> = ({
           <div className="border-t border-gray-200 p-3">
             <div className="mb-2 text-xs text-gray-500">All Day</div>
             <div className="space-y-1">
-              {allDayEvents.map(event => (
-                <div
-                  key={event.id}
-                  className={cn(
-                    'cursor-pointer rounded p-2 transition-colors',
-                    'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                  )}
-                  style={{
-                    backgroundColor: event.category
-                      ? `${event.category.color}20`
-                      : undefined,
-                    color: event.category?.color || undefined,
-                  }}
-                  onClick={() => onEventClick?.(event)}
-                >
-                  <div className="font-medium">{event.title}</div>
-                  {event.venue && (
-                    <div className="mt-1 text-xs opacity-75">
-                      {event.venue.name}
-                    </div>
-                  )}
-                </div>
-              ))}
+              {allDayEvents.map(event => {
+                const eventStyles = getEventStyles(event.category?.color);
+                return (
+                  <div
+                    key={event.id}
+                    className="cursor-pointer rounded p-2 transition-colors hover:opacity-80"
+                    style={eventStyles}
+                    onClick={() => onEventClick?.(event)}
+                  >
+                    <div className="font-medium">{event.title}</div>
+                    {event.venue && (
+                      <div className="mt-1 text-xs opacity-75">
+                        {event.venue.name}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -288,49 +284,38 @@ export const DayView: React.FC<DayViewProps> = ({
           {/* Positioned events overlay */}
           <div className="pointer-events-none absolute inset-0">
             <div className="relative mr-4 ml-20 h-full">
-              {positionedEvents.map(({ event, top, height, width, left }) => (
-                <div
-                  key={event.id}
-                  className="pointer-events-auto absolute z-10 cursor-pointer"
-                  style={{
-                    top: `${top}%`,
-                    height: `${height}%`,
-                    width: `${width}%`,
-                    left: `${left}%`,
-                  }}
-                  onClick={() => onEventClick?.(event)}
-                >
+              {positionedEvents.map(({ event, top, height, width, left }) => {
+                const eventStyles = getEventStyles(event.category?.color);
+                return (
                   <div
-                    className={cn(
-                      'h-full overflow-hidden rounded p-2 text-xs shadow-sm',
-                      'border border-blue-200 bg-blue-100 text-blue-800 transition-colors hover:bg-blue-200'
-                    )}
+                    key={event.id}
+                    className="pointer-events-auto absolute z-10 cursor-pointer"
                     style={{
-                      backgroundColor: event.category
-                        ? `${event.category.color}20`
-                        : undefined,
-                      borderColor: event.category?.color || undefined,
-                      color: event.category?.color || undefined,
+                      top: `${top}%`,
+                      height: `${height}%`,
+                      width: `${width}%`,
+                      left: `${left}%`,
                     }}
+                    onClick={() => onEventClick?.(event)}
                   >
-                    <div className="truncate font-semibold">{event.title}</div>
-                    <div className="mt-1 text-[10px] opacity-75">
-                      {format(event.startTime, 'h:mm a')} -{' '}
-                      {format(event.endTime, 'h:mm a')}
+                    <div
+                      className="h-full overflow-hidden rounded border p-2 text-xs shadow-sm transition-colors hover:opacity-80"
+                      style={eventStyles}
+                    >
+                      <div className="truncate font-semibold">{event.title}</div>
+                      <div className="mt-1 text-[10px] opacity-75">
+                        {format(event.startTime, 'h:mm a')} - {format(event.endTime, 'h:mm a')}
+                      </div>
+                      {event.venue && (
+                        <div className="mt-1 truncate text-[10px] opacity-75">{event.venue.name}</div>
+                      )}
+                      {event.organizer && (
+                        <div className="mt-1 truncate text-[10px] opacity-75">{event.organizer.organizationName}</div>
+                      )}
                     </div>
-                    {event.venue && (
-                      <div className="mt-1 truncate text-[10px] opacity-75">
-                        {event.venue.name}
-                      </div>
-                    )}
-                    {event.organizer && (
-                      <div className="mt-1 truncate text-[10px] opacity-75">
-                        {event.organizer.organizationName}
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

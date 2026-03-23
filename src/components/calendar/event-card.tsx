@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Calendar, Clock, MapPin } from 'lucide-react';
+import { getEventStyles } from '@/lib/color-utils';
 
 interface EventCardProps {
   event: {
@@ -21,32 +22,31 @@ interface EventCardProps {
 export function EventCard({ event, calendarId, onClick }: EventCardProps) {
   const startTime = new Date(event.start_at);
   const hasTime = !event.all_day;
+  const eventStyles = getEventStyles(event.color);
 
   return (
-    <Link 
+    <Link
       href={`/calendars/${calendarId}/events/${event.id}`}
       onClick={onClick}
       className="group block"
     >
       <div
-        className="relative text-[10px] rounded px-1.5 py-0.5 text-white leading-4 overflow-hidden transition-all duration-200 group-hover:shadow-md group-hover:scale-105 group-hover:z-10"
-        style={{ backgroundColor: event.color || '#3B82F6' }}
+        className="relative overflow-hidden rounded px-1.5 py-0.5 text-[10px] leading-4 transition-all duration-200 group-hover:z-10 group-hover:scale-105 group-hover:shadow-md"
+        style={eventStyles}
       >
         {/* Subtle gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/10 pointer-events-none" />
-        
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/0 to-white/10" />
+
         {/* Content */}
         <div className="relative flex items-center gap-1">
-          {hasTime && (
-            <Clock size={8} className="flex-shrink-0 opacity-80" />
-          )}
+          {hasTime && <Clock size={8} className="flex-shrink-0 opacity-80" />}
           <span className="truncate font-medium">{event.title}</span>
         </div>
-        
+
         {/* Tooltip on hover */}
-        <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-50 min-w-[200px]">
-          <div className="bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl">
-            <div className="font-semibold mb-1.5">{event.title}</div>
+        <div className="absolute bottom-full left-0 z-50 mb-1 hidden min-w-[200px] group-hover:block">
+          <div className="rounded-lg bg-gray-900 p-3 text-xs text-white shadow-xl">
+            <div className="mb-1.5 font-semibold">{event.title}</div>
             <div className="space-y-1 text-gray-300">
               <div className="flex items-center gap-1.5">
                 <Calendar size={12} />
@@ -57,7 +57,8 @@ export function EventCard({ event, calendarId, onClick }: EventCardProps) {
                   <Clock size={12} />
                   <span>
                     {format(startTime, 'h:mm a')}
-                    {event.end_at && ` - ${format(new Date(event.end_at), 'h:mm a')}`}
+                    {event.end_at &&
+                      ` - ${format(new Date(event.end_at), 'h:mm a')}`}
                   </span>
                 </div>
               )}
@@ -69,7 +70,7 @@ export function EventCard({ event, calendarId, onClick }: EventCardProps) {
               )}
             </div>
             {/* Arrow pointing down */}
-            <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+            <div className="absolute top-full left-4 h-0 w-0 border-t-4 border-r-4 border-l-4 border-transparent border-t-gray-900" />
           </div>
         </div>
       </div>
@@ -77,16 +78,23 @@ export function EventCard({ event, calendarId, onClick }: EventCardProps) {
   );
 }
 
-export function EventCardCompact({ event, calendarId, onClick, color }: EventCardProps & { color?: string }) {
+export function EventCardCompact({
+  event,
+  calendarId,
+  onClick,
+  color,
+}: EventCardProps & { color?: string }) {
+  const eventStyles = getEventStyles(color || event.color);
+
   return (
-    <Link 
+    <Link
       href={`/calendars/${calendarId}/events/${event.id}`}
       onClick={onClick}
       className="group"
     >
       <div
-        className="text-[10px] truncate rounded px-1 text-white leading-4 transition-all duration-200 group-hover:shadow-sm group-hover:scale-105"
-        style={{ backgroundColor: color || event.color || '#3B82F6' }}
+        className="truncate rounded px-1 text-[10px] leading-4 transition-all duration-200 group-hover:scale-105 group-hover:shadow-sm"
+        style={eventStyles}
       >
         {event.title}
       </div>

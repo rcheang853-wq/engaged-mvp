@@ -17,7 +17,8 @@ import {
 } from 'date-fns';
 import { Event } from '@/types';
 import { cn } from '@/lib/utils';
-import EventCard from './event-card';
+import { getEventStyles } from '@/lib/color-utils';
+import { EventCard } from './event-card';
 
 interface WeekViewProps {
   currentDate: Date;
@@ -164,12 +165,12 @@ export const WeekView: React.FC<WeekViewProps> = ({
   return (
     <div
       className={cn(
-        'flex h-full flex-col overflow-hidden bg-white lg:min-h-0',
+        'flex flex-col overflow-hidden bg-white lg:min-h-0 lg:flex-1',
         className
       )}
     >
       {/* Week header with all-day events */}
-      <div className="border-b border-gray-200">
+      <div className="flex-shrink-0 border-b border-gray-200">
         {/* Day headers */}
         <div className="grid grid-cols-8">
           {/* Time column header */}
@@ -213,24 +214,19 @@ export const WeekView: React.FC<WeekViewProps> = ({
                 key={day.toISOString()}
                 className="min-h-[40px] border-r border-gray-200 p-2 last:border-r-0"
               >
-                {allDayEvents.map(event => (
-                  <div
-                    key={event.id}
-                    className={cn(
-                      'mb-1 cursor-pointer rounded p-1 text-xs transition-colors',
-                      'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                    )}
-                    style={{
-                      backgroundColor: event.category
-                        ? `${event.category.color}20`
-                        : undefined,
-                      color: event.category?.color || undefined,
-                    }}
-                    onClick={() => onEventClick?.(event)}
-                  >
-                    {event.title}
-                  </div>
-                ))}
+                {allDayEvents.map(event => {
+                  const eventStyles = getEventStyles(event.category?.color);
+                  return (
+                    <div
+                      key={event.id}
+                      className="mb-1 cursor-pointer rounded p-1 text-xs transition-colors hover:opacity-80"
+                      style={eventStyles}
+                      onClick={() => onEventClick?.(event)}
+                    >
+                      {event.title}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
@@ -293,46 +289,35 @@ export const WeekView: React.FC<WeekViewProps> = ({
                 >
                   {positionedEvents
                     .filter(positioned => positioned.column === dayIndex)
-                    .map(({ event, top, height, width, left }) => (
-                      <div
-                        key={event.id}
-                        className="pointer-events-auto absolute z-10 cursor-pointer"
-                        style={{
-                          top: `${top}%`,
-                          height: `${height}%`,
-                          width: `${width}%`,
-                          left: `${left}%`,
-                        }}
-                        onClick={() => onEventClick?.(event)}
-                      >
+                    .map(({ event, top, height, width, left }) => {
+                      const eventStyles = getEventStyles(event.category?.color);
+                      return (
                         <div
-                          className={cn(
-                            'h-full overflow-hidden rounded p-1 text-xs',
-                            'border border-blue-200 bg-blue-100 text-blue-800 transition-colors hover:bg-blue-200'
-                          )}
+                          key={event.id}
+                          className="pointer-events-auto absolute z-10 cursor-pointer"
                           style={{
-                            backgroundColor: event.category
-                              ? `${event.category.color}20`
-                              : undefined,
-                            borderColor: event.category?.color || undefined,
-                            color: event.category?.color || undefined,
+                            top: `${top}%`,
+                            height: `${height}%`,
+                            width: `${width}%`,
+                            left: `${left}%`,
                           }}
+                          onClick={() => onEventClick?.(event)}
                         >
-                          <div className="truncate font-medium">
-                            {event.title}
-                          </div>
-                          <div className="truncate text-[10px] opacity-75">
-                            {format(event.startTime, 'h:mm')} -{' '}
-                            {format(event.endTime, 'h:mm')}
-                          </div>
-                          {event.venue && (
+                          <div
+                            className="h-full overflow-hidden rounded border p-1 text-xs transition-colors hover:opacity-80"
+                            style={eventStyles}
+                          >
+                            <div className="truncate font-medium">{event.title}</div>
                             <div className="truncate text-[10px] opacity-75">
-                              {event.venue.name}
+                              {format(event.startTime, 'h:mm')} - {format(event.endTime, 'h:mm')}
                             </div>
-                          )}
+                            {event.venue && (
+                              <div className="truncate text-[10px] opacity-75">{event.venue.name}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               ))}
             </div>
