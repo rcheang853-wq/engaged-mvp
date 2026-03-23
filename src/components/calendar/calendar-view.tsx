@@ -7,7 +7,10 @@ import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/useDebounce';
 
 // Import all calendar view components
-import CalendarNavigation, { CalendarView, MobileCalendarNavigation } from './calendar-navigation';
+import CalendarNavigation, {
+  CalendarView,
+  MobileCalendarNavigation,
+} from './calendar-navigation';
 import MonthView from './month-view';
 import WeekView from './week-view';
 import DayView, { CompactDayView } from './day-view';
@@ -66,8 +69,16 @@ export const CalendarViewComponent: React.FC<CalendarViewProps> = ({
       case 'day':
         // Fetch just the day
         return {
-          startDate: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
-          endDate: new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1),
+          startDate: new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
+          ),
+          endDate: new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate() + 1
+          ),
         };
       case 'agenda':
         // Fetch current month for agenda view
@@ -87,11 +98,11 @@ export const CalendarViewComponent: React.FC<CalendarViewProps> = ({
   const {
     data: eventData,
     isLoading: eventsLoading,
-    error: eventsError
+    error: eventsError,
   } = useEvents({
     filters: {
-      dateRange: { start: startDate, end: endDate }
-    }
+      dateRange: { start: startDate, end: endDate },
+    },
   });
 
   // Use provided events or fetched events
@@ -102,35 +113,47 @@ export const CalendarViewComponent: React.FC<CalendarViewProps> = ({
     setIsLoading(eventsLoading);
   }, [eventsLoading]);
 
-  const handleDateChange = useCallback((date: Date) => {
-    setCurrentDate(date);
-    if (onDateSelect) {
-      onDateSelect(date);
-    }
-  }, [onDateSelect]);
+  const handleDateChange = useCallback(
+    (date: Date) => {
+      setCurrentDate(date);
+      if (onDateSelect) {
+        onDateSelect(date);
+      }
+    },
+    [onDateSelect]
+  );
 
-  const handleViewChange = useCallback((newView: CalendarView) => {
-    setView(newView);
-    if (onViewChange) {
-      onViewChange(newView);
-    }
-  }, [onViewChange]);
+  const handleViewChange = useCallback(
+    (newView: CalendarView) => {
+      setView(newView);
+      if (onViewChange) {
+        onViewChange(newView);
+      }
+    },
+    [onViewChange]
+  );
 
   const handleToday = useCallback(() => {
     setCurrentDate(new Date());
   }, []);
 
-  const handleEventClick = useCallback((event: Event) => {
-    if (onEventClick) {
-      onEventClick(event);
-    }
-  }, [onEventClick]);
+  const handleEventClick = useCallback(
+    (event: Event) => {
+      if (onEventClick) {
+        onEventClick(event);
+      }
+    },
+    [onEventClick]
+  );
 
-  const handleTimeSlotClick = useCallback((date: Date, hour: number, minute?: number) => {
-    if (onTimeSlotClick) {
-      onTimeSlotClick(date, hour, minute);
-    }
-  }, [onTimeSlotClick]);
+  const handleTimeSlotClick = useCallback(
+    (date: Date, hour: number, minute?: number) => {
+      if (onTimeSlotClick) {
+        onTimeSlotClick(date, hour, minute);
+      }
+    },
+    [onTimeSlotClick]
+  );
 
   const renderCalendarView = () => {
     const commonProps = {
@@ -142,12 +165,7 @@ export const CalendarViewComponent: React.FC<CalendarViewProps> = ({
 
     switch (view) {
       case 'month':
-        return (
-          <MonthView
-            {...commonProps}
-            className="flex-1"
-          />
-        );
+        return <MonthView {...commonProps} className="flex-1" />;
       case 'week':
         return (
           <WeekView
@@ -172,31 +190,26 @@ export const CalendarViewComponent: React.FC<CalendarViewProps> = ({
         );
       case 'agenda':
         return isMobile ? (
-          <CompactAgendaView
-            {...commonProps}
-            className="flex-1"
-          />
+          <CompactAgendaView {...commonProps} className="flex-1" />
         ) : (
-          <AgendaView
-            {...commonProps}
-            viewRange="month"
-            className="flex-1"
-          />
+          <AgendaView {...commonProps} viewRange="month" className="flex-1" />
         );
       default:
-        return (
-          <MonthView
-            {...commonProps}
-            className="flex-1"
-          />
-        );
+        return <MonthView {...commonProps} className="flex-1" />;
     }
   };
 
-  const NavigationComponent = isMobile ? MobileCalendarNavigation : CalendarNavigation;
+  const NavigationComponent = isMobile
+    ? MobileCalendarNavigation
+    : CalendarNavigation;
 
   return (
-    <div className={cn('flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200', className)}>
+    <div
+      className={cn(
+        'flex h-full flex-col rounded-lg border border-gray-200 bg-white shadow-sm',
+        className
+      )}
+    >
       <NavigationComponent
         currentDate={currentDate}
         view={view}
@@ -205,23 +218,23 @@ export const CalendarViewComponent: React.FC<CalendarViewProps> = ({
         onToday={handleToday}
       />
 
-      <div className="flex-1 relative overflow-hidden">
+      <div className="relative flex-1 overflow-hidden lg:min-h-0">
         {isLoading && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-opacity-75 absolute inset-0 z-50 flex items-center justify-center bg-white">
             <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
+              <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-blue-600" />
               <span className="text-sm text-gray-600">Loading events...</span>
             </div>
           </div>
         )}
 
         {eventsError && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-opacity-75 absolute inset-0 z-50 flex items-center justify-center bg-white">
             <div className="text-center">
-              <div className="text-red-600 mb-2">Error loading events</div>
+              <div className="mb-2 text-red-600">Error loading events</div>
               <button
                 onClick={() => window.location.reload()}
-                className="text-sm text-blue-600 hover:text-blue-700 underline"
+                className="text-sm text-blue-600 underline hover:text-blue-700"
               >
                 Try again
               </button>
@@ -236,12 +249,15 @@ export const CalendarViewComponent: React.FC<CalendarViewProps> = ({
 };
 
 // Main export with default props
-export const Calendar: React.FC<CalendarViewProps> = (props) => {
+export const Calendar: React.FC<CalendarViewProps> = props => {
   return <CalendarViewComponent {...props} />;
 };
 
 // Hook for calendar state management
-export const useCalendarState = (initialDate: Date = new Date(), initialView: CalendarView = 'month') => {
+export const useCalendarState = (
+  initialDate: Date = new Date(),
+  initialView: CalendarView = 'month'
+) => {
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [view, setView] = useState<CalendarView>(initialView);
 
@@ -289,7 +305,9 @@ export const useIsMobile = () => {
 };
 
 // Enhanced calendar with responsive behavior
-export const ResponsiveCalendar: React.FC<Omit<CalendarViewProps, 'isMobile'>> = (props) => {
+export const ResponsiveCalendar: React.FC<
+  Omit<CalendarViewProps, 'isMobile'>
+> = props => {
   const isMobile = useIsMobile();
 
   return <CalendarViewComponent {...props} isMobile={isMobile} />;

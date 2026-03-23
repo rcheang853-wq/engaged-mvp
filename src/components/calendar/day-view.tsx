@@ -40,7 +40,10 @@ export const DayView: React.FC<DayViewProps> = ({
   onTimeSlotClick,
   className,
 }) => {
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ hour: number; minute: number } | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{
+    hour: number;
+    minute: number;
+  } | null>(null);
 
   // Generate hours (6 AM to 11 PM by default, with 30-minute intervals)
   const startHour = 6;
@@ -62,8 +65,8 @@ export const DayView: React.FC<DayViewProps> = ({
     const positioned: PositionedEvent[] = [];
 
     // Sort events by start time
-    const sortedEvents = [...dayEvents].sort((a, b) =>
-      a.startTime.getTime() - b.startTime.getTime()
+    const sortedEvents = [...dayEvents].sort(
+      (a, b) => a.startTime.getTime() - b.startTime.getTime()
     );
 
     // Group overlapping events
@@ -101,8 +104,10 @@ export const DayView: React.FC<DayViewProps> = ({
       group.forEach((event, eventIndex) => {
         if (event.allDay) return; // Skip all-day events for positioning
 
-        const eventStart = getHours(event.startTime) + getMinutes(event.startTime) / 60;
-        const eventEnd = getHours(event.endTime) + getMinutes(event.endTime) / 60;
+        const eventStart =
+          getHours(event.startTime) + getMinutes(event.startTime) / 60;
+        const eventEnd =
+          getHours(event.endTime) + getMinutes(event.endTime) / 60;
 
         // Calculate position relative to the visible hours
         const totalHours = endHour - startHour + 1;
@@ -153,24 +158,33 @@ export const DayView: React.FC<DayViewProps> = ({
   const currentTimePosition = getCurrentTimePosition();
 
   return (
-    <div className={cn('flex flex-col h-full bg-white overflow-hidden', className)}>
+    <div
+      className={cn(
+        'flex h-full flex-col overflow-hidden bg-white lg:min-h-0',
+        className
+      )}
+    >
       {/* Day header */}
       <div className="border-b border-gray-200 bg-gray-50">
         <div className="p-4">
           <div className="text-center">
-            <div className={cn(
-              'text-sm font-medium',
-              isToday(currentDate) ? 'text-blue-600' : 'text-gray-600'
-            )}>
+            <div
+              className={cn(
+                'text-sm font-medium',
+                isToday(currentDate) ? 'text-blue-600' : 'text-gray-600'
+              )}
+            >
               {format(currentDate, 'EEEE')}
             </div>
-            <div className={cn(
-              'text-3xl font-bold mt-1',
-              isToday(currentDate) ? 'text-blue-600' : 'text-gray-900'
-            )}>
+            <div
+              className={cn(
+                'mt-1 text-3xl font-bold',
+                isToday(currentDate) ? 'text-blue-600' : 'text-gray-900'
+              )}
+            >
               {format(currentDate, 'd')}
             </div>
-            <div className="text-sm text-gray-500 mt-1">
+            <div className="mt-1 text-sm text-gray-500">
               {format(currentDate, 'MMMM yyyy')}
             </div>
           </div>
@@ -179,24 +193,28 @@ export const DayView: React.FC<DayViewProps> = ({
         {/* All-day events */}
         {allDayEvents.length > 0 && (
           <div className="border-t border-gray-200 p-3">
-            <div className="text-xs text-gray-500 mb-2">All Day</div>
+            <div className="mb-2 text-xs text-gray-500">All Day</div>
             <div className="space-y-1">
               {allDayEvents.map(event => (
                 <div
                   key={event.id}
                   className={cn(
-                    'p-2 rounded cursor-pointer transition-colors',
+                    'cursor-pointer rounded p-2 transition-colors',
                     'bg-blue-100 text-blue-800 hover:bg-blue-200'
                   )}
                   style={{
-                    backgroundColor: event.category ? `${event.category.color}20` : undefined,
+                    backgroundColor: event.category
+                      ? `${event.category.color}20`
+                      : undefined,
                     color: event.category?.color || undefined,
                   }}
                   onClick={() => onEventClick?.(event)}
                 >
                   <div className="font-medium">{event.title}</div>
                   {event.venue && (
-                    <div className="text-xs opacity-75 mt-1">{event.venue.name}</div>
+                    <div className="mt-1 text-xs opacity-75">
+                      {event.venue.name}
+                    </div>
                   )}
                 </div>
               ))}
@@ -222,13 +240,15 @@ export const DayView: React.FC<DayViewProps> = ({
                   key={`${hour}-${minute}`}
                   className={cn(
                     'flex cursor-pointer transition-colors hover:bg-gray-50',
-                    selectedTimeSlot?.hour === hour && selectedTimeSlot?.minute === minute && 'bg-blue-50'
+                    selectedTimeSlot?.hour === hour &&
+                      selectedTimeSlot?.minute === minute &&
+                      'bg-blue-50'
                   )}
                   onClick={() => handleTimeSlotClick(hour, minute)}
                   role="button"
                   tabIndex={0}
                   aria-label={`Time slot ${timeString}`}
-                  onKeyDown={(e) => {
+                  onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       handleTimeSlotClick(hour, minute);
@@ -236,32 +256,42 @@ export const DayView: React.FC<DayViewProps> = ({
                   }}
                 >
                   {/* Time label */}
-                  <div className={cn(
-                    'w-20 flex-shrink-0 p-2 text-right border-r border-gray-200',
-                    isHourStart ? 'border-b border-gray-100' : 'border-b border-gray-50'
-                  )}>
+                  <div
+                    className={cn(
+                      'w-20 flex-shrink-0 border-r border-gray-200 p-2 text-right',
+                      isHourStart
+                        ? 'border-b border-gray-100'
+                        : 'border-b border-gray-50'
+                    )}
+                  >
                     {isHourStart && (
-                      <span className="text-xs text-gray-500">{timeString}</span>
+                      <span className="text-xs text-gray-500">
+                        {timeString}
+                      </span>
                     )}
                   </div>
 
                   {/* Event area */}
-                  <div className={cn(
-                    'flex-1 h-12',
-                    isHourStart ? 'border-b border-gray-100' : 'border-b border-gray-50'
-                  )} />
+                  <div
+                    className={cn(
+                      'h-12 flex-1',
+                      isHourStart
+                        ? 'border-b border-gray-100'
+                        : 'border-b border-gray-50'
+                    )}
+                  />
                 </div>
               );
             })}
           </div>
 
           {/* Positioned events overlay */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="ml-20 mr-4 h-full relative">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="relative mr-4 ml-20 h-full">
               {positionedEvents.map(({ event, top, height, width, left }) => (
                 <div
                   key={event.id}
-                  className="absolute pointer-events-auto cursor-pointer z-10"
+                  className="pointer-events-auto absolute z-10 cursor-pointer"
                   style={{
                     top: `${top}%`,
                     height: `${height}%`,
@@ -272,26 +302,29 @@ export const DayView: React.FC<DayViewProps> = ({
                 >
                   <div
                     className={cn(
-                      'h-full p-2 rounded text-xs overflow-hidden shadow-sm',
-                      'bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200 transition-colors'
+                      'h-full overflow-hidden rounded p-2 text-xs shadow-sm',
+                      'border border-blue-200 bg-blue-100 text-blue-800 transition-colors hover:bg-blue-200'
                     )}
                     style={{
-                      backgroundColor: event.category ? `${event.category.color}20` : undefined,
+                      backgroundColor: event.category
+                        ? `${event.category.color}20`
+                        : undefined,
                       borderColor: event.category?.color || undefined,
                       color: event.category?.color || undefined,
                     }}
                   >
-                    <div className="font-semibold truncate">{event.title}</div>
-                    <div className="text-[10px] opacity-75 mt-1">
-                      {format(event.startTime, 'h:mm a')} - {format(event.endTime, 'h:mm a')}
+                    <div className="truncate font-semibold">{event.title}</div>
+                    <div className="mt-1 text-[10px] opacity-75">
+                      {format(event.startTime, 'h:mm a')} -{' '}
+                      {format(event.endTime, 'h:mm a')}
                     </div>
                     {event.venue && (
-                      <div className="text-[10px] opacity-75 truncate mt-1">
+                      <div className="mt-1 truncate text-[10px] opacity-75">
                         {event.venue.name}
                       </div>
                     )}
                     {event.organizer && (
-                      <div className="text-[10px] opacity-75 truncate mt-1">
+                      <div className="mt-1 truncate text-[10px] opacity-75">
                         {event.organizer.organizationName}
                       </div>
                     )}
@@ -304,12 +337,12 @@ export const DayView: React.FC<DayViewProps> = ({
           {/* Current time indicator */}
           {currentTimePosition !== null && (
             <div
-              className="absolute pointer-events-none z-20 ml-20 right-0"
+              className="pointer-events-none absolute right-0 z-20 ml-20"
               style={{ top: `${currentTimePosition}%` }}
             >
               <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-500 rounded-full -ml-1.5" />
-                <div className="h-0.5 bg-red-500 flex-1" />
+                <div className="-ml-1.5 h-3 w-3 rounded-full bg-red-500" />
+                <div className="h-0.5 flex-1 bg-red-500" />
               </div>
             </div>
           )}
@@ -319,10 +352,8 @@ export const DayView: React.FC<DayViewProps> = ({
       {/* Events summary */}
       {dayEvents.length === 0 && (
         <div className="p-8 text-center text-gray-500">
-          <div className="text-lg mb-2">No events scheduled</div>
-          <div className="text-sm">
-            Click on a time slot to add an event
-          </div>
+          <div className="mb-2 text-lg">No events scheduled</div>
+          <div className="text-sm">Click on a time slot to add an event</div>
         </div>
       )}
     </div>
@@ -338,7 +369,8 @@ export const CompactDayView: React.FC<DayViewProps> = ({
   className,
 }) => {
   const dayEvents = useMemo(() => {
-    return events.filter(event => isSameDay(event.startTime, currentDate))
+    return events
+      .filter(event => isSameDay(event.startTime, currentDate))
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }, [events, currentDate]);
 
@@ -346,19 +378,23 @@ export const CompactDayView: React.FC<DayViewProps> = ({
   const timedEvents = dayEvents.filter(event => !event.allDay);
 
   return (
-    <div className={cn('flex flex-col h-full bg-white', className)}>
+    <div className={cn('flex h-full flex-col bg-white lg:min-h-0', className)}>
       {/* Day header */}
       <div className="border-b border-gray-200 bg-gray-50 p-4 text-center">
-        <div className={cn(
-          'text-sm font-medium',
-          isToday(currentDate) ? 'text-blue-600' : 'text-gray-600'
-        )}>
+        <div
+          className={cn(
+            'text-sm font-medium',
+            isToday(currentDate) ? 'text-blue-600' : 'text-gray-600'
+          )}
+        >
           {format(currentDate, 'EEEE')}
         </div>
-        <div className={cn(
-          'text-2xl font-bold mt-1',
-          isToday(currentDate) ? 'text-blue-600' : 'text-gray-900'
-        )}>
+        <div
+          className={cn(
+            'mt-1 text-2xl font-bold',
+            isToday(currentDate) ? 'text-blue-600' : 'text-gray-900'
+          )}
+        >
           {format(currentDate, 'd')}
         </div>
         <div className="text-sm text-gray-500">
@@ -367,11 +403,11 @@ export const CompactDayView: React.FC<DayViewProps> = ({
       </div>
 
       {/* Events list */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+      <div className="flex-1 space-y-4 overflow-auto p-4">
         {/* All-day events */}
         {allDayEvents.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">All Day</h3>
+            <h3 className="mb-2 text-sm font-medium text-gray-700">All Day</h3>
             <div className="space-y-2">
               {allDayEvents.map(event => (
                 <EventCard
@@ -388,7 +424,7 @@ export const CompactDayView: React.FC<DayViewProps> = ({
         {/* Timed events */}
         {timedEvents.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Schedule</h3>
+            <h3 className="mb-2 text-sm font-medium text-gray-700">Schedule</h3>
             <div className="space-y-2">
               {timedEvents.map(event => (
                 <EventCard
@@ -403,11 +439,9 @@ export const CompactDayView: React.FC<DayViewProps> = ({
         )}
 
         {dayEvents.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            <div className="text-lg mb-2">No events scheduled</div>
-            <div className="text-sm">
-              This day is free for new events
-            </div>
+          <div className="py-8 text-center text-gray-500">
+            <div className="mb-2 text-lg">No events scheduled</div>
+            <div className="text-sm">This day is free for new events</div>
           </div>
         )}
       </div>
