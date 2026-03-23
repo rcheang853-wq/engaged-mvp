@@ -131,8 +131,26 @@ export default function CalendarAgendaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
+        <div className="bg-white border-b px-4 py-3 h-16" />
+        <div className="px-4 py-4 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
+              {[1, 2].map((j) => (
+                <div key={j} className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-gray-200">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full mt-1.5 bg-gray-200 flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 w-40 bg-gray-200 rounded animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -196,14 +214,14 @@ export default function CalendarAgendaPage() {
       <div className="flex-1 overflow-y-auto">
         {groupedEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-              <CalendarIcon size={28} className="text-blue-400" />
+            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-5">
+              <CalendarIcon size={32} className="text-blue-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-1">No upcoming events</h2>
-            <p className="text-gray-500 text-sm mb-6">Add events to see them here</p>
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Nothing coming up</h2>
+            <p className="text-gray-500 text-sm mb-6 max-w-xs">Your schedule is clear for the next 90 days. Add events to get started.</p>
             <Link
               href={`/calendars/${id}/events/new${searchParams.get('date') ? `?date=${encodeURIComponent(String(searchParams.get('date')))}` : ''}`}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600"
+              className="bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm"
             >
               Add Event
             </Link>
@@ -212,7 +230,8 @@ export default function CalendarAgendaPage() {
           <div className="px-4 py-4 space-y-4">
             {groupedEvents.map((group) => {
               const dateObj = parseISO(`${group.date}T00:00:00`);
-              const dayLabel = isToday(dateObj)
+              const isTodayGroup = isToday(dateObj);
+              const dayLabel = isTodayGroup
                 ? 'Today'
                 : isTomorrow(dateObj)
                   ? 'Tomorrow'
@@ -220,29 +239,37 @@ export default function CalendarAgendaPage() {
 
               return (
                 <div key={group.date} className="space-y-2">
-                  <div className={`text-sm font-bold mb-2 ${dayLabel === 'Today' ? 'text-blue-600' : 'text-gray-900'}`}>
-                    {dayLabel}
+                  <div className="flex items-center gap-2 mb-2">
+                    {isTodayGroup && (
+                      <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                    )}
+                    <span className={`text-sm font-bold ${isTodayGroup ? 'text-blue-600' : 'text-gray-900'}`}>
+                      {dayLabel}
+                    </span>
+                    {!isTodayGroup && (
+                      <span className="text-xs text-gray-400">{format(dateObj, 'yyyy')}</span>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     {group.allDayEvents.length > 0 && (
                       <div className="space-y-2">
-                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">All-day</div>
+                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide pl-1">All-day</div>
                         {group.allDayEvents.map((evt) => {
                           const eventColor = evt.color || memberColor(evt.profiles?.id ?? '') || calendar?.color || '#3B82F6';
                           return (
                             <Link
                               key={evt.id}
                               href={`/calendars/${id}/events/${evt.id}`}
-                              className="block bg-white rounded-xl p-3 shadow-sm border-l-4"
+                              className="block bg-white rounded-xl p-3 shadow-sm border-l-4 hover:shadow-md transition-shadow"
                               style={{ borderLeftColor: eventColor }}
                             >
                               <div className="flex items-start gap-3">
                                 <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: eventColor }} />
                                 <div className="min-w-0 flex-1">
-                                  <div className="text-xs text-gray-500">All day</div>
+                                  <div className="text-xs text-gray-400 font-medium">All day</div>
                                   <h3 className="font-semibold text-gray-900 truncate">{evt.title}</h3>
-                                  {evt.location && <p className="text-sm text-gray-500 truncate mt-0.5">{evt.location}</p>}
+                                  {evt.location && <p className="text-sm text-gray-500 truncate mt-0.5">📍 {evt.location}</p>}
                                 </div>
                               </div>
                             </Link>
@@ -258,15 +285,15 @@ export default function CalendarAgendaPage() {
                         <Link
                           key={evt.id}
                           href={`/calendars/${id}/events/${evt.id}`}
-                          className="block bg-white rounded-xl p-3 shadow-sm border-l-4"
+                          className="block bg-white rounded-xl p-3 shadow-sm border-l-4 hover:shadow-md transition-shadow"
                           style={{ borderLeftColor: eventColor }}
                         >
                           <div className="flex items-start gap-3">
                             <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: eventColor }} />
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm text-gray-600">{formatEventTime(evt)}</div>
+                              <div className="text-xs font-medium" style={{ color: eventColor }}>{formatEventTime(evt)}</div>
                               <h3 className="font-semibold text-gray-900 truncate">{evt.title}</h3>
-                              {evt.location && <p className="text-sm text-gray-500 truncate mt-0.5">{evt.location}</p>}
+                              {evt.location && <p className="text-sm text-gray-500 truncate mt-0.5">📍 {evt.location}</p>}
                             </div>
                           </div>
                         </Link>

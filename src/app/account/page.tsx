@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, MapPin, Bell, Puzzle, HelpCircle, Mail } from 'lucide-react';
+import { ChevronRight, MapPin, Bell, Puzzle, HelpCircle, Mail, LogOut } from 'lucide-react';
 import BottomTabBar from '@/components/BottomTabBar';
 
 interface UserProfile {
@@ -54,18 +54,17 @@ export default function AccountPage() {
     <div className="min-h-screen bg-[#F9FAFB] pb-20">
 
       {/* Header */}
-      <div
-        className="flex items-center justify-center px-4 bg-[#F9FAFB]"
-        style={{ height: 56, paddingTop: 40 }}
-      >
-        <h1 className="text-base font-bold text-[#111827]">Account</h1>
+      <div className="sticky top-0 z-10 bg-[#F9FAFB] px-4 pt-12 pb-3">
+        <div className="flex items-center justify-center h-8">
+          <h1 className="text-base font-bold text-[#111827]">Account</h1>
+        </div>
       </div>
 
       {/* Body */}
       <div className="px-4 space-y-3">
 
         {/* Profile card */}
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl px-4 flex items-center gap-3" style={{ height: 80 }}>
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl px-4 py-4 flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
           {loading ? (
             <>
               <div className="w-11 h-11 rounded-full bg-gray-100 animate-pulse flex-shrink-0" />
@@ -93,9 +92,9 @@ export default function AccountPage() {
                 <p className="text-sm font-bold text-[#111827]">Not signed in</p>
                 <button
                   onClick={() => router.push('/dev-login')}
-                  className="text-xs font-medium text-[#3B82F6]"
+                  className="text-xs font-semibold text-[#3B82F6] hover:text-[#2563EB] transition-colors"
                 >
-                  Dev login â†’
+                  Dev login -&gt;
                 </button>
               </div>
             </>
@@ -103,18 +102,20 @@ export default function AccountPage() {
         </div>
 
         {/* Settings card */}
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden">
-          {MENU_ROWS.map(({ label, href }, i) => (
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden shadow-sm">
+          {MENU_ROWS.map(({ label, href, icon: Icon }, i) => (
             <button
               key={label}
               onClick={() => router.push(href)}
-              className="w-full flex items-center justify-between px-4"
+              className="w-full flex items-center justify-between px-4 h-12 hover:bg-[#F9FAFB] transition-colors"
               style={{
-                height: 48,
                 borderBottom: i < MENU_ROWS.length - 1 ? '1px solid #E5E7EB' : undefined,
               }}
             >
-              <span className="text-sm font-medium text-[#374151]">{label}</span>
+              <span className="flex items-center gap-2 text-sm font-medium text-[#374151]">
+                <Icon size={16} className="text-[#9CA3AF]" />
+                {label}
+              </span>
               <ChevronRight size={16} className="text-[#9CA3AF]" />
             </button>
           ))}
@@ -122,16 +123,19 @@ export default function AccountPage() {
           {/* Sign out */}
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center px-4"
-            style={{ height: 48, borderTop: '1px solid #E5E7EB' }}
+            className="w-full flex items-center justify-between px-4 h-12 border-t border-[#E5E7EB] hover:bg-red-50 transition-colors"
           >
-            <span className="text-sm font-semibold text-[#EF4444]">Sign out</span>
+            <span className="flex items-center gap-2 text-sm font-semibold text-[#EF4444]">
+              <LogOut size={16} />
+              Sign out
+            </span>
+            <ChevronRight size={16} className="text-transparent" />
           </button>
         </div>
 
         {/* App version */}
         <p className="text-center text-[10px] font-medium text-[#9CA3AF] pt-2">
-          Engage Calendar Â· v0.1.0-beta
+          Engage Calendar - v0.1.0-beta
         </p>
       </div>
 

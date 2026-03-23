@@ -362,10 +362,60 @@ export default function DiscoverClient() {
             Private
           </button>
         </div>
+
+        {/* Quick category chips */}
+        {mode === 'public' && availableCategories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none -mx-4 px-4">
+            {filters.categories.length > 0 && (
+              <button
+                onClick={() => {
+                  const next = applyFiltersToUrl(new URLSearchParams(searchParams.toString()), { ...filters, categories: [] });
+                  router.replace('/discover?' + next.toString());
+                }}
+                className="flex-shrink-0 px-3 h-8 rounded-full text-xs font-semibold bg-[#111827] text-white flex items-center gap-1"
+              >
+                ✕ Clear
+              </button>
+            )}
+            {availableCategories.slice(0, 12).map((cat) => {
+              const active = filters.categories.includes(cat);
+              return (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    const nextCats = active
+                      ? filters.categories.filter((c) => c !== cat)
+                      : [...filters.categories, cat];
+                    const next = applyFiltersToUrl(new URLSearchParams(searchParams.toString()), { ...filters, categories: nextCats });
+                    router.replace('/discover?' + next.toString());
+                  }}
+                  className={`flex-shrink-0 px-3 h-8 rounded-full text-xs font-semibold transition-colors ${
+                    active
+                      ? 'bg-[#3B82F6] text-white border border-[#3B82F6]'
+                      : 'bg-white text-[#374151] border border-[#E5E7EB]'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="px-4 space-y-3">
-        {mode === 'public' && <h2 className="text-base font-bold text-[#111827]">Popular near you</h2>}
+        {mode === 'public' && (
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-[#111827]">
+              {filters.categories.length > 0
+                ? `${filters.categories.join(' · ')}`
+                : 'Popular near you'}
+            </h2>
+            {total != null && !loading && (
+              <span className="text-xs text-[#9CA3AF] font-medium">{total} events</span>
+            )}
+          </div>
+        )}
 
         {loading && (
           <div className="space-y-3">
@@ -420,14 +470,18 @@ export default function DiscoverClient() {
           <button
             onClick={() => (mode === 'public' ? fetchEvents(offset, false) : fetchPrivateEvents(offset, false))}
             disabled={loadingMore}
-            className="w-full py-3 text-sm font-semibold text-[#3B82F6] disabled:text-gray-400"
+            className="w-full py-2.5 text-sm font-semibold text-[#3B82F6] border border-[#E5E7EB] rounded-xl bg-white hover:bg-blue-50 transition-colors disabled:opacity-40"
           >
-            {loadingMore ? 'Loading…' : 'Load more'}
+            {loadingMore ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Loading…
+              </span>
+            ) : 'Load more'}
           </button>
-        )}
-
-        {!loading && total != null && ((mode === 'public' && events.length > 0) || (mode === 'private' && privateEvents.length > 0)) && (
-          <p className="text-center text-xs text-[#9CA3AF] pb-2">{`${total} event${total !== 1 ? 's' : ''}`}</p>
         )}
       </div>
 

@@ -111,28 +111,32 @@ export default function SearchClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-white border-b px-4 py-3">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[#F9FAFB] pb-20">
+      <div className="sticky top-0 z-10 bg-[#F9FAFB] px-4 pt-12 pb-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => router.back()}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="w-9 h-9 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center hover:bg-[#F9FAFB] transition-colors"
+            aria-label="Go back"
           >
-            <ChevronLeft size={24} className="text-gray-700" />
+            <ChevronLeft size={18} className="text-[#6B7280]" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Search Events</h1>
+          <div className="flex-1">
+            <h1 className="text-base font-bold text-[#111827]">Search</h1>
+            <p className="text-xs text-[#6B7280]">Find events across your calendars</p>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white border-b px-4 py-4">
+      <div className="px-4 pb-4">
         <form onSubmit={handleSearch} className="relative">
-          <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by title, description, location..."
-            className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-9 pr-9 py-3 bg-white border border-[#E5E7EB] rounded-full text-sm font-medium text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#3B82F6] transition-colors"
             autoFocus
           />
           {query && (
@@ -144,52 +148,53 @@ export default function SearchClient() {
                 setHasSearched(false);
                 router.push('/search');
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full hover:bg-[#F3F4F6] flex items-center justify-center transition-colors"
+              aria-label="Clear search"
             >
-              <X size={18} className="text-gray-500" />
+              <X size={14} className="text-[#6B7280]" />
             </button>
           )}
         </form>
       </div>
 
-      <div className="px-4 py-4 max-w-2xl mx-auto">
+      <div className="px-4 pb-6 max-w-2xl mx-auto">
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 h-32 animate-pulse" />
+              <div key={i} className="bg-white border border-[#E5E7EB] rounded-2xl p-4 h-32 animate-pulse" />
             ))}
           </div>
         )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-            <p className="text-red-600 text-sm">{error}</p>
+            <p className="text-[#EF4444] text-sm">{error}</p>
           </div>
         )}
 
         {!loading && !error && hasSearched && results.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Search size={36} className="text-gray-400" />
+            <div className="w-20 h-20 bg-[#F3F4F6] rounded-full flex items-center justify-center mb-4">
+              <Search size={32} className="text-[#9CA3AF]" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-1">No events found</h2>
-            <p className="text-gray-500 text-sm">Try searching with different keywords</p>
+            <h2 className="text-base font-semibold text-[#111827] mb-1">No events found</h2>
+            <p className="text-[#6B7280] text-sm">Try searching with different keywords</p>
           </div>
         )}
 
         {!loading && !error && !hasSearched && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-              <Search size={36} className="text-blue-400" />
+              <Search size={32} className="text-[#3B82F6]" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-1">Search for events</h2>
-            <p className="text-gray-500 text-sm">Search across all calendars you belong to</p>
+            <h2 className="text-base font-semibold text-[#111827] mb-1">Search for events</h2>
+            <p className="text-[#6B7280] text-sm">Search across all calendars you belong to</p>
           </div>
         )}
 
         {!loading && !error && results.length > 0 && (
           <div className="space-y-3">
-            <p className="text-sm text-gray-500 px-1">
+            <p className="text-xs text-[#6B7280] px-1">
               {results.length} result{results.length !== 1 ? 's' : ''} for &quot;{searchParams.get('q')}&quot;
             </p>
             {results.map((event) => (
@@ -198,28 +203,28 @@ export default function SearchClient() {
                 href={`/calendars/${event.calendar_id}/events/${event.id}`}
                 className="block"
               >
-                <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: event.calendars.color }} />
-                    <span className="text-xs font-medium text-gray-600">{event.calendars.name}</span>
+                    <span className="text-xs font-medium text-[#6B7280]">{event.calendars.name}</span>
                   </div>
 
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
+                  <h3 className="font-semibold text-[#111827] mb-2 line-clamp-2">{event.title}</h3>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                  <div className="flex items-center gap-2 text-sm text-[#6B7280] mb-1">
                     <Clock size={14} className="flex-shrink-0" />
                     <span className="line-clamp-1">{formatEventDate(event.start_at, event.end_at, event.all_day)}</span>
                   </div>
 
                   {event.location && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                    <div className="flex items-center gap-2 text-sm text-[#6B7280] mb-2">
                       <MapPin size={14} className="flex-shrink-0" />
                       <span className="line-clamp-1">{event.location}</span>
                     </div>
                   )}
 
                   {event.description && (
-                    <p className="text-sm text-gray-500 line-clamp-2">{event.description}</p>
+                    <p className="text-sm text-[#6B7280] line-clamp-2">{event.description}</p>
                   )}
                 </div>
               </Link>
