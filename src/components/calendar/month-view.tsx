@@ -12,7 +12,7 @@ import {
   isSameDay,
   isToday,
   addDays,
-  parseISO
+  parseISO,
 } from 'date-fns';
 import { Event } from '@/types';
 import { cn } from '@/lib/utils';
@@ -40,7 +40,10 @@ export const MonthView: React.FC<MonthViewProps> = ({
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart);
   const calendarEnd = endOfWeek(monthEnd);
-  const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  const calendarDays = eachDayOfInterval({
+    start: calendarStart,
+    end: calendarEnd,
+  });
 
   // Group events by date
   const eventsByDate = useMemo(() => {
@@ -70,13 +73,13 @@ export const MonthView: React.FC<MonthViewProps> = ({
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className={cn('flex flex-col h-full bg-white', className)}>
+    <div className={cn('flex h-full flex-col bg-white', className)}>
       {/* Week header */}
       <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
         {weekDays.map(day => (
           <div
             key={day}
-            className="py-2 text-center text-sm font-medium text-gray-700 border-r border-gray-200 last:border-r-0"
+            className="border-r border-gray-200 py-2 text-center text-sm font-medium text-gray-700 last:border-r-0"
           >
             {day}
           </div>
@@ -84,9 +87,12 @@ export const MonthView: React.FC<MonthViewProps> = ({
       </div>
 
       {/* Calendar grid */}
-      <div className="flex-1 grid grid-rows-6">
+      <div className="grid flex-1 grid-rows-6">
         {Array.from({ length: 6 }).map((_, weekIndex) => (
-          <div key={weekIndex} className="grid grid-cols-7 border-b border-gray-200 last:border-b-0">
+          <div
+            key={weekIndex}
+            className="grid grid-cols-7 border-b border-gray-200 last:border-b-0"
+          >
             {calendarDays.slice(weekIndex * 7, (weekIndex + 1) * 7).map(day => {
               const dayEvents = getDayEvents(day);
               const isCurrentMonth = isSameMonth(day, currentDate);
@@ -97,7 +103,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                 <div
                   key={day.toISOString()}
                   className={cn(
-                    'min-h-[120px] p-2 border-r border-gray-200 last:border-r-0 cursor-pointer transition-colors hover:bg-gray-50',
+                    'min-h-[120px] cursor-pointer border-r border-gray-200 p-2 transition-colors last:border-r-0 hover:bg-gray-50 lg:min-h-[140px] xl:min-h-[160px]',
                     !isCurrentMonth && 'bg-gray-50/50 text-gray-400',
                     isSelected && 'bg-blue-50',
                     isDayToday && 'bg-yellow-50'
@@ -106,7 +112,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                   role="button"
                   tabIndex={0}
                   aria-label={`${format(day, 'EEEE, MMMM d, yyyy')} - ${dayEvents.length} events`}
-                  onKeyDown={(e) => {
+                  onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       handleDateClick(day);
@@ -114,18 +120,19 @@ export const MonthView: React.FC<MonthViewProps> = ({
                   }}
                 >
                   {/* Date number */}
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="mb-1 flex items-center justify-between">
                     <span
                       className={cn(
                         'text-sm font-medium',
-                        isDayToday && 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs',
+                        isDayToday &&
+                          'flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white',
                         !isCurrentMonth && 'text-gray-400'
                       )}
                     >
                       {format(day, 'd')}
                     </span>
                     {dayEvents.length > 3 && (
-                      <span className="text-xs text-gray-500 bg-gray-200 rounded-full px-1">
+                      <span className="rounded-full bg-gray-200 px-1 text-xs text-gray-500">
                         +{dayEvents.length - 3}
                       </span>
                     )}
@@ -137,17 +144,19 @@ export const MonthView: React.FC<MonthViewProps> = ({
                       <div
                         key={event.id}
                         className={cn(
-                          'text-xs p-1 rounded truncate cursor-pointer transition-colors',
+                          'cursor-pointer truncate rounded p-1 text-xs transition-colors',
                           'bg-blue-100 text-blue-800 hover:bg-blue-200'
                         )}
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation();
                           if (onEventClick) {
                             onEventClick(event);
                           }
                         }}
                         style={{
-                          backgroundColor: event.category ? `${event.category.color}20` : undefined,
+                          backgroundColor: event.category
+                            ? `${event.category.color}20`
+                            : undefined,
                           color: event.category?.color || undefined,
                         }}
                       >
@@ -156,10 +165,12 @@ export const MonthView: React.FC<MonthViewProps> = ({
                             <span className="font-medium">{event.title}</span>
                           ) : (
                             <>
-                              <span className="text-[10px] mr-1">
+                              <span className="mr-1 text-[10px]">
                                 {format(event.startTime, 'h:mm')}
                               </span>
-                              <span className="font-medium truncate">{event.title}</span>
+                              <span className="truncate font-medium">
+                                {event.title}
+                              </span>
                             </>
                           )}
                         </div>
@@ -175,9 +186,9 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
       {/* Selected date details panel (mobile) */}
       {selectedDate && (
-        <div className="lg:hidden border-t border-gray-200 bg-white">
+        <div className="border-t border-gray-200 bg-white lg:hidden">
           <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            <h3 className="mb-3 text-lg font-semibold text-gray-900">
               {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </h3>
             {getDayEvents(selectedDate).length > 0 ? (
@@ -192,7 +203,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No events scheduled</p>
+              <p className="text-sm text-gray-500">No events scheduled</p>
             )}
           </div>
         </div>
@@ -244,13 +255,13 @@ export const MonthWeekView: React.FC<MonthViewProps> = ({
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className={cn('flex flex-col h-full bg-white', className)}>
+    <div className={cn('flex h-full flex-col bg-white', className)}>
       {/* Week header */}
       <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
         {weekDays.map(day => (
           <div
             key={day}
-            className="py-3 text-center text-sm font-medium text-gray-700 border-r border-gray-200 last:border-r-0"
+            className="border-r border-gray-200 py-3 text-center text-sm font-medium text-gray-700 last:border-r-0"
           >
             {day}
           </div>
@@ -258,9 +269,12 @@ export const MonthWeekView: React.FC<MonthViewProps> = ({
       </div>
 
       {/* Weeks */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto lg:min-h-0">
         {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="grid grid-cols-7 border-b border-gray-200 min-h-[100px]">
+          <div
+            key={weekIndex}
+            className="grid min-h-[100px] grid-cols-7 border-b border-gray-200 lg:min-h-[120px] xl:min-h-[140px]"
+          >
             {week.map(day => {
               const dayEvents = getDayEvents(day);
               const isCurrentMonth = isSameMonth(day, currentDate);
@@ -270,7 +284,7 @@ export const MonthWeekView: React.FC<MonthViewProps> = ({
                 <div
                   key={day.toISOString()}
                   className={cn(
-                    'p-2 border-r border-gray-200 last:border-r-0 cursor-pointer transition-colors hover:bg-gray-50',
+                    'cursor-pointer border-r border-gray-200 p-2 transition-colors last:border-r-0 hover:bg-gray-50',
                     !isCurrentMonth && 'bg-gray-50/50 text-gray-400',
                     isDayToday && 'bg-yellow-50'
                   )}
@@ -279,17 +293,18 @@ export const MonthWeekView: React.FC<MonthViewProps> = ({
                   tabIndex={0}
                   aria-label={`${format(day, 'EEEE, MMMM d, yyyy')} - ${dayEvents.length} events`}
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2 flex items-center justify-between">
                     <span
                       className={cn(
                         'text-sm font-medium',
-                        isDayToday && 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs'
+                        isDayToday &&
+                          'flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white'
                       )}
                     >
                       {format(day, 'd')}
                     </span>
                     {dayEvents.length > 0 && (
-                      <span className="text-xs bg-blue-100 text-blue-600 rounded-full px-2 py-1">
+                      <span className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600">
                         {dayEvents.length}
                       </span>
                     )}

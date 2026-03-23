@@ -44,7 +44,10 @@ export const WeekView: React.FC<WeekViewProps> = ({
   onTimeSlotClick,
   className,
 }) => {
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; hour: number } | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{
+    date: Date;
+    hour: number;
+  } | null>(null);
 
   // Generate week days
   const weekStart = startOfWeek(currentDate);
@@ -54,7 +57,10 @@ export const WeekView: React.FC<WeekViewProps> = ({
   // Generate hours (7 AM to 10 PM by default)
   const startHour = 7;
   const endHour = 22;
-  const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => i + startHour);
+  const hours = Array.from(
+    { length: endHour - startHour + 1 },
+    (_, i) => i + startHour
+  );
 
   // Group events by day and calculate positions
   const { eventsByDay, positionedEvents } = useMemo(() => {
@@ -75,8 +81,8 @@ export const WeekView: React.FC<WeekViewProps> = ({
       const dayEvents = eventsByDay[dayKey] || [];
 
       // Sort events by start time
-      const sortedEvents = [...dayEvents].sort((a, b) =>
-        a.startTime.getTime() - b.startTime.getTime()
+      const sortedEvents = [...dayEvents].sort(
+        (a, b) => a.startTime.getTime() - b.startTime.getTime()
       );
 
       // Calculate positions for overlapping events
@@ -112,12 +118,15 @@ export const WeekView: React.FC<WeekViewProps> = ({
         const groupSize = group.length;
 
         group.forEach((event, eventIndex) => {
-          const eventStart = getHours(event.startTime) + getMinutes(event.startTime) / 60;
-          const eventEnd = getHours(event.endTime) + getMinutes(event.endTime) / 60;
+          const eventStart =
+            getHours(event.startTime) + getMinutes(event.startTime) / 60;
+          const eventEnd =
+            getHours(event.endTime) + getMinutes(event.endTime) / 60;
 
           // Calculate position relative to the visible hours
           const top = ((eventStart - startHour) / (endHour - startHour)) * 100;
-          const height = ((eventEnd - eventStart) / (endHour - startHour)) * 100;
+          const height =
+            ((eventEnd - eventStart) / (endHour - startHour)) * 100;
 
           // Calculate width and left position for overlapping events
           const width = 100 / groupSize;
@@ -153,13 +162,18 @@ export const WeekView: React.FC<WeekViewProps> = ({
   };
 
   return (
-    <div className={cn('flex flex-col h-full bg-white overflow-hidden', className)}>
+    <div
+      className={cn(
+        'flex h-full flex-col overflow-hidden bg-white lg:min-h-0',
+        className
+      )}
+    >
       {/* Week header with all-day events */}
       <div className="border-b border-gray-200">
         {/* Day headers */}
         <div className="grid grid-cols-8">
           {/* Time column header */}
-          <div className="p-3 border-r border-gray-200 bg-gray-50">
+          <div className="border-r border-gray-200 bg-gray-50 p-3">
             <span className="text-xs text-gray-500">Time</span>
           </div>
 
@@ -168,7 +182,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
             <div
               key={day.toISOString()}
               className={cn(
-                'p-3 text-center border-r border-gray-200 last:border-r-0 bg-gray-50',
+                'border-r border-gray-200 bg-gray-50 p-3 text-center last:border-r-0',
                 isToday(day) && 'bg-blue-50'
               )}
             >
@@ -177,7 +191,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
               </div>
               <div
                 className={cn(
-                  'text-2xl font-bold mt-1',
+                  'mt-1 text-2xl font-bold',
                   isToday(day) ? 'text-blue-600' : 'text-gray-900'
                 )}
               >
@@ -189,7 +203,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
 
         {/* All-day events section */}
         <div className="grid grid-cols-8 border-t border-gray-200 bg-gray-50/50">
-          <div className="p-2 border-r border-gray-200 text-xs text-gray-500 flex items-center">
+          <div className="flex items-center border-r border-gray-200 p-2 text-xs text-gray-500">
             All day
           </div>
           {weekDays.map(day => {
@@ -197,17 +211,19 @@ export const WeekView: React.FC<WeekViewProps> = ({
             return (
               <div
                 key={day.toISOString()}
-                className="p-2 border-r border-gray-200 last:border-r-0 min-h-[40px]"
+                className="min-h-[40px] border-r border-gray-200 p-2 last:border-r-0"
               >
                 {allDayEvents.map(event => (
                   <div
                     key={event.id}
                     className={cn(
-                      'text-xs p-1 mb-1 rounded cursor-pointer transition-colors',
+                      'mb-1 cursor-pointer rounded p-1 text-xs transition-colors',
                       'bg-blue-100 text-blue-800 hover:bg-blue-200'
                     )}
                     style={{
-                      backgroundColor: event.category ? `${event.category.color}20` : undefined,
+                      backgroundColor: event.category
+                        ? `${event.category.color}20`
+                        : undefined,
                       color: event.category?.color || undefined,
                     }}
                     onClick={() => onEventClick?.(event)}
@@ -229,7 +245,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
             {hours.map(hour => (
               <React.Fragment key={hour}>
                 {/* Time label */}
-                <div className="h-16 border-r border-gray-200 border-b border-gray-100 p-2 bg-gray-50">
+                <div className="h-16 border-r border-b border-gray-100 border-gray-200 bg-gray-50 p-2">
                   <span className="text-xs text-gray-500">
                     {format(addHours(startOfDay(new Date()), hour), 'h:mm a')}
                   </span>
@@ -240,16 +256,18 @@ export const WeekView: React.FC<WeekViewProps> = ({
                   <div
                     key={`${day.toISOString()}-${hour}`}
                     className={cn(
-                      'h-16 border-r border-gray-200 last:border-r-0 border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50',
-                      selectedTimeSlot?.date && isSameDay(selectedTimeSlot.date, day) &&
-                      selectedTimeSlot.hour === hour && 'bg-blue-50',
+                      'h-16 cursor-pointer border-r border-b border-gray-100 border-gray-200 transition-colors last:border-r-0 hover:bg-gray-50',
+                      selectedTimeSlot?.date &&
+                        isSameDay(selectedTimeSlot.date, day) &&
+                        selectedTimeSlot.hour === hour &&
+                        'bg-blue-50',
                       isToday(day) && 'bg-yellow-50/30'
                     )}
                     onClick={() => handleTimeSlotClick(day, hour)}
                     role="button"
                     tabIndex={0}
                     aria-label={`${format(day, 'EEEE')} at ${format(addHours(startOfDay(new Date()), hour), 'h:mm a')}`}
-                    onKeyDown={(e) => {
+                    onKeyDown={e => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         handleTimeSlotClick(day, hour);
@@ -262,20 +280,23 @@ export const WeekView: React.FC<WeekViewProps> = ({
           </div>
 
           {/* Positioned events overlay */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="grid grid-cols-8 h-full">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="grid h-full grid-cols-8">
               {/* Skip time column */}
               <div />
 
               {/* Event columns */}
               {weekDays.map((day, dayIndex) => (
-                <div key={day.toISOString()} className="relative border-r border-gray-200 last:border-r-0">
+                <div
+                  key={day.toISOString()}
+                  className="relative border-r border-gray-200 last:border-r-0"
+                >
                   {positionedEvents
                     .filter(positioned => positioned.column === dayIndex)
                     .map(({ event, top, height, width, left }) => (
                       <div
                         key={event.id}
-                        className="absolute pointer-events-auto cursor-pointer z-10"
+                        className="pointer-events-auto absolute z-10 cursor-pointer"
                         style={{
                           top: `${top}%`,
                           height: `${height}%`,
@@ -286,21 +307,26 @@ export const WeekView: React.FC<WeekViewProps> = ({
                       >
                         <div
                           className={cn(
-                            'h-full p-1 rounded text-xs overflow-hidden',
-                            'bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200 transition-colors'
+                            'h-full overflow-hidden rounded p-1 text-xs',
+                            'border border-blue-200 bg-blue-100 text-blue-800 transition-colors hover:bg-blue-200'
                           )}
                           style={{
-                            backgroundColor: event.category ? `${event.category.color}20` : undefined,
+                            backgroundColor: event.category
+                              ? `${event.category.color}20`
+                              : undefined,
                             borderColor: event.category?.color || undefined,
                             color: event.category?.color || undefined,
                           }}
                         >
-                          <div className="font-medium truncate">{event.title}</div>
-                          <div className="text-[10px] opacity-75 truncate">
-                            {format(event.startTime, 'h:mm')} - {format(event.endTime, 'h:mm')}
+                          <div className="truncate font-medium">
+                            {event.title}
+                          </div>
+                          <div className="truncate text-[10px] opacity-75">
+                            {format(event.startTime, 'h:mm')} -{' '}
+                            {format(event.endTime, 'h:mm')}
                           </div>
                           {event.venue && (
-                            <div className="text-[10px] opacity-75 truncate">
+                            <div className="truncate text-[10px] opacity-75">
                               {event.venue.name}
                             </div>
                           )}
@@ -349,7 +375,7 @@ const CurrentTimeIndicator: React.FC<{
 
   return (
     <div
-      className="absolute pointer-events-none z-20"
+      className="pointer-events-none absolute z-20"
       style={{
         top: `${topPercent}%`,
         left: `${((todayIndex + 1) / 8) * 100}%`,
@@ -357,8 +383,8 @@ const CurrentTimeIndicator: React.FC<{
       }}
     >
       <div className="flex items-center">
-        <div className="w-2 h-2 bg-red-500 rounded-full -ml-1" />
-        <div className="h-0.5 bg-red-500 flex-1" />
+        <div className="-ml-1 h-2 w-2 rounded-full bg-red-500" />
+        <div className="h-0.5 flex-1 bg-red-500" />
       </div>
     </div>
   );
