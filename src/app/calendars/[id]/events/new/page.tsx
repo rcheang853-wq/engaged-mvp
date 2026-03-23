@@ -73,26 +73,31 @@ export default function NewEventPage() {
     setPermissionError(null);
 
     try {
-      const start_at = allDay ? `${date}T00:00:00.000Z` : `${date}T${startTime}:00.000Z`;
-      const end_at = allDay ? null : `${date}T${endTime}:00.000Z`;
+      const start_at = allDay
+        ? `${date}T00:00:00.000Z`
+        : `${date}T${startTime}:00.000Z`;
+      const end_at = allDay ? undefined : `${date}T${endTime}:00.000Z`;
+
+      // IMPORTANT: do not send end_at: null (zod datetime validation will fail)
+      const payload: any = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        notes: notes.trim() || undefined,
+        url: url.trim() || undefined,
+        reminder_minutes: reminderMinutes ?? undefined,
+        start_at,
+        all_day: allDay,
+        location: location.trim() || undefined,
+        color,
+        category_main: categoryMain || undefined,
+        tags,
+      };
+      if (!allDay) payload.end_at = end_at;
 
       const res = await fetch(`/api/calendars/${id}/events`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim() || undefined,
-          notes: notes.trim() || undefined,
-          url: url.trim() || undefined,
-          reminder_minutes: reminderMinutes ?? undefined,
-          start_at,
-          end_at,
-          all_day: allDay,
-          location: location.trim() || undefined,
-          color,
-          category_main: categoryMain || undefined,
-          tags,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const d = await res.json();
