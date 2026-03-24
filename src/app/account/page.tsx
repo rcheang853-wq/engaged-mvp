@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, MapPin, Bell, Puzzle, HelpCircle, Mail, LogOut } from 'lucide-react';
+import { ChevronRight, MapPin, Bell, Puzzle, HelpCircle, Mail, LogOut, MessageSquare } from 'lucide-react';
 import BottomTabBar from '@/components/BottomTabBar';
+import FeedbackModal from '@/components/FeedbackModal';
 
 interface UserProfile {
   name: string;
@@ -23,6 +24,7 @@ export default function AccountPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   useEffect(() => {
     // Fetch current user from Supabase auth
@@ -55,10 +57,21 @@ export default function AccountPage() {
 
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[#F9FAFB] px-4 pt-12 pb-3">
-        <div className="flex items-center justify-center h-8">
+        <div className="flex items-center justify-between h-8">
+          <div className="w-8" />
           <h1 className="text-base font-bold text-[#111827]">Account</h1>
+          <button
+            onClick={() => setFeedbackOpen(true)}
+            className="flex items-center gap-1 text-xs font-semibold text-[#3B82F6] hover:text-[#2563EB] transition-colors"
+            aria-label="Send feedback"
+          >
+            <MessageSquare size={15} />
+            Feedback
+          </button>
         </div>
       </div>
+
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
 
       {/* Body */}
       <div className="px-4 space-y-3">
