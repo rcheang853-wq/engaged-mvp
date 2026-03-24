@@ -164,6 +164,18 @@ export default function CalendarViewPage() {
   });
   const firstDayOfWeek = startOfMonth(currentMonth).getDay();
 
+  // Desktop-only: pad the month grid to a consistent 6 rows (42 cells) so it stretches to fill height.
+  // On mobile we keep the existing compact grid.
+  const desktopTrailingCells = useMemo(() => {
+    const leading = firstDayOfWeek;
+    const total = leading + days.length;
+    const remainder = total % 7;
+    const trailingToCompleteWeeks = remainder === 0 ? 0 : 7 - remainder;
+    const totalAfter = total + trailingToCompleteWeeks;
+    const trailingTo42 = totalAfter >= 42 ? 0 : 42 - totalAfter;
+    return trailingToCompleteWeeks + trailingTo42;
+  }, [days.length, firstDayOfWeek]);
+
   const eventsOnDay = (day: Date) =>
     events.filter(e => isSameDay(new Date(e.start_at), day));
 
@@ -411,7 +423,7 @@ export default function CalendarViewPage() {
         </div>
 
         {/* Day cells */}
-        <div className="grid grid-cols-7 gap-0.5 lg:flex-1 lg:overflow-auto">
+        <div className="grid grid-cols-7 gap-0.5 lg:flex-1 lg:min-h-0 lg:overflow-auto lg:grid-rows-6 lg:auto-rows-fr">
           {/* Empty cells before first day */}
           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
             <div key={`empty-${i}`} />
@@ -491,6 +503,11 @@ export default function CalendarViewPage() {
               </div>
             );
           })}
+
+          {/* Desktop-only trailing filler cells to ensure a consistent 6-row grid */}
+          {Array.from({ length: desktopTrailingCells }).map((_, i) => (
+            <div key={`desktop-filler-${i}`} className="hidden lg:block" />
+          ))}
         </div>
       </div>
       {/* Members modal */}
