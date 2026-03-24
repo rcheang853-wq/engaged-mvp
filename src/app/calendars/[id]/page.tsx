@@ -164,9 +164,9 @@ export default function CalendarViewPage() {
   });
   const firstDayOfWeek = startOfMonth(currentMonth).getDay();
 
-  // Desktop-only: pad the month grid to a consistent 6 rows (42 cells) so it stretches to fill height.
-  // On mobile we keep the existing compact grid.
-  const desktopTrailingCells = useMemo(() => {
+  // Pad the month grid to a consistent 6 rows (42 cells) so it can stretch to fill available height
+  // (avoids a bottom white gap when the month only spans 4–5 weeks).
+  const trailingCellsTo42 = useMemo(() => {
     const leading = firstDayOfWeek;
     const total = leading + days.length;
     const remainder = total % 7;
@@ -272,7 +272,7 @@ export default function CalendarViewPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-50 pb-20">
+      <div className="flex min-h-dvh flex-col bg-gray-50 pb-20">
         <div className="h-16 border-b bg-white px-4 py-3" />
         <CalendarSkeleton />
         <BottomTabBar />
@@ -283,7 +283,7 @@ export default function CalendarViewPage() {
   const hasEvents = events.length > 0;
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 pb-20">
+    <div className="flex min-h-dvh flex-col bg-gray-50 pb-20">
       {/* Header */}
       <div className="border-b bg-white px-4 py-3">
         <div className="flex items-center gap-3">
@@ -409,7 +409,7 @@ export default function CalendarViewPage() {
       </div>
 
       {/* Calendar grid */}
-      <div className="flex-1 p-3 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
+      <div className="flex flex-1 min-h-0 flex-col p-3 overflow-hidden">
         {/* Day headers */}
         <div className="mb-1 grid grid-cols-7">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
@@ -423,7 +423,7 @@ export default function CalendarViewPage() {
         </div>
 
         {/* Day cells */}
-        <div className="grid grid-cols-7 gap-0.5 lg:flex-1 lg:min-h-0 lg:overflow-auto lg:grid-rows-6 lg:auto-rows-fr">
+        <div className="grid flex-1 min-h-0 grid-cols-7 grid-rows-6 auto-rows-fr gap-0.5 overflow-auto">
           {/* Empty cells before first day */}
           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
             <div key={`empty-${i}`} />
@@ -442,7 +442,7 @@ export default function CalendarViewPage() {
               // Use div+onClick instead of Link so event-chip Links below aren't nested inside an <a>
               <div
                 key={day.toISOString()}
-                className={`min-h-[64px] cursor-pointer rounded-xl p-1 transition-colors lg:flex lg:min-h-0 lg:flex-col ${
+                className={`flex min-h-0 cursor-pointer flex-col rounded-xl p-1 transition-colors ${
                   isSelected
                     ? 'bg-blue-50 ring-2 ring-blue-400 ring-inset'
                     : isToday
@@ -466,7 +466,7 @@ export default function CalendarViewPage() {
                   {format(day, 'd')}
                 </div>
                 {/* Holiday + Event chips */}
-                <div className="space-y-0.5">
+                <div className="min-h-0 flex-1 space-y-0.5 overflow-hidden">
                   {/* Holidays */}
                   {dayHolidays.slice(0, maxVisible).map((h, i) => (
                     <div
@@ -504,9 +504,9 @@ export default function CalendarViewPage() {
             );
           })}
 
-          {/* Desktop-only trailing filler cells to ensure a consistent 6-row grid */}
-          {Array.from({ length: desktopTrailingCells }).map((_, i) => (
-            <div key={`desktop-filler-${i}`} className="hidden lg:block" />
+          {/* Trailing filler cells to ensure a consistent 6-row (42-cell) grid */}
+          {Array.from({ length: trailingCellsTo42 }).map((_, i) => (
+            <div key={`filler-${i}`} />
           ))}
         </div>
       </div>
