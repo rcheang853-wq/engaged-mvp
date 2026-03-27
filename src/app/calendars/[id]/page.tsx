@@ -164,6 +164,18 @@ export default function CalendarViewPage() {
   });
   const firstDayOfWeek = startOfMonth(currentMonth).getDay();
 
+  // Pad the month grid to a consistent 6 rows (42 cells) so it can stretch to fill available height
+  // (avoids a bottom white gap when the month only spans 4–5 weeks).
+  const trailingCellsTo42 = useMemo(() => {
+    const leading = firstDayOfWeek;
+    const total = leading + days.length;
+    const remainder = total % 7;
+    const trailingToCompleteWeeks = remainder === 0 ? 0 : 7 - remainder;
+    const totalAfter = total + trailingToCompleteWeeks;
+    const trailingTo42 = totalAfter >= 42 ? 0 : 42 - totalAfter;
+    return trailingToCompleteWeeks + trailingTo42;
+  }, [days.length, firstDayOfWeek]);
+
   const eventsOnDay = (day: Date) =>
     events.filter(e => isSameDay(new Date(e.start_at), day));
 
@@ -260,10 +272,12 @@ export default function CalendarViewPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-gray-50 pb-20">
+      <div className="flex h-dvh min-h-dvh flex-col bg-gray-50 pb-20 lg:pb-0">
         <div className="h-16 border-b bg-white px-4 py-3" />
         <CalendarSkeleton />
-        <BottomTabBar />
+        <div className="lg:hidden">
+          <BottomTabBar />
+        </div>
       </div>
     );
   }
@@ -271,7 +285,7 @@ export default function CalendarViewPage() {
   const hasEvents = events.length > 0;
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 pb-20">
+    <div className="flex h-dvh min-h-dvh flex-col bg-gray-50 pb-20 lg:pb-0">
       {/* Header */}
       <div className="border-b bg-white px-4 py-3">
         <div className="flex items-center gap-3">
@@ -397,7 +411,7 @@ export default function CalendarViewPage() {
       </div>
 
       {/* Calendar grid */}
-      <div className="flex-1 p-3 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
+      <div className="flex flex-1 min-h-0 flex-col p-3 overflow-hidden">
         {/* Day headers */}
         <div className="mb-1 grid grid-cols-7">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
@@ -411,7 +425,7 @@ export default function CalendarViewPage() {
         </div>
 
         {/* Day cells */}
-        <div className="grid grid-cols-7 gap-0.5 lg:flex-1 lg:overflow-auto">
+        <div className="grid flex-1 min-h-0 grid-cols-7 [grid-template-rows:repeat(6,minmax(0,1fr))] gap-0.5 overflow-auto">
           {/* Empty cells before first day */}
           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
             <div key={`empty-${i}`} />
@@ -430,7 +444,7 @@ export default function CalendarViewPage() {
               // Use div+onClick instead of Link so event-chip Links below aren't nested inside an <a>
               <div
                 key={day.toISOString()}
-                className={`min-h-[64px] cursor-pointer rounded-xl p-1 transition-colors lg:flex lg:min-h-0 lg:flex-col ${
+                className={`flex min-h-0 cursor-pointer flex-col rounded-xl p-1 transition-colors ${
                   isSelected
                     ? 'bg-blue-50 ring-2 ring-blue-400 ring-inset'
                     : isToday
@@ -454,7 +468,7 @@ export default function CalendarViewPage() {
                   {format(day, 'd')}
                 </div>
                 {/* Holiday + Event chips */}
-                <div className="space-y-0.5">
+                <div className="min-h-0 flex-1 space-y-0.5 overflow-hidden">
                   {/* Holidays */}
                   {dayHolidays.slice(0, maxVisible).map((h, i) => (
                     <div
@@ -491,6 +505,11 @@ export default function CalendarViewPage() {
               </div>
             );
           })}
+
+          {/* Trailing filler cells to ensure a consistent 6-row (42-cell) grid */}
+          {Array.from({ length: trailingCellsTo42 }).map((_, i) => (
+            <div key={`filler-${i}`} />
+          ))}
         </div>
       </div>
       {/* Members modal */}
@@ -661,7 +680,9 @@ export default function CalendarViewPage() {
         </div>
       )}
 
-      <BottomTabBar />
+      <div className="lg:hidden">
+        <BottomTabBar />
+      </div>
     </div>
   );
 }

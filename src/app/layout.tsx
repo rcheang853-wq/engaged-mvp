@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="h-full">
       <head>
         {/* Preconnect to external domains */}
         <link rel="preconnect" href="https://api.supabase.com" />
@@ -89,11 +89,11 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] h-full flex flex-col`}
       >
         <ReactQueryProvider>
           <AuthProvider>
-            {children}
+            <main className="flex min-h-0 flex-1 flex-col">{children}</main>
             <PerformanceMonitor />
             <ToastProvider />
           </AuthProvider>
