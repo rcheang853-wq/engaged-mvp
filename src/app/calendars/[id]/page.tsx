@@ -272,10 +272,12 @@ export default function CalendarViewPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-dvh flex-col bg-gray-50 pb-20">
+      <div className="flex h-dvh min-h-dvh flex-col bg-gray-50 pb-20 lg:pb-0">
         <div className="h-16 border-b bg-white px-4 py-3" />
         <CalendarSkeleton />
-        <BottomTabBar />
+        <div className="lg:hidden">
+          <BottomTabBar />
+        </div>
       </div>
     );
   }
@@ -283,7 +285,7 @@ export default function CalendarViewPage() {
   const hasEvents = events.length > 0;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-gray-50 pb-20">
+    <div className="flex h-dvh min-h-dvh flex-col bg-gray-50 pb-20 lg:pb-0">
       {/* Header */}
       <div className="border-b bg-white px-4 py-3">
         <div className="flex items-center gap-3">
@@ -423,7 +425,7 @@ export default function CalendarViewPage() {
         </div>
 
         {/* Day cells */}
-        <div className="grid flex-1 min-h-0 grid-cols-7 grid-rows-6 auto-rows-fr gap-0.5 overflow-auto">
+        <div className="grid flex-1 min-h-0 grid-cols-7 [grid-template-rows:repeat(6,minmax(0,1fr))] gap-0.5 overflow-auto">
           {/* Empty cells before first day */}
           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
             <div key={`empty-${i}`} />
@@ -678,7 +680,9 @@ export default function CalendarViewPage() {
         </div>
       )}
 
-      <BottomTabBar />
+      <div className="lg:hidden">
+        <BottomTabBar />
+      </div>
     </div>
   );
 }
