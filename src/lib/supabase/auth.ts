@@ -11,14 +11,8 @@ import {
 } from '@/types/auth';
 import { Database } from '@/types/database';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key';
-
-if (typeof window !== 'undefined' && (supabaseUrl === 'https://placeholder.supabase.co' || supabaseAnonKey === 'placeholder-anon-key')) {
-  console.error(
-    'Missing Supabase environment variables. Please check your .env.local file.'
-  );
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 type BrowserSupabaseClient = ReturnType<typeof createBrowserClient<Database>>;
 type UniversalSupabaseClient = ReturnType<typeof createClient<Database>>;
