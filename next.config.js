@@ -33,9 +33,10 @@ const nextConfig = {
     ],
   },
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production'
-      ? { exclude: ['error', 'warn'] }
-      : false,
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? { exclude: ['error', 'warn'] }
+        : false,
   },
   webpack: (config, { dev, isServer }) => {
     const webpackConfig = config;
@@ -121,7 +122,9 @@ const nextConfig = {
           vendor: {
             test: /[\\/]node_modules[\\/]/,
             name(module) {
-              const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)?.[1];
+              const packageName = module.context.match(
+                /[\\/]node_modules[\\/](.*?)([\\/]|$)/
+              )?.[1];
               return `vendor-${packageName?.replace('@', '')}`;
             },
             chunks: 'all',
@@ -158,7 +161,9 @@ const nextConfig = {
         new BundleAnalyzerPlugin({
           analyzerMode: 'static',
           openAnalyzer: false,
-          reportFilename: isServer ? 'server-bundle-analysis.html' : 'client-bundle-analysis.html',
+          reportFilename: isServer
+            ? 'server-bundle-analysis.html'
+            : 'client-bundle-analysis.html',
         })
       );
     }
@@ -172,24 +177,34 @@ const nextConfig = {
         headers: [
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
           { key: 'X-XSS-Protection', value: '1; mode=block' },
         ],
       },
       {
         source: '/_next/static/(.*)',
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
         ],
       },
       {
         source: '/assets/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=86400' },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },
     ];
   },
@@ -198,4 +213,17 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// Keep master CJS format; wrap with Sentry when installed.
+let withSentryConfig;
+try {
+  ({ withSentryConfig } = require('@sentry/nextjs'));
+} catch {
+  withSentryConfig = null;
+}
+
+module.exports = withSentryConfig
+  ? withSentryConfig(nextConfig, {
+      silent: true,
+      disableSourceMapUpload: true,
+    })
+  : nextConfig;
