@@ -48,6 +48,7 @@ export interface AuthActions {
   resendConfirmation: (email: string) => Promise<AuthResult>;
   deleteAccount: () => Promise<AuthResult>;
   signInWithGoogle: (redirectTo?: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithFacebook: (redirectTo?: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 // Authentication results

@@ -56,6 +56,9 @@ export function useAuthStoreOnly() {
     signInWithGoogle: async (_redirectTo?: string): Promise<{ success: boolean; error?: string }> => {
       throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
     },
+    signInWithFacebook: async (_redirectTo?: string): Promise<{ success: boolean; error?: string }> => {
+      throw new Error('Auth actions not available. Wrap your app with AuthProvider.');
+    },
   };
 
   return {
@@ -81,6 +84,7 @@ export function useAuthActions(): AuthActions {
     resendConfirmation,
     deleteAccount,
     signInWithGoogle,
+    signInWithFacebook,
   } = useAuth();
 
   return {
@@ -93,6 +97,7 @@ export function useAuthActions(): AuthActions {
     resendConfirmation,
     deleteAccount,
     signInWithGoogle,
+    signInWithFacebook,
   };
 }
 

@@ -298,6 +298,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [setLoading]);
 
+  const signInWithFacebook = useCallback(async (redirectTo?: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const result = await authClient.signInWithOAuth('facebook', redirectTo);
+
+      if (result.success && result.url) {
+        window.location.href = result.url;
+        return { success: true };
+      }
+
+      if (!result.success) {
+        return { success: false, error: result.error || 'Unknown error' };
+      }
+
+      return { success: false, error: 'Failed to initiate Facebook sign-in' };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'An unexpected error occurred',
+      };
+    } finally {
+      setLoading(false);
+    }
+  }, [setLoading]);
+
   const contextValue: AuthContextType = {
     // State
     user,
@@ -314,6 +339,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resendConfirmation,
     deleteAccount,
     signInWithGoogle,
+    signInWithFacebook,
   };
 
   return (
