@@ -384,7 +384,7 @@ export class SupabaseAuth {
   }
 
   async signInWithOAuth(
-    provider: 'google',
+    provider: 'google' | 'facebook',
     redirectToPath?: string
   ): Promise<{ success: boolean; error?: string; url?: string }> {
     try {
@@ -394,15 +394,21 @@ export class SupabaseAuth {
         callbackUrl.searchParams.set('redirectTo', redirectToPath);
       }
 
+      const options: any = {
+        redirectTo: callbackUrl.toString(),
+      };
+
+      // Keep Google behavior exactly as-is (offline access + consent prompt)
+      if (provider === 'google') {
+        options.queryParams = {
+          access_type: 'offline',
+          prompt: 'consent',
+        };
+      }
+
       const { data, error } = await this.client.auth.signInWithOAuth({
         provider,
-        options: {
-          redirectTo: callbackUrl.toString(),
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
+        options,
       });
 
       if (error) {

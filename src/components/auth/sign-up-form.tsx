@@ -63,9 +63,10 @@ export function SignUpForm({
 }: SignUpFormProps) {
   const router = useRouter();
 
-  const { signUp, resendConfirmation, signInWithGoogle, isLoading } = useAuth();
+  const { signUp, resendConfirmation, signInWithGoogle, signInWithFacebook, isLoading } = useAuth();
   const [isResending, setIsResending] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
+  const [isFacebookLoading, setIsFacebookLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [pendingConfirmation, setPendingConfirmation] = React.useState(false);
@@ -196,6 +197,15 @@ export function SignUpForm({
     </svg>
   );
 
+  const FacebookIcon = () => (
+    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#1877F2"
+        d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.414c0-3.026 1.792-4.699 4.533-4.699 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.49 0-1.953.93-1.953 1.887v2.266h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"
+      />
+    </svg>
+  );
+
   return (
     <div className={className}>
       <div className="text-center mb-6">
@@ -212,44 +222,84 @@ export function SignUpForm({
         </div>
       )}
 
-      {/* Google OAuth - social-first */}
-      <Button
-        type="button"
-        variant="outline"
-        disabled={isGoogleLoading || isLoading}
-        className="w-full mb-4"
-        size="lg"
-        onClick={async () => {
-          try {
-            setError(null);
-            setIsGoogleLoading(true);
-            const result = await signInWithGoogle(redirectTo);
-            if (!result.success) {
-              setError(result.error || 'Failed to sign up with Google');
+      {/* OAuth - social-first */}
+      <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isGoogleLoading || isLoading}
+          className="w-full"
+          size="lg"
+          onClick={async () => {
+            try {
+              setError(null);
+              setIsGoogleLoading(true);
+              const result = await signInWithGoogle(redirectTo);
+              if (!result.success) {
+                setError(result.error || 'Failed to sign up with Google');
+              }
+            } catch (err) {
+              console.error('Google sign-up error:', err);
+              setError('An unexpected error occurred. Please try again.');
+            } finally {
+              setIsGoogleLoading(false);
             }
-          } catch (err) {
-            console.error('Google sign-up error:', err);
-            setError('An unexpected error occurred. Please try again.');
-          } finally {
-            setIsGoogleLoading(false);
-          }
-        }}
-      >
-        {isGoogleLoading ? (
-          <div className="flex items-center">
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            Connecting to Google...
-          </div>
-        ) : (
-          <div className="flex items-center justify-center">
-            <GoogleIcon />
-            Continue with Google
-          </div>
-        )}
-      </Button>
+          }}
+        >
+          {isGoogleLoading ? (
+            <div className="flex items-center">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Connecting...
+            </div>
+          ) : (
+            <div className="flex items-center justify-center">
+              <GoogleIcon />
+              Continue with Google
+            </div>
+          )}
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isFacebookLoading || isLoading}
+          className="w-full"
+          size="lg"
+          onClick={async () => {
+            try {
+              setError(null);
+              setIsFacebookLoading(true);
+              const result = await signInWithFacebook(redirectTo);
+              if (!result.success) {
+                setError(result.error || 'Failed to sign up with Facebook');
+              }
+            } catch (err) {
+              console.error('Facebook sign-up error:', err);
+              setError('An unexpected error occurred. Please try again.');
+            } finally {
+              setIsFacebookLoading(false);
+            }
+          }}
+        >
+          {isFacebookLoading ? (
+            <div className="flex items-center">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Connecting...
+            </div>
+          ) : (
+            <div className="flex items-center justify-center">
+              <FacebookIcon />
+              Continue with Facebook
+            </div>
+          )}
+        </Button>
+      </div>
 
       <div className="relative mb-4">
         <div className="absolute inset-0 flex items-center">
