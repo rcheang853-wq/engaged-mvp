@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { fetchHkTicketingEvents } from '@/lib/discover/hk-ticketing';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,11 @@ export async function GET(request: NextRequest) {
     const freeOnly = searchParams.get('free') === '1';
     const onlineOnly = searchParams.get('online') === '1';
     const sort = (searchParams.get('sort') ?? 'relevance').trim();
+
+    // v1: HK Ticketing feed doesn't support these filters yet.
+    if (city.toLowerCase() === 'hong kong') {
+      // q/date filters are applied by vendor-side defaults; category filter handled in adapter.
+    }
 
     const now = new Date();
 
@@ -80,6 +86,55 @@ export async function GET(request: NextRequest) {
     const categories = categoriesRaw
       ? categoriesRaw.split(',').map((s) => decodeURIComponent(s.trim())).filter(Boolean)
       : [];
+
+    // HK Ticketing v1 feed: when city === Hong Kong, source from HK Ticketing only.
+    if (city.toLowerCase() === 'hong kong') {
+      const { events, total } = await fetchHkTicketingEvents({
+        page: Math.floor(offset / limit) + 1,
+        pageSize: limit,
+        categories,
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: events.map((e) => ({
+          id: e.id,
+          title: e.title,
+          description: null,
+          start_at: e.start_at,
+          end_at: null,
+          all_day: false,
+          timezone: 'Asia/Hong_Kong',
+          venue_name: e.venue_name,
+          address: null,
+          city: 'Hong Kong',
+          region: null,
+          country: 'Hong Kong',
+          url: e.url,
+          ticket_url: e.url,
+          organizer_name: 'HK Ticketing',
+          price_min: e.price_min,
+          price_max: e.price_max,
+          currency: 'HKD',
+          is_free: false,
+          categories: e.categories,
+          images: e.images,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          saved: false,
+        })),
+        meta: {
+          city,
+          limit,
+          offset,
+          total,
+          window: { from: from.toISOString(), to: to.toISOString() },
+          filters: { q, datePreset, chosenDate, neighborhoods, categories, freeOnly, onlineOnly, sort },
+          source: 'hk-ticketing',
+        },
+      });
+    }
 
     const supabase = (await createServerSupabaseClient()) as any;
 

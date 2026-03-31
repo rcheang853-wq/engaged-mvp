@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MapPin, ChevronDown, Search, SlidersHorizontal } from 'lucide-react';
+import { MapPin, Search, SlidersHorizontal } from 'lucide-react';
 import EventCard, { PublicEvent } from '@/components/discover/EventCard';
 import PrivateEventCard, { type PrivateEvent } from '@/components/discover/PrivateEventCard';
+import { HK_DISCOVER_CATEGORIES } from '@/lib/discover/hk-ticketing';
 import BottomTabBar from '@/components/BottomTabBar';
 import DiscoverFilterModal, {
   DEFAULT_DISCOVER_FILTERS,
@@ -255,6 +256,11 @@ export default function DiscoverClient() {
   }, [events]);
 
   const availableCategories = useMemo(() => {
+    // HK Ticketing PRD: fixed category chips.
+    if (city.toLowerCase() === 'hong kong') {
+      return [...HK_DISCOVER_CATEGORIES];
+    }
+
     const all: string[] = [];
     for (const e of events as any[]) {
       const cats = e.categories;
@@ -263,7 +269,7 @@ export default function DiscoverClient() {
     }
     if (filters.showHolidays) all.push('Holiday');
     return uniqSorted(all);
-  }, [events, filters.showHolidays]);
+  }, [city, events, filters.showHolidays]);
 
   const hasMore = total != null && offset < total;
 
@@ -313,11 +319,6 @@ export default function DiscoverClient() {
         {mode === 'public' && (
           <div className="flex items-center gap-2 h-6">
             <MapPin size={16} className="text-[#374151] flex-shrink-0" />
-            <label className="text-sm font-semibold text-[#111827]" htmlFor="discover-location">
-              {locationLabel(city)}
-            </label>
-            <ChevronDown size={16} className="text-[#6B7280]" />
-
             <select
               id="discover-location"
               value={city}
