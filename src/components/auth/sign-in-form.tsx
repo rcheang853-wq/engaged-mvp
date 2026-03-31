@@ -156,7 +156,7 @@ export function SignInForm({
       )}
 
       {/* OAuth - social-first */}
-      <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 mb-4">
         <Button
           type="button"
           variant="outline"
