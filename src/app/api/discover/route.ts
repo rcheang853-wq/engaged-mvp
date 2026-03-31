@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 //   days (default 60) OR from/to (ISO)
 //   limit (default 20, max 50)
 //   offset (default 0)
-//   city (default Macau)
+//   city (default Macau). Supported values in UI: Macau | Hong Kong | China (Mainland China)
 //   q (text search - title/venue/address)
 //   date (any|today|tomorrow|week|weekend|choose) + chosenDate (YYYY-MM-DD)
 //   neighborhoods (comma list) -> matches region

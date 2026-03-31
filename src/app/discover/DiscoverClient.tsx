@@ -14,6 +14,17 @@ import DiscoverFilterModal, {
 
 const PAGE_SIZE = 20;
 
+const DISCOVER_LOCATIONS: Array<{ value: string; label: string }> = [
+  { value: 'Macau', label: 'Macau' },
+  { value: 'Hong Kong', label: 'Hong Kong' },
+  // NOTE: value must match public_events.city
+  { value: 'China', label: 'Mainland China' },
+];
+
+function locationLabel(value: string) {
+  return DISCOVER_LOCATIONS.find((l) => l.value === value)?.label ?? value;
+}
+
 function uniqSorted(arr: (string | null | undefined)[]) {
   return Array.from(new Set(arr.filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b));
 }
@@ -104,6 +115,7 @@ export default function DiscoverClient() {
   const searchParams = useSearchParams();
 
   const mode = (searchParams.get('mode') === 'private' ? 'private' : 'public') as 'public' | 'private';
+  const city = (searchParams.get('city') ?? 'Macau').trim() || 'Macau';
 
   const [events, setEvents] = useState<PublicEvent[]>([]);
   const [privateEvents, setPrivateEvents] = useState<PrivateEvent[]>([]);
@@ -301,8 +313,31 @@ export default function DiscoverClient() {
         {mode === 'public' && (
           <div className="flex items-center gap-2 h-6">
             <MapPin size={16} className="text-[#374151] flex-shrink-0" />
-            <span className="text-sm font-semibold text-[#111827]">Nearby</span>
+            <label className="text-sm font-semibold text-[#111827]" htmlFor="discover-location">
+              {locationLabel(city)}
+            </label>
             <ChevronDown size={16} className="text-[#6B7280]" />
+
+            <select
+              id="discover-location"
+              value={city}
+              onChange={(e) => {
+                const nextCity = e.target.value;
+                const next = new URLSearchParams(searchParams.toString());
+                if (nextCity && nextCity !== 'Macau') next.set('city', nextCity);
+                else next.delete('city');
+                next.delete('offset');
+                router.replace('/discover?' + next.toString());
+              }}
+              className="ml-2 bg-white border border-[#E5E7EB] rounded-full px-3 py-1 text-xs font-semibold text-[#111827]"
+              aria-label="Select location"
+            >
+              {DISCOVER_LOCATIONS.map((loc) => (
+                <option key={loc.value} value={loc.value}>
+                  {loc.label}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
