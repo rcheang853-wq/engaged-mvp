@@ -26,6 +26,16 @@ function getSupabaseEnv() {
       };
     }
 
+    // For local dev ergonomics, don't crash the entire app if env vars are missing.
+    // The UI can still load; auth calls will fail until env is configured.
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[supabase] Missing NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local');
+      return {
+        supabaseUrl: supabaseUrl || 'http://localhost:54321',
+        supabaseAnonKey: supabaseAnonKey || 'anon-key-missing',
+      };
+    }
+
     throw new Error('Missing Supabase environment variables. Check .env.local');
   }
 
