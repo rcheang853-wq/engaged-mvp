@@ -48,9 +48,15 @@ export default function NewEventPage() {
         const calJson = await calRes.json();
 
         const userId = meJson?.user?.id as string | undefined;
-        const members = calJson?.data?.calendar_members as any[] | undefined;
+        const cal = calJson?.data as any;
+
+        // Calendar membership list may not include the owner for Personal calendars.
+        // Treat the calendar creator/owner columns (if present) as owner-equivalent.
+        const members = cal?.calendar_members as any[] | undefined;
         const role = members?.find((m) => m.user_id === userId)?.role as string | undefined;
-        const isOwner = role === 'owner';
+
+        const ownerId = (cal?.owner_id ?? cal?.created_by ?? cal?.user_id) as string | undefined;
+        const isOwner = role === 'owner' || (!!userId && !!ownerId && userId === ownerId);
 
         if (!cancelled) setCanEdit(isOwner);
       } catch {
@@ -111,7 +117,8 @@ export default function NewEventPage() {
         return;
       }
 
-      router.push(`/calendars/${id}/events/${d.data.id}`);
+      // Return to month grid after create
+      router.push(`/calendars/${id}?date=${encodeURIComponent(date)}`);
     } finally {
       setSaving(false);
     }
