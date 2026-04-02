@@ -8,6 +8,13 @@ export const dynamic = 'force-dynamic';
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    if (id.startsWith('hk-lcsd__')) {
+      return NextResponse.json(
+        { success: false, error: 'Saving LCSD-powered Hong Kong events is not supported yet' },
+        { status: 400 }
+      );
+    }
+
     const supabase = (await createServerSupabaseClient()) as any;
     const { data: auth, error: authError } = await getAuthUser(supabase);
     const user = auth?.user;
@@ -30,6 +37,10 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    if (id.startsWith('hk-lcsd__')) {
+      return NextResponse.json({ success: true });
+    }
+
     const supabase = (await createServerSupabaseClient()) as any;
     const { data: auth, error: authError } = await getAuthUser(supabase);
     const user = auth?.user;

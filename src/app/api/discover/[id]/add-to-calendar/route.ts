@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/dev-auth';
+import { fetchHongKongDiscoverEventById } from '@/lib/discover/hong-kong-lcsd';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -26,16 +27,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ success: false, error: parsed.error.issues }, { status: 400 });
     }
 
-    // Fetch public event
-    const { data: publicEvent, error: peErr } = await supabase
-      .from('public_events')
-      .select('*')
-      .eq('id', id)
-      .single();
+    let publicEvent: any = null;
+    if (id.startsWith('hk-lcsd__')) {
+      publicEvent = await fetchHongKongDiscoverEventById(id);
+      if (!publicEvent) {
+        return NextResponse.json({ success: false, error: 'Public event not found' }, { status: 404 });
+      }
+    } else {
+      const { data, error: peErr } = await supabase
+        .from('public_events')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (peErr) throw peErr;
-    if (!publicEvent) {
-      return NextResponse.json({ success: false, error: 'Public event not found' }, { status: 404 });
+      if (peErr) throw peErr;
+      publicEvent = data;
+      if (!publicEvent) {
+        return NextResponse.json({ success: false, error: 'Public event not found' }, { status: 404 });
+      }
     }
 
     // Verify calendar membership (must be a member)
@@ -63,7 +72,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         end_at: publicEvent.end_at,
         all_day: publicEvent.all_day,
         timezone: publicEvent.timezone,
-        public_event_id: publicEvent.id,
+        public_event_id: id.startsWith('hk-lcsd__') ? null : publicEvent.id,
         created_by: user.id,
       })
       .select()

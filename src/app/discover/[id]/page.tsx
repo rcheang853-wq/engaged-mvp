@@ -35,9 +35,27 @@ interface Calendar { id: string; name: string; color: string; }
 
 function formatDate(isoStr: string, tz = 'Asia/Macau') {
   return new Date(isoStr).toLocaleDateString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz,
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: tz,
   });
+}
+
+function formatEventDate(event: PublicEvent) {
+  if (event.all_day) {
+    return new Date(event.start_at).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: event.timezone,
+    });
+  }
+
+  return formatDate(event.start_at, event.timezone);
 }
 
 function formatPrice(event: PublicEvent): string {
@@ -331,7 +349,7 @@ export default function PublicEventDetailPage() {
           <div className="flex items-center gap-2 h-5">
             <CalendarDays size={16} className="text-[#6B7280] flex-shrink-0" />
             <span className="text-sm font-medium text-[#374151]">
-              {formatDate(event.start_at, event.timezone)}
+              {formatEventDate(event)}
             </span>
           </div>
           {(event.venue_name || event.address) && (

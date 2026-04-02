@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { fetchHongKongDiscoverEvents } from '@/lib/discover/hong-kong-lcsd';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,6 +81,34 @@ export async function GET(request: NextRequest) {
     const categories = categoriesRaw
       ? categoriesRaw.split(',').map((s) => decodeURIComponent(s.trim())).filter(Boolean)
       : [];
+
+    if (city === 'Hong Kong') {
+      const result = await fetchHongKongDiscoverEvents({
+        from,
+        to,
+        limit,
+        offset,
+        q,
+        neighborhoods,
+        categories,
+        freeOnly,
+        onlineOnly,
+        sort: sort === 'date' ? 'date' : 'relevance',
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: result.data,
+        meta: {
+          city,
+          limit,
+          offset,
+          total: result.total,
+          window: { from: from.toISOString(), to: to.toISOString() },
+          filters: { q, datePreset, chosenDate, neighborhoods, categories, freeOnly, onlineOnly, sort },
+        },
+      });
+    }
 
     const supabase = (await createServerSupabaseClient()) as any;
 
