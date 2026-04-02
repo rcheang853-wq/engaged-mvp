@@ -15,6 +15,13 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+
+  // Repo relocated into a larger workspace folder that also contains another lockfile.
+  // Pin Next's tracing/workspace root to this repo to avoid dev/build warnings.
+  outputFileTracingRoot: __dirname,
+  turbopack: {
+    root: __dirname,
+  },
   experimental: {
     optimizePackageImports: [
       '@tanstack/react-query',
