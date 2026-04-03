@@ -317,33 +317,31 @@ export default function DiscoverClient() {
     <div className="min-h-screen bg-[#F9FAFB] pb-20">
       <div className="sticky top-0 z-10 bg-[#F9FAFB] px-4 pt-12 pb-3 space-y-3">
         {mode === 'public' && (
-          <div className="flex items-center gap-2 h-6">
+          <div className="flex items-center gap-2 h-8">
             <MapPin size={16} className="text-[#374151] flex-shrink-0" />
-            <label className="text-sm font-semibold text-[#111827]" htmlFor="discover-location">
-              {locationLabel(city)}
-            </label>
-            <ChevronDown size={16} className="text-[#6B7280]" />
-
-            <select
-              id="discover-location"
-              value={city}
-              onChange={(e) => {
-                const nextCity = e.target.value;
-                const next = new URLSearchParams(searchParams.toString());
-                if (nextCity && nextCity !== 'Macau') next.set('city', nextCity);
-                else next.delete('city');
-                next.delete('offset');
-                router.replace('/discover?' + next.toString());
-              }}
-              className="ml-2 bg-white border border-[#E5E7EB] rounded-full px-3 py-1 text-xs font-semibold text-[#111827]"
-              aria-label="Select location"
-            >
-              {DISCOVER_LOCATIONS.map((loc) => (
-                <option key={loc.value} value={loc.value}>
-                  {loc.label}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex items-center">
+              <select
+                id="discover-location"
+                value={city}
+                onChange={(e) => {
+                  const nextCity = e.target.value;
+                  const next = new URLSearchParams(searchParams.toString());
+                  if (nextCity && nextCity !== 'Macau') next.set('city', nextCity);
+                  else next.delete('city');
+                  next.delete('offset');
+                  router.replace('/discover?' + next.toString());
+                }}
+                className="appearance-none bg-transparent pr-5 text-sm font-semibold text-[#111827] outline-none cursor-pointer"
+                aria-label="Select location"
+              >
+                {DISCOVER_LOCATIONS.map((loc) => (
+                  <option key={loc.value} value={loc.value}>
+                    {loc.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="text-[#6B7280] pointer-events-none absolute right-0" />
+            </div>
           </div>
         )}
 
