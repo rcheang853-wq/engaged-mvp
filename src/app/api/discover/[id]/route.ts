@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { fetchHongKongDiscoverEventById } from '@/lib/discover/hong-kong-lcsd';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,16 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    if (id.startsWith('hk-lcsd__')) {
+      const data = await fetchHongKongDiscoverEventById(id);
+      if (!data) {
+        return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true, data });
+    }
+
     const supabase = (await createServerSupabaseClient()) as any;
 
     const { data, error } = await supabase

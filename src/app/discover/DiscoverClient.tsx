@@ -11,6 +11,7 @@ import DiscoverFilterModal, {
   type DiscoverFilters,
   type HolidayLocale,
 } from '@/components/discover/DiscoverFilterModal';
+import { HONG_KONG_DISCOVER_CATEGORIES } from '@/lib/discover/hong-kong-lcsd';
 
 const PAGE_SIZE = 20;
 
@@ -255,6 +256,11 @@ export default function DiscoverClient() {
   }, [events]);
 
   const availableCategories = useMemo(() => {
+    // HK Discover PRD: fixed chips set
+    if (city.toLowerCase() === 'hong kong') {
+      return [...HONG_KONG_DISCOVER_CATEGORIES];
+    }
+
     const all: string[] = [];
     for (const e of events as any[]) {
       const cats = e.categories;
@@ -263,7 +269,7 @@ export default function DiscoverClient() {
     }
     if (filters.showHolidays) all.push('Holiday');
     return uniqSorted(all);
-  }, [events, filters.showHolidays]);
+  }, [city, events, filters.showHolidays]);
 
   const hasMore = total != null && offset < total;
 

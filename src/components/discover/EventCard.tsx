@@ -8,6 +8,8 @@ export interface PublicEvent {
   id: string;
   title: string;
   start_at: string;
+  all_day?: boolean;
+  timezone?: string;
   venue_name: string | null;
   price_min: number | null;
   price_max: number | null;
@@ -33,16 +35,21 @@ function formatPrice(event: PublicEvent): string {
   return '';
 }
 
-function formatDate(isoStr: string): string {
+function formatDate(isoStr: string, timezone = 'Asia/Macau', allDay = false): string {
   const d = new Date(isoStr);
-  return d.toLocaleDateString('en-US', {
+  const options: Intl.DateTimeFormatOptions = {
     month: 'short',
     day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'Asia/Macau',
-  });
+    timeZone: timezone,
+  };
+
+  if (!allDay) {
+    options.hour = 'numeric';
+    options.minute = '2-digit';
+    options.hour12 = true;
+  }
+
+  return d.toLocaleDateString('en-US', options);
 }
 
 // "Just added" if ingested within 48h
@@ -105,7 +112,7 @@ export default function EventCard({ event }: EventCardProps) {
 
           {/* Date + venue */}
           <p className="text-xs font-medium text-[#6B7280] truncate">
-            {formatDate(event.start_at)}
+            {formatDate(event.start_at, event.timezone, event.all_day)}
             {event.venue_name ? ` · ${event.venue_name}` : ''}
           </p>
 
