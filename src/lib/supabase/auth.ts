@@ -11,8 +11,36 @@ import {
 } from '@/types/auth';
 import { Database } from '@/types/database';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+function getSupabaseEnv() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // Next may execute route modules during build-time "collect page data".
+    // To keep builds working in a partially-configured local env, provide harmless
+    // placeholders during the production build phase.
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+      return {
+        supabaseUrl: supabaseUrl || 'http://localhost:54321',
+        supabaseAnonKey: supabaseAnonKey || 'anon-key-missing',
+      };
+    }
+
+    // For local dev ergonomics, don't crash the entire app if env vars are missing.
+    // The UI can still load; auth calls will fail until env is configured.
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[supabase] Missing NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local');
+      return {
+        supabaseUrl: supabaseUrl || 'http://localhost:54321',
+        supabaseAnonKey: supabaseAnonKey || 'anon-key-missing',
+      };
+    }
+
+    throw new Error('Missing Supabase environment variables. Check .env.local');
+  }
+
+  return { supabaseUrl, supabaseAnonKey };
+}
 
 type BrowserSupabaseClient = ReturnType<typeof createBrowserClient<Database>>;
 type UniversalSupabaseClient = ReturnType<typeof createClient<Database>>;
@@ -25,6 +53,7 @@ const globalForSupabase = globalThis as typeof globalThis & {
 export function createBrowserSupabaseClient() {
   if (!globalForSupabase.__engagedBrowserSupabase) {
     const factory = typeof window === 'undefined' ? createClient : createBrowserClient;
+    const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
     globalForSupabase.__engagedBrowserSupabase = factory<Database>(
       supabaseUrl,
       supabaseAnonKey,
@@ -45,6 +74,7 @@ export function createBrowserSupabaseClient() {
 export async function createServerSupabaseClient() {
   const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -71,6 +101,8 @@ export function createMiddlewareSupabaseClient(
   request: NextRequest,
   response: NextResponse
 ) {
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
+
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
