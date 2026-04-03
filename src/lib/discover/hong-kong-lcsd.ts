@@ -198,7 +198,8 @@ function extractTimeComponents(value: string): { hour: number; minute: number } 
   if (meridiemMatch) {
     let hour = Number(meridiemMatch[1]);
     const minute = Number(meridiemMatch[2] ?? '0');
-    const meridiem = meridiemMatch[3].toLowerCase();
+    const meridiem = meridiemMatch[3]?.toLowerCase();
+    if (!meridiem) return null;
 
     if (hour === 12) hour = 0;
     if (meridiem === 'pm') hour += 12;
@@ -427,12 +428,18 @@ function buildDiscoverEvent(
   };
 }
 
-async function fetchLcsdXml(url: string): Promise<string> {
+const LCSD_TIMEOUT_MS = 8000;
+
+async function fetchLcsdXml(url: string, signal?: AbortSignal | null): Promise<string> {
   const response = await fetch(url, {
     headers: {
       Accept: 'application/xml,text/xml;q=0.9,*/*;q=0.8',
-      'User-Agent': 'Engage-Timetree/1.0',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'gzip, deflate',
+      Connection: 'keep-alive',
     },
+    signal: signal ?? undefined,
     next: { revalidate: 1800 },
   });
 
@@ -444,82 +451,96 @@ async function fetchLcsdXml(url: string): Promise<string> {
 }
 
 async function fetchRawLcsdData() {
-  const [eventsXml, datesXml, venuesXml] = await Promise.all([
-    fetchLcsdXml(LCSD_EVENTS_URL),
-    fetchLcsdXml(LCSD_EVENT_DATES_URL),
-    fetchLcsdXml(LCSD_VENUES_URL),
-  ]);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), LCSD_TIMEOUT_MS);
 
-  const programmeRecords = parseXmlRecords(eventsXml, ['id', 'cat1']);
-  const dateRecords = parseXmlRecords(datesXml, ['id', 'indate']);
-  const venueRecords = parseXmlRecords(venuesXml, ['id', 'venue']);
+  try {
+    const [eventsXml, datesXml, venuesXml] = await Promise.all([
+      fetchLcsdXml(LCSD_EVENTS_URL, controller.signal),
+      fetchLcsdXml(LCSD_EVENT_DATES_URL, controller.signal),
+      fetchLcsdXml(LCSD_VENUES_URL, controller.signal),
+    ]);
 
-  const venuesById = new Map<string, LcsdVenueRecord>(
-    venueRecords.map((record) => [
-      record.id,
-      {
-        id: record.id,
+    clearTimeout(timeoutId);
+
+    const programmeRecords = parseXmlRecords(eventsXml, ['id', 'cat1']);
+    const dateRecords = parseXmlRecords(datesXml, ['id', 'indate']);
+    const venueRecords = parseXmlRecords(venuesXml, ['id', 'venue']);
+
+    const venuesById = new Map<string, LcsdVenueRecord>();
+    for (const record of venueRecords) {
+      const id = textOf(record, 'id');
+      if (!id) continue;
+      venuesById.set(id, {
+        id,
         venue: textOf(record, 'venue'),
         venuec: textOf(record, 'venuec'),
         latitude: textOf(record, 'latitude'),
         longitude: textOf(record, 'longitude'),
-      },
-    ])
-  );
+      });
+    }
 
-  const eventDatesById = new Map<string, string[]>();
-  for (const record of dateRecords) {
-    const dates = eventDatesById.get(record.id) ?? [];
-    dates.push(record.indate);
-    eventDatesById.set(record.id, dates);
+    const eventDatesById = new Map<string, string[]>();
+    for (const record of dateRecords) {
+      const id = textOf(record, 'id');
+      if (!id) continue;
+      const dates = eventDatesById.get(id) ?? [];
+      dates.push(textOf(record, 'indate'));
+      eventDatesById.set(id, dates);
+    }
+
+    const programmes: LcsdProgrammeRecord[] = programmeRecords.map((record) => ({
+      id: textOf(record, 'id'),
+      titlec: textOf(record, 'titlec'),
+      titlee: textOf(record, 'titlee'),
+      cat1: textOf(record, 'cat1'),
+      cat2: textOf(record, 'cat2'),
+      predatec: textOf(record, 'predatec'),
+      predatee: textOf(record, 'predatee'),
+      progtimec: textOf(record, 'progtimec'),
+      progtimee: textOf(record, 'progtimee'),
+      venueid: textOf(record, 'venueid'),
+      agelimitc: textOf(record, 'agelimitc'),
+      agelimite: textOf(record, 'agelimite'),
+      pricec: textOf(record, 'pricec'),
+      pricee: textOf(record, 'pricee'),
+      descc: textOf(record, 'descc'),
+      desce: textOf(record, 'desce'),
+      urlc: textOf(record, 'urlc'),
+      urle: textOf(record, 'urle'),
+      tagenturlc: textOf(record, 'tagenturlc'),
+      tagenturle: textOf(record, 'tagenturle'),
+      remarkc: textOf(record, 'remarkc'),
+      remarke: textOf(record, 'remarke'),
+      enquiry: textOf(record, 'enquiry'),
+      fax: textOf(record, 'fax'),
+      email: textOf(record, 'email'),
+      saledate: textOf(record, 'saledate'),
+      interbook: textOf(record, 'interbook'),
+      presenterorgc: textOf(record, 'presenterorgc'),
+      presenterorge: textOf(record, 'presenterorge'),
+      prog_image: textOf(record, 'prog_image'),
+      detail_image1: textOf(record, 'detail_image1'),
+      detail_image2: textOf(record, 'detail_image2'),
+      detail_image3: textOf(record, 'detail_image3'),
+      detail_image4: textOf(record, 'detail_image4'),
+      detail_image5: textOf(record, 'detail_image5'),
+      video_link: textOf(record, 'video_link'),
+      video2_link: textOf(record, 'video2_link'),
+      submitdate: textOf(record, 'submitdate'),
+    }));
+
+    return {
+      programmes,
+      venuesById,
+      eventDatesById,
+    };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.warn(err.message);
+    return { programmes: [], venuesById: new Map(), eventDatesById: new Map() };
   }
-
-  const programmes: LcsdProgrammeRecord[] = programmeRecords.map((record) => ({
-    id: textOf(record, 'id'),
-    titlec: textOf(record, 'titlec'),
-    titlee: textOf(record, 'titlee'),
-    cat1: textOf(record, 'cat1'),
-    cat2: textOf(record, 'cat2'),
-    predatec: textOf(record, 'predatec'),
-    predatee: textOf(record, 'predatee'),
-    progtimec: textOf(record, 'progtimec'),
-    progtimee: textOf(record, 'progtimee'),
-    venueid: textOf(record, 'venueid'),
-    agelimitc: textOf(record, 'agelimitc'),
-    agelimite: textOf(record, 'agelimite'),
-    pricec: textOf(record, 'pricec'),
-    pricee: textOf(record, 'pricee'),
-    descc: textOf(record, 'descc'),
-    desce: textOf(record, 'desce'),
-    urlc: textOf(record, 'urlc'),
-    urle: textOf(record, 'urle'),
-    tagenturlc: textOf(record, 'tagenturlc'),
-    tagenturle: textOf(record, 'tagenturle'),
-    remarkc: textOf(record, 'remarkc'),
-    remarke: textOf(record, 'remarke'),
-    enquiry: textOf(record, 'enquiry'),
-    fax: textOf(record, 'fax'),
-    email: textOf(record, 'email'),
-    saledate: textOf(record, 'saledate'),
-    interbook: textOf(record, 'interbook'),
-    presenterorgc: textOf(record, 'presenterorgc'),
-    presenterorge: textOf(record, 'presenterorge'),
-    prog_image: textOf(record, 'prog_image'),
-    detail_image1: textOf(record, 'detail_image1'),
-    detail_image2: textOf(record, 'detail_image2'),
-    detail_image3: textOf(record, 'detail_image3'),
-    detail_image4: textOf(record, 'detail_image4'),
-    detail_image5: textOf(record, 'detail_image5'),
-    video_link: textOf(record, 'video_link'),
-    video2_link: textOf(record, 'video2_link'),
-    submitdate: textOf(record, 'submitdate'),
-  }));
-
-  return {
-    programmes,
-    venuesById,
-    eventDatesById,
-  };
 }
 
 function sortEvents(events: PublicDiscoverEvent[], sort: DiscoverSort) {
@@ -534,76 +555,101 @@ function sortEvents(events: PublicDiscoverEvent[], sort: DiscoverSort) {
 export async function fetchHongKongDiscoverEvents(
   filters: HongKongDiscoverFilters
 ): Promise<HongKongDiscoverResponse> {
-  const { programmes, venuesById, eventDatesById } = await fetchRawLcsdData();
+  try {
+    const { programmes, venuesById, eventDatesById } = await fetchRawLcsdData();
 
-  let events = programmes
-    .map((programme) =>
-      buildDiscoverEvent(programme, venuesById, eventDatesById, {
-        from: filters.from,
-        to: filters.to,
-      })
-    )
-    .filter((event): event is PublicDiscoverEvent => Boolean(event));
+    let events = programmes
+      .map((programme) =>
+        buildDiscoverEvent(programme, venuesById, eventDatesById, {
+          from: filters.from,
+          to: filters.to,
+        })
+      )
+      .filter((event): event is PublicDiscoverEvent => Boolean(event));
 
-  if (filters.q) {
-    events = events.filter((event) => recordMatchesQuery(event, filters.q));
+    if (filters.q) {
+      events = events.filter((event) => recordMatchesQuery(event, filters.q));
+    }
+
+    if (filters.neighborhoods.length) {
+      events = events.filter((event) => {
+        const region = event.region ?? event.city;
+        return region ? filters.neighborhoods.includes(region) : false;
+      });
+    }
+
+    if (filters.categories.length) {
+      events = events.filter((event) =>
+        event.categories.some((category) => filters.categories.includes(category))
+      );
+    }
+
+    if (filters.freeOnly) {
+      events = events.filter((event) => event.is_free === true);
+    }
+
+    if (filters.onlineOnly) {
+      events = events.filter((event) => {
+        const haystack = [event.title, event.venue_name, event.address, event.description]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes('online');
+      });
+    }
+
+    sortEvents(events, filters.sort);
+
+    if (events.length === 0) {
+      console.warn('[discover][hk-lcsd] parsed 0 events', {
+        from: filters.from.toISOString(),
+        to: filters.to.toISOString(),
+        q: filters.q,
+        categories: filters.categories,
+        neighborhoods: filters.neighborhoods,
+        freeOnly: filters.freeOnly,
+        onlineOnly: filters.onlineOnly,
+        sort: filters.sort,
+      });
+    }
+
+    return {
+      data: events.slice(filters.offset, filters.offset + filters.limit),
+      total: events.length,
+    };
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.warn(err.message);
+    return { data: [], total: 0 };
   }
-
-  if (filters.neighborhoods.length) {
-    events = events.filter((event) => {
-      const region = event.region ?? event.city;
-      return region ? filters.neighborhoods.includes(region) : false;
-    });
-  }
-
-  if (filters.categories.length) {
-    events = events.filter((event) =>
-      event.categories.some((category) => filters.categories.includes(category))
-    );
-  }
-
-  if (filters.freeOnly) {
-    events = events.filter((event) => event.is_free === true);
-  }
-
-  if (filters.onlineOnly) {
-    events = events.filter((event) => {
-      const haystack = [event.title, event.venue_name, event.address, event.description]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-      return haystack.includes('online');
-    });
-  }
-
-  sortEvents(events, filters.sort);
-
-  return {
-    data: events.slice(filters.offset, filters.offset + filters.limit),
-    total: events.length,
-  };
 }
 
 export async function fetchHongKongDiscoverEventById(
   id: string,
   window?: { from: Date; to: Date }
 ): Promise<PublicDiscoverEvent | null> {
-  if (!id.startsWith(HK_LCSD_ID_PREFIX)) return null;
+  try {
+    if (!id.startsWith(HK_LCSD_ID_PREFIX)) return null;
 
-  const sourceEventId = id.slice(HK_LCSD_ID_PREFIX.length);
-  const { programmes, venuesById, eventDatesById } = await fetchRawLcsdData();
-  const programme = programmes.find((item) => item.id === sourceEventId);
-  if (!programme) return null;
+    const sourceEventId = id.slice(HK_LCSD_ID_PREFIX.length);
+    const { programmes, venuesById, eventDatesById } = await fetchRawLcsdData();
+    const programme = programmes.find((item) => item.id === sourceEventId);
+    if (!programme) return null;
 
-  return (
-    buildDiscoverEvent(
-      programme,
-      venuesById,
-      eventDatesById,
-      window ?? {
-        from: new Date('2000-01-01T00:00:00.000Z'),
-        to: new Date('2100-01-01T00:00:00.000Z'),
-      }
-    ) ?? null
-  );
+    return (
+      buildDiscoverEvent(
+        programme,
+        venuesById,
+        eventDatesById,
+        window ?? {
+          from: new Date('2000-01-01T00:00:00.000Z'),
+          to: new Date('2100-01-01T00:00:00.000Z'),
+        }
+      ) ?? null
+    );
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.warn(err.message);
+    return null;
+  }
 }
