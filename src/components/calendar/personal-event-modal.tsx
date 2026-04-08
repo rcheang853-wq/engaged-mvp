@@ -48,7 +48,7 @@ interface PersonalEventModalProps {
   onClose: () => void;
   event?: PersonalEvent | null;
   isCreating: boolean;
-  onSave: (eventData: Omit<PersonalEvent, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  onSave: (eventData: Omit<PersonalEvent, 'id' | 'created_at' | 'updated_at'>) => Promise<PersonalEvent | void>;
   onDelete?: (id: string) => Promise<void>;
   defaultDate?: Date;
   defaultStartTime?: string;
@@ -75,6 +75,7 @@ export function PersonalEventModal({
   const [shareLink, setShareLink] = useState('');
   const [copied, setCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [createdEvent, setCreatedEvent] = useState<PersonalEvent | null>(null);
 
   const {
     register,
@@ -126,16 +127,24 @@ export function PersonalEventModal({
       }
       setError(null);
       setCopied(false);
+      setCreatedEvent(null);
     }
   }, [isOpen, event, defaultDate, defaultStartTime, defaultEndTime, setValue, reset]);
 
   const handleToggleShare = async () => {
-    if (!event || isCreating) return;
+    if (isCreating) {
+      // During creation, just toggle local state; share_enabled is sent with onSave
+      setShareEnabled(!shareEnabled);
+      return;
+    }
+
+    const eventId = event?.id || createdEvent?.id;
+    if (!eventId) return;
 
     try {
       const newShareEnabled = !shareEnabled;
-      const { data, error: toggleError } = await toggleShare(event.id, newShareEnabled);
-      
+      const { data, error: toggleError } = await toggleShare(eventId, newShareEnabled);
+
       if (toggleError || !data) {
         setError('Failed to toggle sharing');
         return;
@@ -162,11 +171,12 @@ export function PersonalEventModal({
   };
 
   const handleRegenerateSlug = async () => {
-    if (!event || isCreating) return;
+    const eventId = event?.id || createdEvent?.id;
+    if (!eventId) return;
 
     setRegenerating(true);
     try {
-      const { data, error: regenError } = await regenerateShareSlug(event.id);
+      const { data, error: regenError } = await regenerateShareSlug(eventId);
       
       if (regenError || !data || !data.share_slug) {
         setError('Failed to regenerate link');
@@ -187,14 +197,25 @@ export function PersonalEventModal({
     setError(null);
 
     try {
-      await onSave({
+      const savedEvent = await onSave({
         title: data.title,
         start_time: new Date(data.start_time).toISOString(),
         end_time: new Date(data.end_time).toISOString(),
         location: data.location || null,
         notes: data.notes || null,
+        share_enabled: shareEnabled,
       });
-      onClose();
+
+      if (isCreating && shareEnabled && savedEvent) {
+        // Keep modal open to display the generated share link
+        setCreatedEvent(savedEvent);
+        if (savedEvent.share_slug) {
+          const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+          setShareLink(`${baseUrl}/e/${savedEvent.share_slug}`);
+        }
+      } else {
+        onClose();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save event');
     } finally {
@@ -312,8 +333,8 @@ export function PersonalEventModal({
             />
           </FormField>
 
-          {/* Share Section - only show for existing events */}
-          {!isCreating && event && (
+          {/* Share Section */}
+          {(event || isCreating || createdEvent) && (
             <div className="border-t pt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

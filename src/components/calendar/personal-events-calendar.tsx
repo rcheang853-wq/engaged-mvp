@@ -27,7 +27,7 @@ const localizer = dateFnsLocalizer({
 
 export interface PersonalEventsCalendarProps {
   events?: PersonalEvent[];
-  onCreateEvent?: (event: Omit<PersonalEvent, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  onCreateEvent?: (event: Omit<PersonalEvent, 'id' | 'created_at' | 'updated_at'>) => Promise<PersonalEvent | void>;
   onUpdateEvent?: (id: string, updates: Partial<PersonalEvent>) => Promise<void>;
   onDeleteEvent?: (id: string) => Promise<void>;
   loading?: boolean;
@@ -98,14 +98,14 @@ export function PersonalEventsCalendar({
     setView(newView);
   }, []);
 
-  const handleCreateEvent = async (eventData: Omit<PersonalEvent, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleCreateEvent = async (eventData: Omit<PersonalEvent, 'id' | 'created_at' | 'updated_at'>): Promise<PersonalEvent | void> => {
     if (!onCreateEvent) return;
-    
+
     setLocalLoading(true);
     setError(null);
-    
+
     try {
-      await onCreateEvent(eventData);
+      return await onCreateEvent(eventData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create event');
       throw err;

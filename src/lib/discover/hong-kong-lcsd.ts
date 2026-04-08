@@ -578,8 +578,10 @@ export async function fetchHongKongDiscoverEvents(
 
   sortEvents(events, filters.sort);
 
+  const pageEvents = events.slice(filters.offset, filters.offset + filters.limit);
+
   return {
-    data: events.slice(filters.offset, filters.offset + filters.limit),
+    data: pageEvents,
     total: events.length,
   };
 }

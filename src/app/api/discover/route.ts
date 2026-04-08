@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { fetchHongKongDiscoverEvents } from '@/lib/discover/hong-kong-lcsd';
+import { enrichEventsWithOgImages } from '@/lib/scrape-og-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,6 +96,8 @@ export async function GET(request: NextRequest) {
         onlineOnly,
         sort: sort === 'date' ? 'date' : 'relevance',
       });
+
+      await enrichEventsWithOgImages(result.data);
 
       return NextResponse.json({
         success: true,
