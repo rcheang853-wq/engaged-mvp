@@ -72,6 +72,7 @@ export function PersonalEventModalV2({
   const [visibility, setVisibility] = useState<Visibility>('public');
   const [shareEnabled, setShareEnabled] = useState(false);
   const [shareLink, setShareLink] = useState('');
+  const [shareSlug, setShareSlug] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
 
@@ -132,6 +133,7 @@ export function PersonalEventModalV2({
         setValue('visibility', vis);
 
         setShareEnabled(event.share_enabled || false);
+        setShareSlug(event.share_slug || null);
         if (event.share_slug) {
           const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
           setShareLink(`${baseUrl}/e/${event.share_slug}`);
@@ -160,6 +162,7 @@ export function PersonalEventModalV2({
         setEventType('unlimited');
         setVisibility('public');
         setShareEnabled(false);
+        setShareSlug(null);
         setShareLink('');
       }
       setError(null);
@@ -180,6 +183,7 @@ export function PersonalEventModalV2({
       }
 
       setShareEnabled(newShareEnabled);
+      setShareSlug(data.share_slug || null);
       if (newShareEnabled && data.share_slug) {
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
         setShareLink(`${baseUrl}/e/${data.share_slug}`);
@@ -216,6 +220,7 @@ export function PersonalEventModalV2({
       }
 
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      setShareSlug(data.share_slug);
       setShareLink(`${baseUrl}/e/${data.share_slug}`);
       setShareEnabled(true);
     } catch (err) {
@@ -255,7 +260,7 @@ export function PersonalEventModalV2({
         notes: data.notes || null,
         max_attendees: eventType === 'limited' ? (data.max_attendees || null) : null,
         visibility: visibility,
-        share_slug: event?.share_slug || null,
+        share_slug: shareSlug,
         share_enabled: shareEnabled,
       });
       onClose();

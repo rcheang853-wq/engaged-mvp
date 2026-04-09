@@ -97,7 +97,9 @@ export async function GET(request: NextRequest) {
         sort: sort === 'date' ? 'date' : 'relevance',
       });
 
-      await enrichEventsWithOgImages(result.data);
+      void enrichEventsWithOgImages(result.data).catch(() => {
+        // Best-effort enrichment only; never block the discover response on OG scraping
+      });
 
       return NextResponse.json({
         success: true,
