@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { fetchHongKongDiscoverEvents } from '@/lib/discover/hong-kong-lcsd';
+import { enrichEventsWithOgImages } from '@/lib/scrape-og-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,6 +95,10 @@ export async function GET(request: NextRequest) {
         freeOnly,
         onlineOnly,
         sort: sort === 'date' ? 'date' : 'relevance',
+      });
+
+      void enrichEventsWithOgImages(result.data).catch(() => {
+        // Best-effort enrichment only; never block the discover response on OG scraping
       });
 
       return NextResponse.json({
