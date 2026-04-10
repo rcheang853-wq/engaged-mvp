@@ -184,12 +184,15 @@ export async function GET(request: NextRequest) {
     let publicQuery = supabase
       .from('public_events')
       .select(
-        'id, title, description, start_at, end_at, all_day, timezone, venue_name, address, city, region, country, url, ticket_url, organizer_name, price_min, price_max, currency, is_free, categories, images, status, created_at, updated_at'
+        'id, title, description, start_at, end_at, all_day, timezone, venue_name, address, city, region, country, url, ticket_url, organizer_name, price_min, price_max, currency, is_free, categories, images, status, created_at, updated_at',
+        { count: 'exact' }
       )
       .eq('city', city)
       .eq('status', 'active')
       .gte('start_at', from.toISOString())
-      .lt('start_at', to.toISOString());
+      .lt('start_at', to.toISOString())
+      .order('start_at', { ascending: true })
+      .range(0, Math.min(offset + limit + 200, 500));
 
     if (q) {
       const safe = q.replace(/[,%]/g, ' ');
@@ -205,7 +208,7 @@ export async function GET(request: NextRequest) {
       publicQuery = publicQuery.or('venue_name.ilike.%online%,address.ilike.%online%,title.ilike.%online%');
     }
 
-    const { data: publicData, error: publicError } = await publicQuery;
+    const { data: publicData, error: publicError, count: publicCount } = await publicQuery;
     if (publicError) throw publicError;
 
     const hasUserCreatedDiscoverFilters = city === 'Macau' && (!neighborhoods.length || neighborhoods.includes(''));
@@ -215,7 +218,8 @@ export async function GET(request: NextRequest) {
       let calendarQuery = supabase
         .from('calendar_events')
         .select(
-          'id, title, description, start_at, end_at, all_day, timezone, location, url, category_main, tags, created_at, updated_at'
+          'id, title, description, start_at, end_at, all_day, timezone, location, url, category_main, tags, created_at, updated_at',
+          { count: 'exact' }
         )
         .eq('discoverable_by_others', true)
         .gte('start_at', from.toISOString())
@@ -230,7 +234,7 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const { data: calendarData, error: calendarError } = await calendarQuery;
+      const { data: calendarData, error: calendarError, count: calendarCount } = await calendarQuery;
       if (calendarError) {
         const message = String(calendarError.message || '');
         if (!message.includes('discoverable_by_others')) {
