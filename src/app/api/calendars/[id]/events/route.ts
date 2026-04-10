@@ -16,6 +16,7 @@ const createEventSchema = z.object({
   end_at: z.string().datetime().optional(),
   all_day: z.boolean().optional().default(false),
   location: z.string().max(500).optional(),
+  discoverable_by_others: z.boolean().optional().default(false),
   color: z
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/)
@@ -108,6 +109,7 @@ export async function POST(
         tags: parsed.data.tags ?? [],
         end_at: parsed.data.end_at ?? null,
         location: parsed.data.location ?? null,
+        discoverable_by_others: parsed.data.discoverable_by_others ?? false,
         color: parsed.data.color ?? null,
       })
       .select()

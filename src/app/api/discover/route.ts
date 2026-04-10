@@ -5,6 +5,100 @@ import { enrichEventsWithOgImages } from '@/lib/scrape-og-image';
 
 export const dynamic = 'force-dynamic';
 
+function mapPersonalEventToDiscoverRow(row: any) {
+  return {
+    id: `user-${row.id}`,
+    title: row.title,
+    description: row.notes ?? null,
+    start_at: row.start_time,
+    end_at: row.end_time,
+    all_day: false,
+    timezone: 'Asia/Macau',
+    venue_name: row.location ?? null,
+    address: row.location ?? null,
+    city: 'Macau',
+    region: null,
+    country: 'MO',
+    url: null,
+    ticket_url: null,
+    organizer_name: 'Community',
+    price_min: null,
+    price_max: null,
+    currency: 'MOP',
+    is_free: true,
+    categories: ['community'],
+    images: [],
+    status: 'active',
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    source_type: 'user_created',
+  };
+}
+
+function mapCalendarEventToDiscoverRow(row: any) {
+  const categories = [
+    row.category_main,
+    ...(Array.isArray(row.tags) ? row.tags : []),
+  ].filter(Boolean);
+
+  return {
+    id: `calendar-${row.id}`,
+    title: row.title,
+    description: row.description ?? null,
+    start_at: row.start_at,
+    end_at: row.end_at,
+    all_day: row.all_day ?? false,
+    timezone: row.timezone ?? 'Asia/Macau',
+    venue_name: row.location ?? null,
+    address: row.location ?? null,
+    city: 'Macau',
+    region: null,
+    country: 'MO',
+    url: row.url ?? null,
+    ticket_url: null,
+    organizer_name: 'Community',
+    price_min: null,
+    price_max: null,
+    currency: 'MOP',
+    is_free: true,
+    categories: categories.length ? categories : ['community'],
+    images: [],
+    status: 'active',
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    source_type: 'user_created',
+  };
+}
+
+function discoverRowMatchesFilters(
+  row: any,
+  filters: {
+    neighborhoods: string[];
+    categories: string[];
+    freeOnly: boolean;
+    onlineOnly: boolean;
+  }
+) {
+  if (filters.freeOnly && row.is_free !== true) return false;
+
+  if (filters.neighborhoods.length) {
+    const region = typeof row.region === 'string' ? row.region : '';
+    if (!filters.neighborhoods.includes(region)) return false;
+  }
+
+  if (filters.categories.length) {
+    const rowCategories = Array.isArray(row.categories) ? row.categories : [];
+    if (!filters.categories.some((category) => rowCategories.includes(category))) return false;
+  }
+
+  if (filters.onlineOnly) {
+    const haystack = [row.venue_name, row.address, row.title].filter(Boolean).join(' ').toLowerCase();
+    if (!haystack.includes('online')) return false;
+  }
+
+  return true;
+}
+
 // GET /api/discover
 // Public endpoint (RLS allows SELECT). Supports pagination + filters.
 // Query params:
@@ -117,11 +211,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = (await createServerSupabaseClient()) as any;
 
-    let qb = supabase
+    let publicQuery = supabase
       .from('public_events')
       .select(
-        'id, title, description, start_at, end_at, all_day, timezone, venue_name, address, city, region, country, url, ticket_url, organizer_name, price_min, price_max, currency, is_free, categories, images, status, created_at, updated_at',
-        { count: 'exact' }
+        'id, title, description, start_at, end_at, all_day, timezone, venue_name, address, city, region, country, url, ticket_url, organizer_name, price_min, price_max, currency, is_free, categories, images, status, created_at, updated_at'
       )
       .eq('city', city)
       .eq('status', 'active')
@@ -129,48 +222,76 @@ export async function GET(request: NextRequest) {
       .lt('start_at', to.toISOString());
 
     if (q) {
-      // best-effort search across common text fields
       const safe = q.replace(/[,%]/g, ' ');
-      qb = qb.or(
+      publicQuery = publicQuery.or(
         `title.ilike.%${safe}%,description.ilike.%${safe}%,venue_name.ilike.%${safe}%,address.ilike.%${safe}%,region.ilike.%${safe}%,city.ilike.%${safe}%,organizer_name.ilike.%${safe}%`
       );
     }
 
-    if (freeOnly) {
-      qb = qb.eq('is_free', true);
-    }
-
-    if (neighborhoods.length) {
-      qb = qb.in('region', neighborhoods);
-    }
-
-    if (categories.length) {
-      // overlap filter for text[]
-      qb = qb.overlaps('categories', categories);
-    }
-
+    if (freeOnly) publicQuery = publicQuery.eq('is_free', true);
+    if (neighborhoods.length) publicQuery = publicQuery.in('region', neighborhoods);
+    if (categories.length) publicQuery = publicQuery.overlaps('categories', categories);
     if (onlineOnly) {
-      // heuristic: look for 'online' in venue/address/title
-      qb = qb.or('venue_name.ilike.%online%,address.ilike.%online%,title.ilike.%online%');
+      publicQuery = publicQuery.or('venue_name.ilike.%online%,address.ilike.%online%,title.ilike.%online%');
     }
 
-    // sorting
-    // TODO: relevance sorting. For now, date sort is canonical.
-    if (sort === 'date' || sort === 'relevance') {
-      qb = qb.order('start_at', { ascending: true });
+    const { data: publicData, error: publicError } = await publicQuery;
+    if (publicError) throw publicError;
+
+    let personalQuery = supabase
+      .from('personal_events')
+      .select('id, title, notes, start_time, end_time, location, created_at, updated_at')
+      .eq('discoverable_by_others', true)
+      .gte('start_time', from.toISOString())
+      .lt('start_time', to.toISOString());
+
+    if (q) {
+      const safe = q.replace(/[,%]/g, ' ');
+      personalQuery = personalQuery.or(`title.ilike.%${safe}%,notes.ilike.%${safe}%,location.ilike.%${safe}%`);
     }
 
-    const { data, error, count } = await qb.range(offset, offset + limit - 1);
-    if (error) throw error;
+    const { data: personalData, error: personalError } = await personalQuery;
+    if (personalError) throw personalError;
+
+    let calendarQuery = supabase
+      .from('calendar_events')
+      .select(
+        'id, title, description, start_at, end_at, all_day, timezone, location, url, category_main, tags, created_at, updated_at'
+      )
+      .eq('discoverable_by_others', true)
+      .gte('start_at', from.toISOString())
+      .lt('start_at', to.toISOString());
+
+    if (q) {
+      const safe = q.replace(/[,%]/g, ' ');
+      calendarQuery = calendarQuery.or(
+        `title.ilike.%${safe}%,description.ilike.%${safe}%,location.ilike.%${safe}%,category_main.ilike.%${safe}%`
+      );
+    }
+
+    const { data: calendarData, error: calendarError } = await calendarQuery;
+    if (calendarError) throw calendarError;
+
+    const merged = [
+      ...((publicData ?? []).map((row: any) => ({ ...row, source_type: 'public_ingested' }))),
+      ...(city === 'Macau' ? (personalData ?? []).map(mapPersonalEventToDiscoverRow) : []),
+      ...(city === 'Macau' ? (calendarData ?? []).map(mapCalendarEventToDiscoverRow) : []),
+    ].filter((row) =>
+      discoverRowMatchesFilters(row, { neighborhoods, categories, freeOnly, onlineOnly })
+    );
+
+    merged.sort((a: any, b: any) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+
+    const paged = merged.slice(offset, offset + limit);
 
     return NextResponse.json({
       success: true,
-      data,
+      data: paged,
       meta: {
         city,
         limit,
         offset,
-        total: count ?? null,
+        total: merged.length,
         window: { from: from.toISOString(), to: to.toISOString() },
         filters: { q, datePreset, chosenDate, neighborhoods, categories, freeOnly, onlineOnly, sort },
       },
