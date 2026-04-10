@@ -5,36 +5,6 @@ import { enrichEventsWithOgImages } from '@/lib/scrape-og-image';
 
 export const dynamic = 'force-dynamic';
 
-function mapPersonalEventToDiscoverRow(row: any) {
-  return {
-    id: `user-${row.id}`,
-    title: row.title,
-    description: row.notes ?? null,
-    start_at: row.start_time,
-    end_at: row.end_time,
-    all_day: false,
-    timezone: 'Asia/Macau',
-    venue_name: row.location ?? null,
-    address: row.location ?? null,
-    city: 'Macau',
-    region: null,
-    country: 'MO',
-    url: null,
-    ticket_url: null,
-    organizer_name: 'Community',
-    price_min: null,
-    price_max: null,
-    currency: 'MOP',
-    is_free: true,
-    categories: ['community'],
-    images: [],
-    status: 'active',
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-    source_type: 'user_created',
-  };
-}
-
 function mapCalendarEventToDiscoverRow(row: any) {
   const categories = [
     row.category_main,
@@ -238,44 +208,42 @@ export async function GET(request: NextRequest) {
     const { data: publicData, error: publicError } = await publicQuery;
     if (publicError) throw publicError;
 
-    let personalQuery = supabase
-      .from('personal_events')
-      .select('id, title, notes, start_time, end_time, location, created_at, updated_at')
-      .eq('discoverable_by_others', true)
-      .gte('start_time', from.toISOString())
-      .lt('start_time', to.toISOString());
+    const hasUserCreatedDiscoverFilters = city === 'Macau' && (!neighborhoods.length || neighborhoods.includes(''));
 
-    if (q) {
-      const safe = q.replace(/[,%]/g, ' ');
-      personalQuery = personalQuery.or(`title.ilike.%${safe}%,notes.ilike.%${safe}%,location.ilike.%${safe}%`);
+    let calendarRows: any[] = [];
+    if (hasUserCreatedDiscoverFilters) {
+      let calendarQuery = supabase
+        .from('calendar_events')
+        .select(
+          'id, title, description, start_at, end_at, all_day, timezone, location, url, category_main, tags, created_at, updated_at'
+        )
+        .eq('discoverable_by_others', true)
+        .gte('start_at', from.toISOString())
+        .lt('start_at', to.toISOString())
+        .order('start_at', { ascending: true })
+        .range(0, Math.min(offset + limit + 200, 500));
+
+      if (q) {
+        const safe = q.replace(/[,%]/g, ' ');
+        calendarQuery = calendarQuery.or(
+          `title.ilike.%${safe}%,description.ilike.%${safe}%,location.ilike.%${safe}%,category_main.ilike.%${safe}%`
+        );
+      }
+
+      const { data: calendarData, error: calendarError } = await calendarQuery;
+      if (calendarError) {
+        const message = String(calendarError.message || '');
+        if (!message.includes('discoverable_by_others')) {
+          throw calendarError;
+        }
+      } else {
+        calendarRows = (calendarData ?? []).map(mapCalendarEventToDiscoverRow);
+      }
     }
-
-    const { data: personalData, error: personalError } = await personalQuery;
-    if (personalError) throw personalError;
-
-    let calendarQuery = supabase
-      .from('calendar_events')
-      .select(
-        'id, title, description, start_at, end_at, all_day, timezone, location, url, category_main, tags, created_at, updated_at'
-      )
-      .eq('discoverable_by_others', true)
-      .gte('start_at', from.toISOString())
-      .lt('start_at', to.toISOString());
-
-    if (q) {
-      const safe = q.replace(/[,%]/g, ' ');
-      calendarQuery = calendarQuery.or(
-        `title.ilike.%${safe}%,description.ilike.%${safe}%,location.ilike.%${safe}%,category_main.ilike.%${safe}%`
-      );
-    }
-
-    const { data: calendarData, error: calendarError } = await calendarQuery;
-    if (calendarError) throw calendarError;
 
     const merged = [
       ...((publicData ?? []).map((row: any) => ({ ...row, source_type: 'public_ingested' }))),
-      ...(city === 'Macau' ? (personalData ?? []).map(mapPersonalEventToDiscoverRow) : []),
-      ...(city === 'Macau' ? (calendarData ?? []).map(mapCalendarEventToDiscoverRow) : []),
+      ...calendarRows,
     ].filter((row) =>
       discoverRowMatchesFilters(row, { neighborhoods, categories, freeOnly, onlineOnly })
     );

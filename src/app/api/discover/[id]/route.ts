@@ -23,44 +23,6 @@ export async function GET(
 
     const supabase = (await createServerSupabaseClient()) as any;
 
-    if (id.startsWith('user-')) {
-      const personalId = id.replace(/^user-/, '');
-      const { data: personal, error: personalError } = await supabase
-        .from('personal_events')
-        .select('id, title, notes, start_time, end_time, location, created_at, updated_at, discoverable_by_others')
-        .eq('id', personalId)
-        .eq('discoverable_by_others', true)
-        .single();
-
-      if (personalError || !personal) {
-        return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
-      }
-
-      const data = {
-        id,
-        title: personal.title,
-        description: personal.notes ?? null,
-        start_at: personal.start_time,
-        end_at: personal.end_time,
-        all_day: false,
-        timezone: 'Asia/Macau',
-        venue_name: personal.location ?? null,
-        address: personal.location ?? null,
-        organizer_name: 'Community',
-        price_min: null,
-        price_max: null,
-        is_free: true,
-        currency: 'MOP',
-        images: [],
-        categories: ['community'],
-        ticket_url: null,
-        created_at: personal.created_at,
-        source_type: 'user_created',
-      };
-
-      return NextResponse.json({ success: true, data });
-    }
-
     if (id.startsWith('calendar-')) {
       const calendarEventId = id.replace(/^calendar-/, '');
       const { data: calendarEvent, error: calendarEventError } = await supabase
@@ -73,6 +35,10 @@ export async function GET(
         .single();
 
       if (calendarEventError || !calendarEvent) {
+        const message = String(calendarEventError?.message || '');
+        if (message.includes('discoverable_by_others')) {
+          return NextResponse.json({ success: false, error: 'Discoverable events not enabled yet' }, { status: 404 });
+        }
         return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
       }
 
