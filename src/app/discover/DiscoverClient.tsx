@@ -314,8 +314,8 @@ export default function DiscoverClient() {
   }, [events, holidayEvents]);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] pb-20">
-      <div className="sticky top-0 z-10 bg-[#F9FAFB] px-4 pt-12 pb-3 space-y-3">
+    <div className="min-h-screen pb-20" style={{ background: 'var(--engaged-bg)' }}>
+      <div className="sticky top-0 z-10 px-4 pt-12 pb-3 space-y-3" style={{ background: 'var(--engaged-bg)' }}>
         {mode === 'public' && (
           <div className="flex items-center gap-2 h-8">
             <MapPin size={16} className="text-[#374151] flex-shrink-0" />

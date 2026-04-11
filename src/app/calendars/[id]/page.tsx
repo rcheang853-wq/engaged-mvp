@@ -272,7 +272,7 @@ export default function CalendarViewPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-dvh flex-col bg-gray-50 pb-20 md:h-dvh">
+      <div className="flex min-h-dvh flex-col pb-20 md:h-dvh" style={{ background: 'var(--engaged-bg)' }}>
         <div className="h-16 border-b bg-white px-4 py-3" />
         <CalendarSkeleton />
         <BottomTabBar />
@@ -283,7 +283,7 @@ export default function CalendarViewPage() {
   const hasEvents = events.length > 0;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-gray-50 pb-20 md:h-dvh">
+    <div className="flex min-h-dvh flex-col pb-20 md:h-dvh" style={{ background: 'var(--engaged-bg)' }}>
       {/* Header */}
       <div className="border-b bg-white px-4 py-3">
         <div className="flex items-center gap-3">

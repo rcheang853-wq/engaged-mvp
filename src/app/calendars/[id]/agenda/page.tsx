@@ -131,7 +131,7 @@ export default function CalendarAgendaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
+      <div className="min-h-screen flex flex-col pb-20" style={{ background: 'var(--engaged-bg)' }}>
         <div className="bg-white border-b px-4 py-3 h-16" />
         <div className="px-4 py-4 space-y-4">
           {[1, 2, 3].map((i) => (
@@ -156,7 +156,7 @@ export default function CalendarAgendaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
+    <div className="min-h-screen flex flex-col pb-20" style={{ background: 'var(--engaged-bg)' }}>
       <div className="bg-white border-b px-4 py-3">
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="text-gray-500 hover:text-gray-700">
