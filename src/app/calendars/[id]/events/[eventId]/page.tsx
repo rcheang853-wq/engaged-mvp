@@ -28,6 +28,7 @@ interface CalendarEvent {
   tags: string[] | null;
   discoverable_by_others: boolean;
   created_by: string;
+  viewer_is_owner?: boolean;
   profiles: { id: string; full_name: string; avatar_url: string | null };
   event_comments: Comment[];
 }
@@ -161,7 +162,7 @@ export default function EventDetailPage() {
 
   const eventColor = event.color || '#3B82F6';
   const eventTags = event.tags ?? [];
-  const isOwner = currentUserId && event.created_by === currentUserId;
+  const isOwner = event.viewer_is_owner ?? !!(currentUserId && event.created_by === currentUserId);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

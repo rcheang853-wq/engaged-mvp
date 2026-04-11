@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       .single();
 
     if (error) return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({ success: true, data: { ...data, viewer_is_owner: data.created_by === user.id } });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
