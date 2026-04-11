@@ -112,7 +112,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const result = await authClient.signIn({ email, password });
 
         if (result.success) {
-          // User profile will be set by the auth state change listener
+          // Do not rely only on the async auth-state listener; eagerly refresh user state.
+          const profile = await authClient.getCurrentUser();
+          setUser(profile);
           return result;
         }
 
@@ -126,7 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setLoading(false);
       }
     },
-    [setLoading]
+    [setLoading, setUser]
   );
 
   const signUp = useCallback(
