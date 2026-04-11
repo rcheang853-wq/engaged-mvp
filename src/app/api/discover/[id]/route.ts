@@ -23,6 +23,56 @@ export async function GET(
 
     const supabase = (await createServerSupabaseClient()) as any;
 
+    if (id.startsWith('calendar-')) {
+      const calendarEventId = id.replace(/^calendar-/, '');
+      const { data: calendarEvent, error: calendarEventError } = await supabase
+        .from('calendar_events')
+        .select(
+          'id, title, description, start_at, end_at, all_day, timezone, location, url, category_main, tags, created_at, updated_at, discoverable_by_others'
+        )
+        .eq('id', calendarEventId)
+        .eq('discoverable_by_others', true)
+        .single();
+
+      if (calendarEventError || !calendarEvent) {
+        const message = String(calendarEventError?.message || '');
+        if (message.includes('discoverable_by_others')) {
+          return NextResponse.json({ success: false, error: 'Discoverable events not enabled yet' }, { status: 404 });
+        }
+        return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+      }
+
+      const categories = [
+        calendarEvent.category_main,
+        ...(Array.isArray(calendarEvent.tags) ? calendarEvent.tags : []),
+      ].filter(Boolean);
+
+      const data = {
+        id,
+        title: calendarEvent.title,
+        description: calendarEvent.description ?? null,
+        start_at: calendarEvent.start_at,
+        end_at: calendarEvent.end_at,
+        all_day: calendarEvent.all_day ?? false,
+        timezone: calendarEvent.timezone ?? 'Asia/Macau',
+        venue_name: calendarEvent.location ?? null,
+        address: calendarEvent.location ?? null,
+        organizer_name: 'Community',
+        price_min: null,
+        price_max: null,
+        is_free: true,
+        currency: 'MOP',
+        images: [],
+        categories: categories.length ? categories : ['community'],
+        ticket_url: null,
+        url: calendarEvent.url ?? null,
+        created_at: calendarEvent.created_at,
+        source_type: 'user_created',
+      };
+
+      return NextResponse.json({ success: true, data });
+    }
+
     const { data, error } = await supabase
       .from('public_events')
       .select('*')

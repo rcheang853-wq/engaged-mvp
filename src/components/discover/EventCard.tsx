@@ -19,6 +19,7 @@ export interface PublicEvent {
   categories: string[];
   created_at: string;
   saved?: boolean;
+  source_type?: 'public_ingested' | 'user_created' | string;
 }
 
 interface EventCardProps {
@@ -64,11 +65,12 @@ export default function EventCard({ event }: EventCardProps) {
   const thumbnail = event.images?.[1] ?? event.images?.[0] ?? null;
   const priceStr = formatPrice(event);
   const newBadge = isJustAdded(event);
+  const isUserCreatedDiscover = event.source_type === 'user_created';
 
   async function toggleSave(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (saving) return;
+    if (saving || isUserCreatedDiscover) return;
     setSaving(true);
     try {
       const method = saved ? 'DELETE' : 'POST';
@@ -145,17 +147,19 @@ export default function EventCard({ event }: EventCardProps) {
         </div>
 
         {/* Heart */}
-        <button
-          onClick={toggleSave}
-          disabled={saving}
-          className="flex-shrink-0 p-1 -mr-1 transition-transform active:scale-90"
-          aria-label={saved ? 'Unsave event' : 'Save event'}
-        >
-          <Heart
-            size={16}
-            className={saved ? 'text-red-500 fill-red-500' : 'text-[#9CA3AF]'}
-          />
-        </button>
+        {!isUserCreatedDiscover && (
+          <button
+            onClick={toggleSave}
+            disabled={saving}
+            className="flex-shrink-0 p-1 -mr-1 transition-transform active:scale-90"
+            aria-label={saved ? 'Unsave event' : 'Save event'}
+          >
+            <Heart
+              size={16}
+              className={saved ? 'text-red-500 fill-red-500' : 'text-[#9CA3AF]'}
+            />
+          </button>
+        )}
       </div>
     </Link>
   );

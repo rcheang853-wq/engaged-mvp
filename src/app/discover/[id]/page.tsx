@@ -27,6 +27,7 @@ interface PublicEvent {
   categories: string[];
   ticket_url: string | null;
   created_at: string;
+  source_type?: 'public_ingested' | 'user_created' | string;
 }
 
 interface Calendar { id: string; name: string; color: string; }
@@ -263,7 +264,7 @@ export default function PublicEventDetailPage() {
   }, [id]);
 
   async function toggleSave() {
-    if (!event) return;
+    if (!event || event.source_type === 'user_created') return;
     const method = saved ? 'DELETE' : 'POST';
     await fetch(`/api/discover/${event.id}/save`, { method });
     setSaved(!saved);
@@ -271,6 +272,7 @@ export default function PublicEventDetailPage() {
 
   const priceStr = event ? formatPrice(event) : '';
   const endingSoon = event ? isSaleEndingSoon(event) : false;
+  const isUserCreatedDiscover = event?.source_type === 'user_created';
   const shortDesc = event?.description?.slice(0, 120);
   const hasMore = (event?.description?.length ?? 0) > 120;
 
@@ -313,9 +315,11 @@ export default function PublicEventDetailPage() {
           </button>
           <div className="flex items-center gap-3 pointer-events-auto">
             <button className="p-1"><Share2 size={18} color="#FFFFFF" /></button>
-            <button onClick={toggleSave} className="p-1">
-              <Heart size={18} color="#FFFFFF" className={saved ? 'fill-white' : ''} />
-            </button>
+            {!isUserCreatedDiscover && (
+              <button onClick={toggleSave} className="p-1">
+                <Heart size={18} color="#FFFFFF" className={saved ? 'fill-white' : ''} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -425,7 +429,11 @@ export default function PublicEventDetailPage() {
       >
         <span className="text-sm font-bold text-[#111827]">{priceStr}</span>
 
-        {addedTo ? (
+        {isUserCreatedDiscover ? (
+          <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-4 py-1.5 rounded-2xl">
+            <span className="text-xs font-semibold text-blue-700">Community event</span>
+          </div>
+        ) : addedTo ? (
           <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 px-4 py-1.5 rounded-2xl">
             <Check size={14} className="text-green-600" />
             <span className="text-xs font-semibold text-green-700">Added to {addedTo}</span>
@@ -445,7 +453,7 @@ export default function PublicEventDetailPage() {
       <BottomTabBar />
 
       {/* Add to Calendar modal */}
-      {showCalModal && (
+      {showCalModal && !isUserCreatedDiscover && (
         <AddToCalendarModal
           eventId={event.id}
           onClose={() => setShowCalModal(false)}
