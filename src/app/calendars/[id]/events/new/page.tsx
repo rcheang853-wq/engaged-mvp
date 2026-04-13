@@ -127,7 +127,7 @@ export default function NewEventPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: 'var(--engaged-bg)' }}>
       {/* Header */}
       <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
         <button onClick={() => router.back()} className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
