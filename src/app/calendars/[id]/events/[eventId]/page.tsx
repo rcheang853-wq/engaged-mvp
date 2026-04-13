@@ -26,7 +26,9 @@ interface CalendarEvent {
   color: string | null;
   category_main: string | null;
   tags: string[] | null;
+  discoverable_by_others: boolean;
   created_by: string;
+  viewer_is_owner?: boolean;
   profiles: { id: string; full_name: string; avatar_url: string | null };
   event_comments: Comment[];
 }
@@ -49,6 +51,7 @@ export default function EventDetailPage() {
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [savingDiscoverable, setSavingDiscoverable] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,6 +108,31 @@ export default function EventDetailPage() {
     }
   };
 
+  const toggleDiscoverable = async () => {
+    if (!event || savingDiscoverable) return;
+
+    const nextDiscoverable = !event.discoverable_by_others;
+    setSavingDiscoverable(true);
+    try {
+      const res = await fetch(`/api/calendars/${id}/events/${eventId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ discoverable_by_others: nextDiscoverable }),
+      });
+      const d = await res.json();
+      if (!res.ok || !d.success) {
+        toast.error('Failed to update Discover setting');
+        return;
+      }
+      setEvent((prev) => prev ? { ...prev, discoverable_by_others: nextDiscoverable } : prev);
+      toast.success(nextDiscoverable ? 'Event can appear in Discover' : 'Event removed from Discover');
+    } catch {
+      toast.error('Failed to update Discover setting');
+    } finally {
+      setSavingDiscoverable(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -134,7 +162,7 @@ export default function EventDetailPage() {
 
   const eventColor = event.color || '#3B82F6';
   const eventTags = event.tags ?? [];
-  const isOwner = currentUserId && event.created_by === currentUserId;
+  const isOwner = event.viewer_is_owner ?? !!(currentUserId && event.created_by === currentUserId);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -264,6 +292,32 @@ export default function EventDetailPage() {
                     {tag}
                   </span>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Discoverability */}
+          {isOwner && (
+            <div className="flex items-start gap-3 border-t border-gray-50 pt-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: eventColor + '15' }}>
+                <Share2 size={16} style={{ color: eventColor }} />
+              </div>
+              <div className="flex-1">
+                <label className="flex items-start justify-between gap-3">
+                  <span>
+                    <span className="block text-sm font-semibold text-gray-900">Appear in Discover</span>
+                    <span className="block text-xs text-gray-500 mt-0.5">
+                      Public Discover listing only; calendar access stays unchanged.
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={!!event.discoverable_by_others}
+                    onChange={toggleDiscoverable}
+                    disabled={savingDiscoverable}
+                    className="mt-1 rounded"
+                  />
+                </label>
               </div>
             </div>
           )}

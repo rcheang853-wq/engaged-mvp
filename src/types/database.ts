@@ -217,6 +217,7 @@ export interface Database {
           reminder_minutes: number | null;
           category_main: string | null;
           tags: string[];
+          discoverable_by_others: boolean;
           start_at: string;
           end_at: string | null;
           all_day: boolean;
@@ -239,6 +240,7 @@ export interface Database {
           reminder_minutes?: number | null;
           category_main?: string | null;
           tags?: string[];
+          discoverable_by_others?: boolean;
           start_at: string;
           end_at?: string | null;
           all_day?: boolean;
@@ -261,6 +263,7 @@ export interface Database {
           reminder_minutes?: number | null;
           category_main?: string | null;
           tags?: string[];
+          discoverable_by_others?: boolean;
           start_at?: string;
           end_at?: string | null;
           all_day?: boolean;
@@ -886,6 +889,7 @@ export interface Database {
           notes: string | null;
           share_slug: string | null;
           share_enabled: boolean;
+          discoverable_by_others: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -899,6 +903,7 @@ export interface Database {
           notes?: string | null;
           share_slug?: string | null;
           share_enabled?: boolean;
+          discoverable_by_others?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -912,6 +917,7 @@ export interface Database {
           notes?: string | null;
           share_slug?: string | null;
           share_enabled?: boolean;
+          discoverable_by_others?: boolean;
           created_at?: string;
           updated_at?: string;
         };

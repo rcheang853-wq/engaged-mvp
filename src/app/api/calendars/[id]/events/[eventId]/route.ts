@@ -11,6 +11,7 @@ const updateEventSchema = z.object({
   end_at: z.string().datetime().optional(),
   all_day: z.boolean().optional(),
   location: z.string().max(500).optional(),
+  discoverable_by_others: z.boolean().optional(),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
   category_main: z.string().max(100).optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
@@ -33,7 +34,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       .single();
 
     if (error) return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({ success: true, data: { ...data, viewer_is_owner: data.created_by === user.id } });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
@@ -61,6 +62,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         ...(parsed.data.end_at !== undefined && { end_at: parsed.data.end_at ?? null }),
         ...(parsed.data.all_day !== undefined && { all_day: parsed.data.all_day }),
         ...(parsed.data.location !== undefined && { location: parsed.data.location ?? null }),
+        ...(parsed.data.discoverable_by_others !== undefined && { discoverable_by_others: parsed.data.discoverable_by_others }),
         ...(parsed.data.color !== undefined && { color: parsed.data.color ?? null }),
         ...(parsed.data.category_main !== undefined && { category_main: parsed.data.category_main ?? null }),
         ...(parsed.data.tags !== undefined && { tags: parsed.data.tags ?? [] }),

@@ -7,15 +7,13 @@ export const dynamic = 'force-dynamic';
 const createEventSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
-  notes: z.string().max(5000).optional(),
-  url: z.string().max(2000).optional(),
-  reminder_minutes: z.number().int().min(0).max(7 * 24 * 60).optional(),
   category_main: z.string().max(100).optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
   start_at: z.string().datetime(),
   end_at: z.string().datetime().optional(),
   all_day: z.boolean().optional().default(false),
   location: z.string().max(500).optional(),
+  discoverable_by_others: z.boolean().optional().default(false),
   color: z
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/)
@@ -101,13 +99,11 @@ export async function POST(
         start_at: parsed.data.start_at,
         all_day: parsed.data.all_day ?? false,
         description: parsed.data.description ?? null,
-        notes: parsed.data.notes ?? null,
-        url: parsed.data.url ?? null,
-        reminder_minutes: parsed.data.reminder_minutes ?? null,
         category_main: parsed.data.category_main ?? null,
         tags: parsed.data.tags ?? [],
         end_at: parsed.data.end_at ?? null,
         location: parsed.data.location ?? null,
+        discoverable_by_others: parsed.data.discoverable_by_others ?? false,
         color: parsed.data.color ?? null,
       })
       .select()

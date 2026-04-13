@@ -25,6 +25,7 @@ export default function NewEventPage() {
   const [endTime, setEndTime] = useState('10:00');
   const [allDay, setAllDay] = useState(false);
   const [location, setLocation] = useState('');
+  const [discoverableByOthers, setDiscoverableByOthers] = useState(false);
   const [color, setColor] = useState(COLORS[0]);
   const [saving, setSaving] = useState(false);
   const [showColors, setShowColors] = useState(false);
@@ -94,6 +95,7 @@ export default function NewEventPage() {
         start_at,
         all_day: allDay,
         location: location.trim() || undefined,
+        discoverable_by_others: discoverableByOthers,
         color,
         category_main: categoryMain || undefined,
         tags,
@@ -255,6 +257,25 @@ export default function NewEventPage() {
               className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 disabled:text-gray-400"
             />
           </div>
+        </div>
+
+        {/* Discoverability */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={discoverableByOthers}
+              onChange={(e) => setDiscoverableByOthers(e.target.checked)}
+              disabled={isReadOnly}
+              className="mt-1 rounded"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-gray-900">Appear in Discover</span>
+              <span className="block text-xs text-gray-500 mt-1">
+                Anyone can find this event in Discover. This does not invite them to this calendar.
+              </span>
+            </span>
+          </label>
         </div>
 
         {/* Category + tags */}

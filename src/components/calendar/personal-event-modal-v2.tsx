@@ -25,6 +25,7 @@ export interface PersonalEventFormDataV2 {
   event_type: EventType;
   max_attendees?: number;
   visibility: Visibility;
+  discoverable_by_others?: boolean;
   notes?: string;
 }
 
@@ -38,6 +39,7 @@ export interface PersonalEventV2 {
   notes: string | null;
   max_attendees: number | null;
   visibility: Visibility;
+  discoverable_by_others?: boolean;
   share_slug?: string | null;
   share_enabled?: boolean;
   created_at: string;
@@ -95,6 +97,7 @@ export function PersonalEventModalV2({
       event_type: 'unlimited',
       max_attendees: undefined,
       visibility: 'public',
+      discoverable_by_others: false,
       notes: '',
     },
   });
@@ -131,6 +134,7 @@ export function PersonalEventModalV2({
         const vis = event.visibility || 'public';
         setVisibility(vis);
         setValue('visibility', vis);
+        setValue('discoverable_by_others', !!event.discoverable_by_others);
 
         setShareEnabled(event.share_enabled || false);
         setShareSlug(event.share_slug || null);
@@ -156,6 +160,7 @@ export function PersonalEventModalV2({
           event_type: 'unlimited',
           max_attendees: undefined,
           visibility: 'public',
+          discoverable_by_others: false,
           notes: '',
         });
         setLocationType('none');
@@ -260,6 +265,7 @@ export function PersonalEventModalV2({
         notes: data.notes || null,
         max_attendees: eventType === 'limited' ? (data.max_attendees || null) : null,
         visibility: visibility,
+        discoverable_by_others: !!data.discoverable_by_others,
         share_slug: shareSlug,
         share_enabled: shareEnabled,
       });
@@ -576,10 +582,28 @@ export function PersonalEventModalV2({
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              {visibility === 'public' && 'Public events are visible to everyone and can be discovered by others.'}
+              {visibility === 'public' && 'Public events are visible to everyone with calendar access.'}
               {visibility === 'private' && 'Private events are only visible to you.'}
               {visibility === 'invite_only' && 'Invite Only events require explicit invitation to view.'}
             </p>
+          </div>
+
+          {/* Discoverability Toggle (separate from visibility and share-link) */}
+          <div className="border border-gray-700 rounded-md p-3 bg-[#141423]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">Discoverable by others</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  If enabled, this event can appear in Discover feed. This is separate from share-link and shared calendars.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                {...register('discoverable_by_others')}
+                className="h-4 w-4 rounded border-gray-500 text-purple-600 focus:ring-purple-500"
+                disabled={loading}
+              />
+            </div>
           </div>
 
           {/* Notes (optional, hidden) */}
