@@ -165,8 +165,8 @@
 }
 .kobe-corner.tl { top: -52px; left: -62px; }
 .kobe-corner.tr { top: -52px; right: -62px; transform: scaleX(-1); }
-.kobe-corner.bl { bottom: -52px; left: -62px; transform: scaleY(-1); }
-.kobe-corner.br { bottom: -52px; right: -62px; transform: scale(-1); }
+.kobe-corner.bl { bottom: -52px; left: -62px; }
+.kobe-corner.br { bottom: -52px; right: -62px; transform: scaleX(-1); }
 
 @media (max-width: 960px) {
   .kobe-corner { width: 100px; }
