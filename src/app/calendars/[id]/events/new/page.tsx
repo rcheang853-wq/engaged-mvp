@@ -3,10 +3,31 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, MapPin, Clock, AlignLeft, Palette, Link as LinkIcon, Bell, Repeat, Paperclip, Tag } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, AlignLeft, Bell, Repeat, Tag } from 'lucide-react';
 import { PRIVATE_EVENT_TAXONOMY } from '@/lib/private-event-taxonomy';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
+
+const sectionLabel: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 800,
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  color: 'var(--engaged-text2)',
+  marginBottom: 8,
+};
+
+const formInput: React.CSSProperties = {
+  width: '100%',
+  border: '1.5px solid var(--engaged-border)',
+  borderRadius: 14,
+  padding: '14px 16px',
+  fontSize: 16,
+  fontFamily: 'inherit',
+  background: '#fff',
+  color: 'var(--engaged-text)',
+  outline: 'none',
+};
 
 export default function NewEventPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,12 +49,11 @@ export default function NewEventPage() {
   const [discoverableByOthers, setDiscoverableByOthers] = useState(false);
   const [color, setColor] = useState(COLORS[0]);
   const [saving, setSaving] = useState(false);
-  const [showColors, setShowColors] = useState(false);
   const [categoryMain, setCategoryMain] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
 
   const [canEdit, setCanEdit] = useState<boolean | null>(null);
-  const [permissionError, setPermissionError] = useState<string | null>(null);
   const isReadOnly = canEdit === false;
 
   const tagsForCategory = useMemo(() => {
@@ -50,12 +70,8 @@ export default function NewEventPage() {
 
         const userId = meJson?.user?.id as string | undefined;
         const cal = calJson?.data as any;
-
-        // Calendar membership list may not include the owner for Personal calendars.
-        // Treat the calendar creator/owner columns (if present) as owner-equivalent.
         const members = cal?.calendar_members as any[] | undefined;
         const role = members?.find((m) => m.user_id === userId)?.role as string | undefined;
-
         const ownerId = (cal?.owner_id ?? cal?.created_by ?? cal?.user_id) as string | undefined;
         const isOwner = role === 'owner' || (!!userId && !!ownerId && userId === ownerId);
 
@@ -64,9 +80,7 @@ export default function NewEventPage() {
         if (!cancelled) setCanEdit(null);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [id]);
 
   const handleSave = async () => {
@@ -85,7 +99,6 @@ export default function NewEventPage() {
         : `${date}T${startTime}:00.000Z`;
       const end_at = allDay ? undefined : `${date}T${endTime}:00.000Z`;
 
-      // IMPORTANT: do not send end_at: null (zod datetime validation will fail)
       const payload: any = {
         title: title.trim(),
         description: description.trim() || undefined,
@@ -110,7 +123,6 @@ export default function NewEventPage() {
 
       const d = await res.json();
       if (!res.ok || !d.success) {
-        // Supabase RLS will block viewers; surface a friendly message
         if (res.status === 401 || res.status === 403) {
           setPermissionError('Only calendar owners can create events in shared calendars.');
         } else {
@@ -119,7 +131,6 @@ export default function NewEventPage() {
         return;
       }
 
-      // Return to month grid after create
       router.push(`/calendars/${id}?date=${encodeURIComponent(date)}`);
     } finally {
       setSaving(false);
@@ -127,343 +138,374 @@ export default function NewEventPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--engaged-bg)' }}>
-      {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
-        <button onClick={() => router.back()} className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
-          <ArrowLeft size={20} />
+    <div style={{ minHeight: '100vh', background: 'var(--engaged-bg)', paddingBottom: 40 }}>
+      {/* ── Header ── */}
+      <div
+        style={{
+          background: '#fff',
+          borderBottom: '1.5px solid var(--engaged-border)',
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          position: 'sticky',
+          top: 0,
+          zIndex: 30,
+        }}
+      >
+        <button
+          onClick={() => router.back()}
+          style={{
+            width: 36, height: 36, borderRadius: '50%',
+            border: '1.5px solid var(--engaged-border)',
+            background: 'var(--engaged-bg)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', flexShrink: 0,
+          }}
+        >
+          <ArrowLeft size={18} style={{ color: 'var(--engaged-text2)' }} />
         </button>
-        <h1 className="flex-1 font-bold text-gray-900">New Event</h1>
+        <h1
+          style={{
+            flex: 1,
+            fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em',
+            color: 'var(--engaged-text)',
+          }}
+        >
+          New Event
+        </h1>
         <button
           onClick={handleSave}
           disabled={!title.trim() || saving || canEdit === false}
-          className="bg-blue-500 text-white px-4 py-1.5 rounded-xl text-sm font-semibold disabled:opacity-40 hover:bg-blue-600 transition-colors"
+          style={{
+            height: 36, padding: '0 18px', borderRadius: 18,
+            background: (!title.trim() || saving || canEdit === false) ? '#ccc' : 'var(--engaged-blue)',
+            color: '#fff', fontSize: 13, fontWeight: 700,
+            border: 'none', cursor: 'pointer', flexShrink: 0,
+          }}
         >
-          {canEdit === false ? 'View only' : saving ? 'Saving...' : 'Save'}
+          {canEdit === false ? 'View only' : saving ? 'Saving\u2026' : 'Save'}
         </button>
       </div>
 
-      <div className="px-4 py-4 space-y-3 max-w-2xl mx-auto">
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
         {permissionError && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">
+          <div style={{ margin: '16px 20px 0', padding: '12px 14px', background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 14, fontSize: 13, color: '#B91C1C' }}>
             {permissionError}
           </div>
         )}
 
         {canEdit === false && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-900">
-            This calendar is shared with you as <span className="font-semibold">viewer-only</span>. You can view events but can’t create or edit them.
+          <div style={{ margin: '12px 20px 0', padding: '12px 14px', background: '#FFFBEB', border: '1.5px solid #FDE68A', borderRadius: 14, fontSize: 13, color: '#92400E' }}>
+            This calendar is shared with you as <strong>viewer-only</strong>. You can view events but can&apos;t create or edit them.
           </div>
         )}
-        {/* Title + color */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                if (isReadOnly) return;
-                setShowColors(!showColors);
-              }}
-              disabled={isReadOnly}
-              className="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-white shadow"
-              style={{ backgroundColor: color }}
-            >
-              <Palette size={16} className="text-white mx-auto" />
-            </button>
-            <input
-              type="text"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Event title"
-              disabled={isReadOnly}
-              className="flex-1 text-lg font-semibold outline-none placeholder-gray-300 text-gray-900 disabled:text-gray-400"
-              autoFocus
-            />
-          </div>
 
-          {/* Color picker */}
-          {showColors && (
-            <div className="flex gap-2 mt-3 pl-13 flex-wrap">
-              {COLORS.map(c => (
-                <button
-                  key={c}
-                  onClick={() => {
-                    if (isReadOnly) return;
-                    setColor(c);
-                    setShowColors(false);
-                  }}
-                  disabled={isReadOnly}
-                  className={`w-8 h-8 rounded-full transition-transform ${color === c ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : 'hover:scale-110'} disabled:opacity-60 disabled:hover:scale-100`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-            </div>
-          )}
+        {/* ── Title ── */}
+        <div style={{ padding: '20px 20px 0' }}>
+          <div style={sectionLabel}>Event Title</div>
+          <input
+            type="text"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="What's happening?"
+            disabled={isReadOnly}
+            autoFocus
+            style={{ ...formInput, fontSize: 18, fontWeight: 700 }}
+          />
         </div>
 
-        {/* Date & Time */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-          <div className="flex items-center gap-3">
-            <Clock size={18} className="text-gray-400 flex-shrink-0" />
-            <input
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              disabled={isReadOnly}
-              className="flex-1 outline-none text-gray-900 text-sm disabled:text-gray-400"
-            />
-            <label className="flex items-center gap-1.5 text-sm text-gray-600">
+        {/* ── Color picker ── */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <div style={sectionLabel}>Color</div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', padding: '4px 0' }}>
+            {COLORS.map(c => (
+              <button
+                key={c}
+                onClick={() => { if (!isReadOnly) setColor(c); }}
+                disabled={isReadOnly}
+                style={{
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: c, border: color === c ? '3px solid var(--engaged-text)' : '3px solid transparent',
+                  transform: color === c ? 'scale(1.1)' : 'scale(1)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                {color === c && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Date & Time ── */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <div style={sectionLabel}>Date &amp; Time</div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <div
+              style={{
+                border: '1.5px solid var(--engaged-border)', borderRadius: 14,
+                padding: '12px 14px', background: '#fff', cursor: 'pointer',
+              }}
+            >
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--engaged-text3)', marginBottom: 3 }}>Date</div>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                disabled={isReadOnly}
+                style={{ fontSize: 15, fontWeight: 700, color: 'var(--engaged-text)', border: 'none', outline: 'none', background: 'transparent', width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+            <div
+              style={{
+                border: '1.5px solid var(--engaged-border)', borderRadius: 14,
+                padding: '12px 14px', background: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--engaged-text3)', marginBottom: 3 }}>All day</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: allDay ? 'var(--engaged-blue)' : 'var(--engaged-text)' }}>{allDay ? 'Yes' : 'No'}</div>
+              </div>
               <input
                 type="checkbox"
                 checked={allDay}
                 onChange={e => setAllDay(e.target.checked)}
                 disabled={isReadOnly}
-                className="rounded"
+                style={{ width: 20, height: 20, cursor: 'pointer', accentColor: 'var(--engaged-blue)' }}
               />
-              All day
-            </label>
+            </div>
           </div>
 
           {!allDay && (
-            <div className="flex items-center gap-3 pl-7">
-              <input
-                type="time"
-                value={startTime}
-                onChange={e => setStartTime(e.target.value)}
-                disabled={isReadOnly}
-                className="outline-none text-gray-900 text-sm bg-gray-50 px-3 py-1.5 rounded-lg disabled:text-gray-400"
-              />
-              <span className="text-gray-400 text-sm">to</span>
-              <input
-                type="time"
-                value={endTime}
-                onChange={e => setEndTime(e.target.value)}
-                disabled={isReadOnly}
-                className="outline-none text-gray-900 text-sm bg-gray-50 px-3 py-1.5 rounded-lg disabled:text-gray-400"
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ border: '1.5px solid var(--engaged-border)', borderRadius: 14, padding: '12px 14px', background: '#fff' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--engaged-text3)', marginBottom: 3 }}>Start</div>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={e => setStartTime(e.target.value)}
+                  disabled={isReadOnly}
+                  style={{ fontSize: 15, fontWeight: 700, color: 'var(--engaged-text)', border: 'none', outline: 'none', background: 'transparent', width: '100%', cursor: 'pointer' }}
+                />
+              </div>
+              <div style={{ border: '1.5px solid var(--engaged-border)', borderRadius: 14, padding: '12px 14px', background: '#fff' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--engaged-text3)', marginBottom: 3 }}>End</div>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={e => setEndTime(e.target.value)}
+                  disabled={isReadOnly}
+                  style={{ fontSize: 15, fontWeight: 700, color: 'var(--engaged-text)', border: 'none', outline: 'none', background: 'transparent', width: '100%', cursor: 'pointer' }}
+                />
+              </div>
             </div>
           )}
         </div>
 
-        {/* Location */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <MapPin size={18} className="text-gray-400 flex-shrink-0" />
+        {/* ── Location ── */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <div style={sectionLabel}>Location</div>
+          <div style={{ position: 'relative' }}>
+            <MapPin
+              size={16}
+              style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--engaged-text3)', pointerEvents: 'none' }}
+            />
             <input
               type="text"
               value={location}
               onChange={e => setLocation(e.target.value)}
-              placeholder="Add location"
+              placeholder="Add a location"
               disabled={isReadOnly}
-              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 disabled:text-gray-400"
+              style={{ ...formInput, paddingLeft: 40 }}
             />
           </div>
         </div>
 
-        {/* Discoverability */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <label className="flex items-start gap-3">
+        {/* ── Discover ── */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <label
+            style={{
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+              border: '1.5px solid var(--engaged-border)', borderRadius: 14,
+              padding: '14px 16px', background: '#fff', cursor: 'pointer',
+            }}
+          >
             <input
               type="checkbox"
               checked={discoverableByOthers}
               onChange={(e) => setDiscoverableByOthers(e.target.checked)}
               disabled={isReadOnly}
-              className="mt-1 rounded"
+              style={{ marginTop: 2, width: 18, height: 18, accentColor: 'var(--engaged-blue)' }}
             />
             <span>
-              <span className="block text-sm font-semibold text-gray-900">Appear in Discover</span>
-              <span className="block text-xs text-gray-500 mt-1">
+              <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: 'var(--engaged-text)' }}>Appear in Discover</span>
+              <span style={{ display: 'block', fontSize: 12, color: 'var(--engaged-text2)', marginTop: 2 }}>
                 Anyone can find this event in Discover. This does not invite them to this calendar.
               </span>
             </span>
           </label>
         </div>
 
-        {/* Category + tags */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-          <div className="flex items-center gap-3">
-            <Tag size={18} className="text-gray-400 flex-shrink-0" />
-            <select
-              value={categoryMain}
-              onChange={(e) => {
-                const nextCategory = e.target.value;
-                setCategoryMain(nextCategory);
-                setTags([]);
-              }}
-              disabled={isReadOnly}
-              className="flex-1 outline-none text-gray-900 text-sm bg-transparent disabled:text-gray-400"
-            >
-              <option value="">Select main category</option>
-              {PRIVATE_EVENT_TAXONOMY.map((entry) => (
-                <option key={entry.category} value={entry.category}>
-                  {entry.emoji ? `${entry.emoji} ` : ''}{entry.category}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* ── Category + Tags ── */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <div style={sectionLabel}>Category</div>
+          <select
+            value={categoryMain}
+            onChange={(e) => { setCategoryMain(e.target.value); setTags([]); }}
+            disabled={isReadOnly}
+            style={{ ...formInput, cursor: 'pointer' }}
+          >
+            <option value="">Select a category</option>
+            {PRIVATE_EVENT_TAXONOMY.map((entry) => (
+              <option key={entry.category} value={entry.category}>
+                {entry.emoji ? `${entry.emoji} ` : ''}{entry.category}
+              </option>
+            ))}
+          </select>
 
-          <div className="pl-7">
-            <div className="text-xs text-gray-500 mb-2">Tags (optional)</div>
-            {categoryMain ? (
-              <>
-                {(() => {
-                  const entry = PRIVATE_EVENT_TAXONOMY.find((e) => e.category === categoryMain);
-                  if (!entry) return null;
-
-                  // If tagGroups exist, show grouped layout
-                  if (entry.tagGroups && entry.tagGroups.length > 0) {
-                    return (
-                      <div className="space-y-3">
-                        {entry.tagGroups.map((group) => (
-                          <div key={group.label}>
-                            <div className="text-xs font-medium text-gray-600 mb-1.5">{group.label}</div>
-                            <div className="flex flex-wrap gap-2">
-                              {group.tags.map((tag) => {
-                                const selected = tags.includes(tag);
-                                return (
-                                  <button
-                                    key={tag}
-                                    type="button"
-                                    onClick={() => {
-                                      if (isReadOnly) return;
-                                      setTags((prev) =>
-                                        prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-                                      );
-                                    }}
-                                    disabled={isReadOnly}
-                                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                                      selected
-                                        ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                        : 'bg-white border-gray-200 text-gray-600'
-                                    } disabled:opacity-60`}
-                                  >
-                                    {tag}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  }
-
-                  // Otherwise, show flat list (fallback for categories without tagGroups)
+          {categoryMain && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ ...sectionLabel, marginBottom: 8 }}>Tags</div>
+              {(() => {
+                const entry = PRIVATE_EVENT_TAXONOMY.find((e) => e.category === categoryMain);
+                if (!entry) return null;
+                if (entry.tagGroups && entry.tagGroups.length > 0) {
                   return (
-                    <div className="flex flex-wrap gap-2">
-                      {tagsForCategory.map((tag) => {
-                        const selected = tags.includes(tag);
-                        return (
-                          <button
-                            key={tag}
-                            type="button"
-                            onClick={() => {
-                              if (isReadOnly) return;
-                              setTags((prev) =>
-                                prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {entry.tagGroups.map((group) => (
+                        <div key={group.label}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--engaged-text2)', marginBottom: 6 }}>{group.label}</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                            {group.tags.map((tag) => {
+                              const selected = tags.includes(tag);
+                              return (
+                                <button
+                                  key={tag}
+                                  type="button"
+                                  onClick={() => { if (!isReadOnly) setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]); }}
+                                  disabled={isReadOnly}
+                                  style={{
+                                    padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                                    border: selected ? '1.5px solid var(--engaged-blue)' : '1.5px solid var(--engaged-border)',
+                                    background: selected ? 'var(--engaged-blue-lt)' : '#fff',
+                                    color: selected ? 'var(--engaged-blue)' : 'var(--engaged-text2)',
+                                    cursor: 'pointer', transition: 'all 0.15s',
+                                  }}
+                                >
+                                  {tag}
+                                </button>
                               );
-                            }}
-                            disabled={isReadOnly}
-                            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                              selected
-                                ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                : 'bg-white border-gray-200 text-gray-600'
-                            } disabled:opacity-60`}
-                          >
-                            {tag}
-                          </button>
-                        );
-                      })}
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   );
-                })()}
-              </>
-            ) : (
-              <p className="text-xs text-gray-400">Pick a category to see available tags.</p>
-            )}
+                }
+                return (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {tagsForCategory.map((tag) => {
+                      const selected = tags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => { if (!isReadOnly) setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]); }}
+                          disabled={isReadOnly}
+                          style={{
+                            padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                            border: selected ? '1.5px solid var(--engaged-blue)' : '1.5px solid var(--engaged-border)',
+                            background: selected ? 'var(--engaged-blue-lt)' : '#fff',
+                            color: selected ? 'var(--engaged-blue)' : 'var(--engaged-text2)',
+                            cursor: 'pointer', transition: 'all 0.15s',
+                          }}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+
+        {/* ── Reminder ── */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <div style={sectionLabel}>Reminder</div>
+          <select
+            value={reminderMinutes == null ? '' : String(reminderMinutes)}
+            onChange={(e) => setReminderMinutes(e.target.value ? Number(e.target.value) : null)}
+            disabled={isReadOnly}
+            style={{ ...formInput, cursor: 'pointer' }}
+          >
+            <option value="">No reminder</option>
+            <option value="5">5 minutes before</option>
+            <option value="10">10 minutes before</option>
+            <option value="30">30 minutes before</option>
+            <option value="60">1 hour before</option>
+            <option value="1440">1 day before</option>
+          </select>
+        </div>
+
+        {/* ── Repeat (UI only) ── */}
+        <div style={{ padding: '16px 20px 0', opacity: 0.5 }}>
+          <div style={{ ...formInput, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Repeat size={16} style={{ color: 'var(--engaged-text3)' }} />
+            <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--engaged-text)' }}>Repeat</span>
+            <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--engaged-text3)' }}>Coming soon</span>
           </div>
         </div>
 
-        {/* URL */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <LinkIcon size={18} className="text-gray-400 flex-shrink-0" />
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="Add URL"
-              disabled={isReadOnly}
-              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 disabled:text-gray-400"
-            />
-          </div>
+        {/* ── Description ── */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <div style={sectionLabel}>Description</div>
+          <textarea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Add a description"
+            rows={3}
+            disabled={isReadOnly}
+            style={{ ...formInput, resize: 'none', lineHeight: 1.5 }}
+          />
         </div>
 
-        {/* Reminder */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Bell size={18} className="text-gray-400 flex-shrink-0" />
-            <select
-              value={reminderMinutes == null ? '' : String(reminderMinutes)}
-              onChange={(e) => setReminderMinutes(e.target.value ? Number(e.target.value) : null)}
-              disabled={isReadOnly}
-              className="flex-1 outline-none text-gray-900 text-sm bg-transparent disabled:text-gray-400"
-            >
-              <option value="">No reminder</option>
-              <option value="5">5 minutes before</option>
-              <option value="10">10 minutes before</option>
-              <option value="30">30 minutes before</option>
-              <option value="60">1 hour before</option>
-              <option value="1440">1 day before</option>
-            </select>
-          </div>
+        {/* ── Notes ── */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <div style={sectionLabel}>Notes</div>
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Add notes"
+            rows={4}
+            disabled={isReadOnly}
+            style={{ ...formInput, resize: 'none', lineHeight: 1.5 }}
+          />
         </div>
 
-        {/* Repeat (UI-only) */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm opacity-70">
-          <div className="flex items-center gap-3">
-            <Repeat size={18} className="text-gray-400 flex-shrink-0" />
-            <span className="text-sm text-gray-700">Repeat</span>
-            <span className="ml-auto text-xs text-gray-500">Coming soon</span>
-          </div>
-        </div>
-
-        {/* Attachments (UI-only) */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm opacity-70">
-          <div className="flex items-center gap-3">
-            <Paperclip size={18} className="text-gray-400 flex-shrink-0" />
-            <span className="text-sm text-gray-700">Attachments</span>
-            <span className="ml-auto text-xs text-gray-500">Coming soon</span>
-          </div>
-        </div>
-
-        {/* Description */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <AlignLeft size={18} className="text-gray-400 flex-shrink-0 mt-0.5" />
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Add description"
-              rows={3}
-              disabled={isReadOnly}
-              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 resize-none disabled:text-gray-400"
-            />
-          </div>
-        </div>
-
-        {/* Notes */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <AlignLeft size={18} className="text-gray-400 flex-shrink-0 mt-0.5" />
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Add notes"
-              rows={4}
-              disabled={isReadOnly}
-              className="flex-1 outline-none text-gray-900 text-sm placeholder-gray-400 resize-none disabled:text-gray-400"
-            />
-          </div>
+        {/* ── Save button (bottom) ── */}
+        <div style={{ padding: '24px 20px 40px' }}>
+          <button
+            onClick={handleSave}
+            disabled={!title.trim() || saving || canEdit === false}
+            style={{
+              width: '100%', height: 52, borderRadius: 16,
+              background: (!title.trim() || saving || canEdit === false) ? '#D1D5DB' : 'var(--engaged-blue)',
+              color: '#fff', fontSize: 16, fontWeight: 800,
+              letterSpacing: '-0.02em', border: 'none', cursor: 'pointer',
+              transition: 'opacity 0.15s',
+            }}
+          >
+            {canEdit === false ? 'View only' : saving ? 'Saving\u2026' : 'Add Event'}
+          </button>
         </div>
       </div>
     </div>

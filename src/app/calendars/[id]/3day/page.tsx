@@ -3,11 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Settings, Search, UserPlus } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Plus, Settings, Search } from 'lucide-react';
 import { addDays, addHours, endOfDay, format, isToday, parseISO, startOfDay } from 'date-fns';
 import BottomTabBar from '@/components/BottomTabBar';
-import CalendarSwitcher from '@/components/CalendarSwitcher';
-import CalendarViewTabs from '@/components/calendar/calendar-view-tabs';
 
 interface CalendarEvent {
   id: string;
@@ -35,7 +33,7 @@ interface SharedCalendar {
 }
 
 const MEMBER_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
-const HOUR_HEIGHT = 64;
+const HOUR_HEIGHT = 56; // matches mockup
 const TOTAL_HEIGHT = HOUR_HEIGHT * 24;
 
 export default function CalendarThreeDayPage() {
@@ -52,7 +50,6 @@ export default function CalendarThreeDayPage() {
   const baseDate = useMemo(() => {
     const dateParam = searchParams.get('date');
     if (!dateParam) return startOfDay(new Date());
-
     const parsed = parseISO(dateParam);
     return Number.isNaN(parsed.getTime()) ? startOfDay(new Date()) : startOfDay(parsed);
   }, [searchParams]);
@@ -98,12 +95,10 @@ export default function CalendarThreeDayPage() {
 
   const eventsByDay = useMemo(() => {
     const dayKeys = days.map((day) => dayKeyInTz(day));
-
     return dayKeys.map((dayKey) => {
       const dayEvents = events
         .filter((event) => dayKeyInTz(parseISO(event.start_at)) === dayKey)
         .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
-
       return {
         dayKey,
         allDayEvents: dayEvents.filter((event) => event.all_day),
@@ -111,8 +106,6 @@ export default function CalendarThreeDayPage() {
       };
     });
   }, [days, events, calendarTz]);
-
-  const hasEvents = eventsByDay.some((entry) => entry.allDayEvents.length > 0 || entry.timedEvents.length > 0);
 
   const memberColor = (userId: string) => {
     const idx = calendar?.calendar_members?.findIndex((m) => m.profiles.id === userId) ?? 0;
@@ -139,166 +132,268 @@ export default function CalendarThreeDayPage() {
     return { top, height };
   };
 
+  const calColor = calendar?.color || '#2563EB';
+
+  const viewToggleTabs = [
+    { key: 'month', label: 'Month', href: `/calendars/${id}?date=${baseDateKey}` },
+    { key: '3day', label: '3 Days', href: `/calendars/${id}/3day?date=${baseDateKey}` },
+    { key: 'agenda', label: 'Agenda', href: `/calendars/${id}/agenda?date=${baseDateKey}` },
+  ];
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--engaged-bg)' }}>
-        <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" />
+      <div className="flex min-h-dvh items-center justify-center" style={{ background: 'var(--engaged-bg)' }}>
+        <div className="animate-spin w-6 h-6 border-2 border-t-transparent rounded-full" style={{ borderColor: 'var(--engaged-blue)', borderTopColor: 'transparent' }} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col pb-20" style={{ background: 'var(--engaged-bg)' }}>
-      <div className="bg-white border-b px-4 py-3">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="text-gray-500 hover:text-gray-700">
-            <ArrowLeft size={20} />
-          </button>
-          <div className="flex-1">
-            <CalendarSwitcher currentCalendarId={calendarId} />
-            <div className="flex -space-x-1 mt-0.5">
-              {calendar?.calendar_members?.slice(0, 6).map((m, i) => (
-                <div
-                  key={i}
-                  className="w-5 h-5 rounded-full border-2 border-white overflow-hidden bg-gray-200 flex items-center justify-center"
-                  style={{ backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length] + '40' }}
-                >
-                  {m.profiles?.avatar_url ? (
-                    <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-[8px] font-semibold" style={{ color: MEMBER_COLORS[i % MEMBER_COLORS.length] }}>
-                      {m.profiles?.full_name?.[0] ?? '?'}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-          <Link href="/search" className="text-gray-400 hover:text-gray-600" title="Search events">
-            <Search size={20} />
-          </Link>
-          <Link
-            href={`/calendars/${id}?members=1`}
-            className="text-gray-400 hover:text-gray-600"
-            title="Invite members"
-            aria-label="Invite members"
+    <div className="flex min-h-dvh flex-col pb-20" style={{ background: 'var(--engaged-bg)' }}>
+
+      {/* ── Header ── */}
+      <div className="px-4 pt-3 pb-0" style={{ background: '#fff', borderBottom: '1.5px solid var(--engaged-border)', flexShrink: 0 }}>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.back()}
+            className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center"
+            style={{ border: '1.5px solid var(--engaged-border)' }}
           >
-            <UserPlus size={20} />
+            <ArrowLeft size={17} style={{ color: 'var(--engaged-text2)' }} />
+          </button>
+
+          {/* Color dot + name */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: calColor }} />
+            <span className="text-[20px] font-black tracking-[-0.04em] truncate" style={{ color: 'var(--engaged-text)' }}>
+              {calendar?.name ?? '\u2026'}
+            </span>
+          </div>
+
+          {/* Member avatars */}
+          <div className="flex items-center flex-shrink-0">
+            {calendar?.calendar_members?.slice(0, 4).map((m, i) => (
+              <div
+                key={m.user_id}
+                className="w-7 h-7 rounded-full border-2 border-white overflow-hidden flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                style={{ marginLeft: i === 0 ? 0 : -8, background: MEMBER_COLORS[i % MEMBER_COLORS.length] + '30', color: MEMBER_COLORS[i % MEMBER_COLORS.length], zIndex: 10 - i }}
+              >
+                {m.profiles?.avatar_url
+                  ? <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                  : (m.profiles?.full_name?.[0] ?? '?').toUpperCase()}
+              </div>
+            ))}
+          </div>
+
+          {/* Action buttons */}
+          <Link href="/search" className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ color: 'var(--engaged-text2)' }} aria-label="Search">
+            <Search size={17} />
           </Link>
-          <Link href={`/calendars/${id}/settings`} className="text-gray-400 hover:text-gray-600" title="Settings">
-            <Settings size={20} />
+          <Link href={`/calendars/${id}/settings`} className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ color: 'var(--engaged-text2)' }} aria-label="Settings">
+            <Settings size={17} />
           </Link>
           <Link
             href={`/calendars/${id}/events/new?date=${baseDateKey}`}
-            className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-600"
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white"
+            style={{ background: 'var(--engaged-blue)' }}
+            aria-label="New event"
           >
-            <Plus size={18} />
+            <Plus size={17} />
           </Link>
         </div>
 
-        <div className="mt-3 ml-8 flex items-center justify-between gap-3">
-          <CalendarViewTabs calendarId={calendarId} active="3day" date={baseDateKey} />
-          <div className="flex items-center gap-1">
-            <button onClick={() => shiftBaseDate(-3)} className="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100" aria-label="Previous 3 days">
-              <ChevronLeft size={16} />
+        {/* View toggle strip + nav arrows */}
+        <div className="flex items-center justify-between gap-2 mt-3 pb-3">
+          <div className="flex items-center gap-2">
+            {viewToggleTabs.map(tab => (
+              <Link
+                key={tab.key}
+                href={tab.href}
+                className="h-[30px] px-4 rounded-full text-[13px] font-bold flex items-center flex-shrink-0"
+                style={tab.key === '3day'
+                  ? { background: 'var(--engaged-blue)', color: '#fff' }
+                  : { background: '#fff', border: '1.5px solid var(--engaged-border)', color: 'var(--engaged-text2)' }}
+              >
+                {tab.label}
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => shiftBaseDate(-3)}
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ border: '1.5px solid var(--engaged-border)', color: 'var(--engaged-text2)' }}
+              aria-label="Previous 3 days"
+            >
+              <ChevronLeft size={15} />
             </button>
-            <button onClick={() => shiftBaseDate(3)} className="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100" aria-label="Next 3 days">
-              <ChevronRight size={16} />
+            <button
+              onClick={() => shiftBaseDate(3)}
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ border: '1.5px solid var(--engaged-border)', color: 'var(--engaged-text2)' }}
+              aria-label="Next 3 days"
+            >
+              <ChevronRight size={15} />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto">
-        <div className="min-w-[680px] px-2 py-3">
-          <div className="grid grid-cols-[56px_repeat(3,minmax(0,1fr))] gap-2 mb-2">
-            <div />
-            {days.map((day) => (
-              <div key={day.toISOString()} className="bg-white border rounded-lg px-2 py-2 text-center">
-                <div className="text-sm font-semibold text-gray-900">{format(day, 'EEE, MMM d')}</div>
-                {isToday(day) && <div className="text-[11px] text-blue-600 font-medium mt-0.5">Today</div>}
+      {/* ── Day header columns ── */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '40px 1fr 1fr 1fr',
+          background: '#fff',
+          borderBottom: '1.5px solid var(--engaged-border)',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ width: 40 }} />
+        {days.map((day) => {
+          const today = isToday(day);
+          return (
+            <div key={day.toISOString()} style={{ textAlign: 'center', padding: '6px 4px' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--engaged-text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {format(day, 'EEE')}
               </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-[56px_repeat(3,minmax(0,1fr))] gap-2 mb-2">
-            <div className="text-[11px] text-gray-500 font-medium pt-2">All day</div>
-            {eventsByDay.map((entry, idx) => (
-              <div key={entry.dayKey + idx} className="bg-white border rounded-lg p-2 min-h-[56px] space-y-1">
-                {entry.allDayEvents.length === 0 ? (
-                  <div className="text-xs text-gray-400">No all-day events</div>
-                ) : (
-                  entry.allDayEvents.map((event) => {
-                    const color = event.color || memberColor(event.profiles?.id ?? '') || calendar?.color || '#3B82F6';
-                    return (
-                      <Link
-                        key={event.id}
-                        href={`/calendars/${id}/events/${event.id}`}
-                        className="block text-xs rounded px-2 py-1 text-white truncate"
-                        style={{ backgroundColor: color }}
-                      >
-                        {event.title}
-                      </Link>
-                    );
-                  })
-                )}
-              </div>
-            ))}
-          </div>
-
-          {!hasEvents && (
-            <div className="bg-white border rounded-lg px-4 py-3 text-sm text-gray-500 mb-2">
-              No events in this 3-day range.
-            </div>
-          )}
-
-          <div className="grid grid-cols-[56px_repeat(3,minmax(0,1fr))] gap-2">
-            <div className="relative" style={{ height: TOTAL_HEIGHT }}>
-              {Array.from({ length: 24 }).map((_, hour) => (
-                <div key={hour} className="absolute left-0 right-0" style={{ top: hour * HOUR_HEIGHT }}>
-                  <div className="text-[11px] text-gray-500 -translate-y-1/2">{`${hour.toString().padStart(2, '0')}:00`}</div>
+              {today ? (
+                <div
+                  style={{
+                    width: 32, height: 32, borderRadius: '50%',
+                    background: 'var(--engaged-blue)', color: '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '2px auto', fontSize: 16, fontWeight: 900, letterSpacing: '-0.03em',
+                  }}
+                >
+                  {format(day, 'd')}
                 </div>
-              ))}
+              ) : (
+                <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', color: 'var(--engaged-text)', lineHeight: 1.3 }}>
+                  {format(day, 'd')}
+                </div>
+              )}
             </div>
+          );
+        })}
+      </div>
 
-            {eventsByDay.map((entry, idx) => (
-              <div key={entry.dayKey + '-timed-' + idx} className="relative bg-white border rounded-lg" style={{ height: TOTAL_HEIGHT }}>
-                {Array.from({ length: 24 }).map((_, hour) => (
-                  <div
-                    key={hour}
-                    className="absolute left-0 right-0 border-t border-gray-100"
-                    style={{ top: hour * HOUR_HEIGHT }}
-                  />
-                ))}
+      {/* ── All-day events row ── */}
+      {eventsByDay.some(e => e.allDayEvents.length > 0) && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '40px 1fr 1fr 1fr',
+            background: '#fff',
+            borderBottom: '1.5px solid var(--engaged-border)',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ paddingRight: 8, paddingTop: 6, textAlign: 'right' }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--engaged-text3)' }}>All day</span>
+          </div>
+          {eventsByDay.map((entry, idx) => (
+            <div key={entry.dayKey + '-allday-' + idx} style={{ padding: '4px 2px', minHeight: 28 }}>
+              {entry.allDayEvents.map(event => {
+                const color = event.color || memberColor(event.profiles?.id ?? '') || calColor;
+                return (
+                  <Link
+                    key={event.id}
+                    href={`/calendars/${id}/events/${event.id}`}
+                    style={{
+                      display: 'block', fontSize: 10, fontWeight: 700,
+                      padding: '2px 6px', borderRadius: 6, color: '#fff',
+                      background: color, marginBottom: 2,
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {event.title}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
 
-                {entry.timedEvents.map((event) => {
-                  const color = event.color || memberColor(event.profiles?.id ?? '') || calendar?.color || '#3B82F6';
-                  const { top, height } = getEventBlockStyle(event);
-
-                  return (
-                    <Link
-                      key={event.id}
-                      href={`/calendars/${id}/events/${event.id}`}
-                      className="absolute left-1.5 right-1.5 rounded-md px-2 py-1 text-xs overflow-hidden"
-                      style={{
-                        top,
-                        minHeight: height,
-                        backgroundColor: color + '22',
-                        borderLeft: `3px solid ${color}`,
-                      }}
-                    >
-                      <div className="font-semibold text-gray-900 truncate">{event.title}</div>
-                      <div className="text-gray-600 truncate">
-                        {formatTimeInTz(parseISO(event.start_at))}
-                        {event.end_at ? ` - ${formatTimeInTz(parseISO(event.end_at))}` : ''}
-                      </div>
-                      {event.location && <div className="text-gray-500 truncate">{event.location}</div>}
-                    </Link>
-                  );
-                })}
+      {/* ── Timed grid ── */}
+      <div className="flex-1 overflow-auto">
+        <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 1fr 1fr', minHeight: TOTAL_HEIGHT }}>
+          {/* Hour labels */}
+          <div style={{ position: 'relative', height: TOTAL_HEIGHT }}>
+            {Array.from({ length: 24 }).map((_, hour) => (
+              <div
+                key={hour}
+                style={{
+                  position: 'absolute', left: 0, right: 0,
+                  top: hour * HOUR_HEIGHT,
+                  paddingRight: 8, textAlign: 'right',
+                  fontSize: 10, fontWeight: 600, color: 'var(--engaged-text3)',
+                  lineHeight: 1,
+                }}
+              >
+                {hour === 0 ? '' : `${hour < 12 ? hour : hour === 12 ? 12 : hour - 12}${hour < 12 ? 'am' : 'pm'}`}
               </div>
             ))}
           </div>
+
+          {/* Day columns */}
+          {eventsByDay.map((entry, idx) => (
+            <div
+              key={entry.dayKey + '-timed-' + idx}
+              style={{
+                position: 'relative',
+                height: TOTAL_HEIGHT,
+                borderLeft: '1px solid var(--engaged-border)',
+              }}
+            >
+              {/* Hour lines */}
+              {Array.from({ length: 24 }).map((_, hour) => (
+                <div
+                  key={hour}
+                  style={{
+                    position: 'absolute', left: 0, right: 0,
+                    top: hour * HOUR_HEIGHT,
+                    borderTop: `1px solid var(--engaged-border)`,
+                    height: HOUR_HEIGHT,
+                  }}
+                />
+              ))}
+
+              {/* Events */}
+              {entry.timedEvents.map((event) => {
+                const color = event.color || memberColor(event.profiles?.id ?? '') || calColor;
+                const { top, height } = getEventBlockStyle(event);
+                return (
+                  <Link
+                    key={event.id}
+                    href={`/calendars/${id}/events/${event.id}`}
+                    style={{
+                      position: 'absolute',
+                      left: 2, right: 2,
+                      top,
+                      minHeight: height,
+                      borderRadius: 8,
+                      padding: '3px 6px',
+                      fontSize: 10, fontWeight: 700,
+                      color: '#fff',
+                      background: color,
+                      overflow: 'hidden',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <div style={{ fontSize: 9, fontWeight: 600, opacity: 0.85, marginBottom: 1 }}>
+                      {formatTimeInTz(parseISO(event.start_at))}
+                    </div>
+                    <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {event.title}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 
