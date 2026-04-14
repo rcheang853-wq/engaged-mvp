@@ -299,7 +299,20 @@ export function SignInForm({
           </Button>
         )}
 
-
+        {onSignUp && (
+          <div className="text-center mt-2">
+            <p className="text-sm text-gray-600">
+              Don&apos;t have an account?{' '}
+              <button
+                type="button"
+                onClick={onSignUp}
+                className="text-blue-500 hover:text-blue-600 font-semibold transition-colors"
+              >
+                Sign up
+              </button>
+            </p>
+          </div>
+        )}
       </Form>
     </div>
   );

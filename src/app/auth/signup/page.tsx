@@ -53,10 +53,7 @@ function SignUpPageContent() {
         </div>
       </div>
 
-      <p className="mt-8 text-sm" style={{ color: 'var(--engaged-text2)' }}>
-        Already have an account?{' '}
-        <button onClick={handleSignIn} className="font-bold" style={{ color: 'var(--engaged-blue)' }}>Sign in</button>
-      </p>
+
     </div>
   );
 }

@@ -419,7 +419,20 @@ export function SignUpForm({
           )}
         </Button>
 
-
+        {onSignIn && (
+          <div className="text-center mt-2">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={onSignIn}
+                className="text-blue-500 hover:text-blue-600 font-semibold transition-colors"
+              >
+                Sign in
+              </button>
+            </p>
+          </div>
+        )}
       </Form>
     </div>
   );
