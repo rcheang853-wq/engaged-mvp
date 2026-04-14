@@ -91,17 +91,26 @@ export async function POST(
       expiresInDays,
     };
 
-    // Send email (non-blocking - don't fail invite creation if email fails)
-    sendEmail({
+    // Email is best-effort; invite creation is the source of truth.
+    const emailResult = await sendEmail({
       to: email,
       subject: `${emailParams.inviterName} invited you to ${emailParams.calendarName}`,
       html: getCalendarInviteEmailHtml(emailParams),
       text: getCalendarInviteEmailText(emailParams),
-    }).catch((err) => {
-      console.error('[POST /api/calendars/:id/invite] Email send error:', err);
     });
 
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    const emailSent = !!emailResult.success;
+    const message = emailSent
+      ? 'Invite created and email sent'
+      : process.env.RESEND_API_KEY
+        ? 'Invite created; email delivery failed'
+        : 'Invite saved; email not sent (RESEND_API_KEY missing)';
+
+    if (!emailSent) {
+      console.warn('[POST /api/calendars/:id/invite] Email not sent:', emailResult.error);
+    }
+
+    return NextResponse.json({ success: true, data, emailSent, message }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

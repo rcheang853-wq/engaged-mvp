@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Copy, Mail, Users } from 'lucide-react';
+import { ArrowLeft, Copy, Mail, RefreshCw, Users } from 'lucide-react';
 import BottomTabBar from '@/components/BottomTabBar';
 
 type CalendarMember = {
@@ -38,6 +38,7 @@ export default function CalendarSettingsPage() {
 
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
+  const [generatingShareLink, setGeneratingShareLink] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<string | null>(null);
 
   const inviteLink = useMemo(() => {
@@ -127,9 +128,15 @@ export default function CalendarSettingsPage() {
       const json = await res.json();
       if (json.success) {
         setInviteEmail('');
-        // Note: email sending is best-effort in the API; even if delivery isn't set up,
-        // the pending invite is stored in calendar_invites.
-        setInviteMessage('Invite created');
+
+        if (json.emailSent === false) {
+          const fallbackHint = inviteLink
+            ? ' Copy and share the calendar link below.'
+            : ' Generate and copy a share link below as fallback.';
+          setInviteMessage(`${json.message || 'Invite saved; email not sent.'}${fallbackHint}`);
+        } else {
+          setInviteMessage(json.message || 'Invite created and email sent');
+        }
       } else {
         setInviteMessage(json.error || 'Invite failed');
       }
@@ -137,6 +144,32 @@ export default function CalendarSettingsPage() {
       setInviteMessage('Invite failed');
     } finally {
       setInviting(false);
+      setTimeout(() => setInviteMessage(null), 2500);
+    }
+  };
+
+  const onGenerateShareLink = async () => {
+    if (!calendarId || generatingShareLink) return;
+
+    setGeneratingShareLink(true);
+    setInviteMessage(null);
+
+    try {
+      const res = await fetch(`/api/calendars/${calendarId}/share-link`, { method: 'POST' });
+      const json = await res.json();
+
+      if (!json.success) {
+        setInviteMessage(json.error || 'Failed to generate share link');
+        return;
+      }
+
+      const nextCode = json.data?.invite_code ?? null;
+      setCalendar((prev) => (prev ? { ...prev, invite_code: nextCode } : prev));
+      setInviteMessage(nextCode ? 'Share link ready' : 'Share link updated');
+    } catch {
+      setInviteMessage('Failed to generate share link');
+    } finally {
+      setGeneratingShareLink(false);
       setTimeout(() => setInviteMessage(null), 2500);
     }
   };
@@ -268,16 +301,29 @@ export default function CalendarSettingsPage() {
               </button>
             </div>
             <p className="text-xs text-gray-500">
-              If email delivery isn’t configured, the invite is still stored in Supabase (calendar_invites). You can share an invite code/link below.
+              Email invite is optional. Share link is the primary whole-calendar sharing method; generate/copy it below anytime.
             </p>
           </div>
 
           <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-sm font-medium text-gray-700">Share link (whole calendar)</label>
+              <button
+                onClick={onGenerateShareLink}
+                disabled={generatingShareLink}
+                className="inline-flex items-center gap-2 border rounded-xl px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
+              >
+                <RefreshCw size={14} className={generatingShareLink ? 'animate-spin' : ''} />
+                {calendar.invite_code ? 'Regenerate' : 'Generate'}
+              </button>
+            </div>
+
             <label className="text-sm font-medium text-gray-700">Invite code</label>
             <div className="flex gap-2">
               <input
                 readOnly
                 value={calendar.invite_code ?? ''}
+                placeholder="Generate share link to create code"
                 className="flex-1 border rounded-xl px-3 py-2 text-sm bg-gray-50"
               />
               {calendar.invite_code && (
@@ -293,7 +339,7 @@ export default function CalendarSettingsPage() {
 
             {inviteLink && (
               <>
-                <label className="text-sm font-medium text-gray-700">Invite link</label>
+                <label className="text-sm font-medium text-gray-700">Share link</label>
                 <div className="flex gap-2">
                   <input
                     readOnly
@@ -310,6 +356,10 @@ export default function CalendarSettingsPage() {
                 </div>
               </>
             )}
+
+            <p className="text-xs text-gray-500">
+              Recipients opening this link can preview the calendar, then join as <span className="font-semibold">viewer</span>.
+            </p>
 
             {inviteMessage && <div className="text-sm text-gray-700">{inviteMessage}</div>}
           </div>

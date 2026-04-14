@@ -172,16 +172,41 @@ export default function CalendarViewPage() {
     if (!calendarId) return;
     const email = inviteEmail.trim();
     if (!email) return;
-    setInviting(true); setInviteError(null); setInviteSuccess(null);
+    setInviting(true);
+    setInviteError(null);
+    setInviteSuccess(null);
+
     try {
       const res = await fetch(`/api/calendars/${calendarId}/invite`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
+
       const json = await res.json();
-      if (!res.ok || !json.success) { const m = json.error ?? 'Failed to invite'; setInviteError(m); toast.error(m); return; }
-      setInviteSuccess('Invite sent'); toast.success(`Invitation sent to ${email}`); setInviteEmail('');
-    } catch { const m = 'Failed to invite'; setInviteError(m); toast.error(m); }
-    finally { setInviting(false); }
+      if (!res.ok || !json.success) {
+        const errorMsg = json.error ?? 'Failed to invite';
+        setInviteError(errorMsg);
+        toast.error(errorMsg);
+        return;
+      }
+
+      if (json.emailSent === false) {
+        setInviteSuccess(json.message || 'Invite saved; email not sent');
+        toast.success(json.message || 'Invite saved; email not sent');
+      } else {
+        setInviteSuccess(json.message || 'Invite created and email sent');
+        toast.success(json.message || `Invitation sent to ${email}`);
+      }
+
+      setInviteEmail('');
+    } catch {
+      const errorMsg = 'Failed to invite';
+      setInviteError(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setInviting(false);
+    }
   }
 
   async function removeMember(userId: string) {
