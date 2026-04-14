@@ -208,11 +208,6 @@ export function SignUpForm({
 
   return (
     <div className={className}>
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Create your account</h2>
-        <p className="text-sm text-gray-500 mt-1">Join and start sharing calendars with your people</p>
-      </div>
-
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 flex gap-2">
           <svg className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
