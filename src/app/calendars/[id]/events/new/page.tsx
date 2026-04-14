@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, MapPin, Clock, AlignLeft, Bell, Repeat, Tag } from 'lucide-react';
+import { ArrowLeft, MapPin, Bell, Repeat, Tag, Link as LinkIcon } from 'lucide-react';
 import { PRIVATE_EVENT_TAXONOMY } from '@/lib/private-event-taxonomy';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
@@ -454,6 +454,25 @@ export default function NewEventPage() {
             <option value="60">1 hour before</option>
             <option value="1440">1 day before</option>
           </select>
+        </div>
+
+        {/* ── URL ── */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <div style={sectionLabel}>Event URL</div>
+          <div style={{ position: 'relative' }}>
+            <LinkIcon
+              size={16}
+              style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--engaged-text3)', pointerEvents: 'none' }}
+            />
+            <input
+              type="url"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              placeholder="Add a link (RSVP, tickets, etc.)"
+              disabled={isReadOnly}
+              style={{ ...formInput, paddingLeft: 40 }}
+            />
+          </div>
         </div>
 
         {/* ── Repeat (UI only) ── */}
