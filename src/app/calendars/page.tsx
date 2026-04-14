@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -22,14 +22,14 @@ interface SharedCalendar {
 
 function calendarEmoji(name: string): string {
   const n = name.toLowerCase();
-  if (/music|band|guitar|rehearsal|concert|gig/.test(n)) return '🎸';
-  if (/food|eat|brunch|lunch|dinner|cook|cafe|restaurant/.test(n)) return '🍳';
-  if (/sport|gym|run|hike|cycle|bike|climb|swim|beach|volley/.test(n)) return '🏄';
-  if (/photo|camera|film|movie|art/.test(n)) return '📷';
-  if (/travel|trip|adventure/.test(n)) return '✈️';
-  if (/family/.test(n)) return '👨‍👩‍👧';
-  if (/work|office|meeting/.test(n)) return '💼';
-  return '📅';
+  if (/music|band|guitar|rehearsal|concert|gig/.test(n)) return 'ðŸŽ¸';
+  if (/food|eat|brunch|lunch|dinner|cook|cafe|restaurant/.test(n)) return 'ðŸ³';
+  if (/sport|gym|run|hike|cycle|bike|climb|swim|beach|volley/.test(n)) return 'ðŸ„';
+  if (/photo|camera|film|movie|art/.test(n)) return 'ðŸ“·';
+  if (/travel|trip|adventure/.test(n)) return 'âœˆï¸';
+  if (/family/.test(n)) return 'ðŸ‘¨â€ðŸ‘©â€ðŸ‘§';
+  if (/work|office|meeting/.test(n)) return 'ðŸ’¼';
+  return 'ðŸ“…';
 }
 
 const ACCENT_COLORS: Record<string, string> = {
@@ -91,7 +91,7 @@ export default function CalendarsPage() {
             <Plus size={15} strokeWidth={2.5} />New
           </Link>
         </div>
-        {!loading && <p className="text-[13px] mt-1" style={{ color: 'var(--engaged-text2)' }}>{calendars.length} total · {shared.length} shared</p>}
+        {!loading && <p className="text-[13px] mt-1" style={{ color: 'var(--engaged-text2)' }}>{calendars.length} total Â· {shared.length} shared</p>}
       </div>
 
       <div className="max-w-2xl mx-auto">
@@ -149,7 +149,7 @@ function CalendarCard({ cal }: { cal: SharedCalendar }) {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center px-8">
-      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 text-4xl" style={{ background: 'var(--engaged-blue-lt)' }}>📅</div>
+      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 text-4xl" style={{ background: 'var(--engaged-blue-lt)' }}>ðŸ“…</div>
       <h2 className="text-base font-extrabold mb-1" style={{ color: 'var(--engaged-text)' }}>No calendars yet</h2>
       <p className="text-sm mb-6" style={{ color: 'var(--engaged-text2)' }}>Create a shared calendar or join one with an invite code</p>
       <div className="flex gap-3">
