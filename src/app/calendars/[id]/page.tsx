@@ -4,33 +4,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft,
-  Plus,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  X,
-  UserPlus,
-  Trash2,
-  LogOut,
+  ArrowLeft, Plus, Settings, ChevronLeft, ChevronRight,
+  Search, X, Trash2, LogOut,
 } from 'lucide-react';
 import BottomTabBar from '@/components/BottomTabBar';
-import CalendarSwitcher from '@/components/CalendarSwitcher';
-import CalendarViewTabs from '@/components/calendar/calendar-view-tabs';
 import { authClient } from '@/lib/supabase/auth';
 import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  isSameDay,
-  addMonths,
-  subMonths,
+  format, startOfMonth, endOfMonth, eachDayOfInterval,
+  isSameDay, addMonths, subMonths,
 } from 'date-fns';
 import { CalendarSkeleton } from '@/components/ui/skeleton';
-import { EventCardCompact } from '@/components/calendar/event-card';
-import { NoCalendarEvents } from '@/components/ui/empty-state';
 import { useToast } from '@/hooks/use-toast';
 
 interface CalendarEvent {
@@ -56,25 +39,18 @@ interface SharedCalendar {
   calendar_members: CalendarMember[];
 }
 
-const MEMBER_COLORS = [
-  '#3B82F6',
-  '#10B981',
-  '#F59E0B',
-  '#EF4444',
-  '#8B5CF6',
-  '#EC4899',
-];
+const MEMBER_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export default function CalendarViewPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useToast();
+
   const [calendar, setCalendar] = useState<SharedCalendar | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
-
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [membersOpen, setMembersOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -83,70 +59,43 @@ export default function CalendarViewPage() {
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
 
-  // Holidays
   const [showHolidays, setShowHolidays] = useState(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('calendar_show_holidays');
-      return stored !== 'false'; // default true
+      return localStorage.getItem('calendar_show_holidays') !== 'false';
     }
     return true;
   });
-  const [holidays, setHolidays] = useState<
-    Array<{ date: string; name: string; localName: string }>
-  >([]);
+  const [holidays, setHolidays] = useState<Array<{ date: string; name: string; localName: string }>>([]);
 
   const calendarId = Array.isArray(id) ? id[0] : id;
 
   useEffect(() => {
-    // auth user
-    authClient
-      .getCurrentUser()
-      .then(u => setCurrentUserId(u?.id ?? null))
-      .catch(() => setCurrentUserId(null));
+    authClient.getCurrentUser().then(u => setCurrentUserId(u?.id ?? null)).catch(() => setCurrentUserId(null));
   }, []);
 
   useEffect(() => {
-    if (searchParams.get('members') === '1') {
-      setMembersOpen(true);
-    }
+    if (searchParams.get('members') === '1') setMembersOpen(true);
   }, [searchParams]);
 
   useEffect(() => {
     Promise.all([
       fetch(`/api/calendars/${id}`).then(r => r.json()),
-      fetch(
-        `/api/calendars/${id}/events?start=${startOfMonth(currentMonth).toISOString()}&end=${endOfMonth(currentMonth).toISOString()}`
-      ).then(r => r.json()),
+      fetch(`/api/calendars/${id}/events?start=${startOfMonth(currentMonth).toISOString()}&end=${endOfMonth(currentMonth).toISOString()}`).then(r => r.json()),
     ])
-      .then(([cal, evts]) => {
-        setCalendar(cal.data);
-        setEvents(evts.data || []);
-        setLoading(false);
-      })
+      .then(([cal, evts]) => { setCalendar(cal.data); setEvents(evts.data || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [id, currentMonth]);
 
-  // Fetch holidays for current month
   useEffect(() => {
-    if (!showHolidays) {
-      setHolidays([]);
-      return;
-    }
-
-    const locale = 'MO'; // Macau - TODO: make this configurable per user
+    if (!showHolidays) { setHolidays([]); return; }
+    const locale = 'MO';
     const from = startOfMonth(currentMonth);
     const to = endOfMonth(currentMonth);
-
     fetch(`/api/holidays?locale=${locale}&from=${from.toISOString()}&to=${to.toISOString()}`)
       .then(r => r.json())
       .then(data => {
         if (data.success && Array.isArray(data.data)) {
-          const transformedHolidays = data.data.map((h: any) => ({
-            date: h.start_at.split('T')[0],
-            name: h.title,
-            localName: h.title,
-          }));
-          setHolidays(transformedHolidays);
+          setHolidays(data.data.map((h: any) => ({ date: h.start_at.split('T')[0], name: h.title, localName: h.title })));
         }
       })
       .catch(() => setHolidays([]));
@@ -158,43 +107,37 @@ export default function CalendarViewPage() {
     return format(new Date(), 'yyyy-MM-dd');
   }, [searchParams]);
 
-  const days = eachDayOfInterval({
-    start: startOfMonth(currentMonth),
-    end: endOfMonth(currentMonth),
-  });
+  const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
   const firstDayOfWeek = startOfMonth(currentMonth).getDay();
 
-  // Pad the month grid to a consistent 6 rows (42 cells) so it can stretch to fill available height
-  // (avoids a bottom white gap when the month only spans 4–5 weeks).
   const trailingCellsTo42 = useMemo(() => {
     const leading = firstDayOfWeek;
     const total = leading + days.length;
     const remainder = total % 7;
     const trailingToCompleteWeeks = remainder === 0 ? 0 : 7 - remainder;
     const totalAfter = total + trailingToCompleteWeeks;
-    const trailingTo42 = totalAfter >= 42 ? 0 : 42 - totalAfter;
-    return trailingToCompleteWeeks + trailingTo42;
+    return trailingToCompleteWeeks + (totalAfter >= 42 ? 0 : 42 - totalAfter);
   }, [days.length, firstDayOfWeek]);
 
-  const eventsOnDay = (day: Date) =>
-    events.filter(e => isSameDay(new Date(e.start_at), day));
+  const eventsOnDay = (day: Date) => events.filter(e => isSameDay(new Date(e.start_at), day));
+  const holidaysOnDay = (day: Date) => holidays.filter(h => h.date === format(day, 'yyyy-MM-dd'));
 
-  const holidaysOnDay = (day: Date) => {
-    const dateStr = format(day, 'yyyy-MM-dd');
-    return holidays.filter(h => h.date === dateStr);
-  };
+  const eventsForSelectedDate = useMemo(() =>
+    events.filter(e => isSameDay(new Date(e.start_at), new Date(selectedDate + 'T12:00:00'))),
+    [events, selectedDate]);
+
+  const holidaysForSelectedDate = useMemo(() =>
+    holidays.filter(h => h.date === selectedDate),
+    [holidays, selectedDate]);
 
   const memberColor = (userId: string) => {
-    const idx =
-      calendar?.calendar_members?.findIndex(m => m.user_id === userId) ?? 0;
+    const idx = calendar?.calendar_members?.findIndex(m => m.user_id === userId) ?? 0;
     return MEMBER_COLORS[idx % MEMBER_COLORS.length];
   };
 
-  const myRole =
-    currentUserId && calendar?.calendar_members
-      ? calendar.calendar_members.find(m => m.user_id === currentUserId)?.role
-      : null;
-
+  const myRole = currentUserId && calendar?.calendar_members
+    ? calendar.calendar_members.find(m => m.user_id === currentUserId)?.role
+    : null;
   const isOwner = myRole === 'owner';
 
   async function refreshMembers() {
@@ -202,72 +145,36 @@ export default function CalendarViewPage() {
     try {
       const res = await fetch(`/api/calendars/${calendarId}/members`);
       const json = await res.json();
-      if (json.success && calendar) {
-        setCalendar({ ...calendar, calendar_members: json.data });
-      }
-    } catch {
-      // ignore
-    }
+      if (json.success && calendar) setCalendar({ ...calendar, calendar_members: json.data });
+    } catch {}
   }
 
   async function sendInvite() {
     if (!calendarId) return;
     const email = inviteEmail.trim();
     if (!email) return;
-
-    setInviting(true);
-    setInviteError(null);
-    setInviteSuccess(null);
+    setInviting(true); setInviteError(null); setInviteSuccess(null);
     try {
       const res = await fetch(`/api/calendars/${calendarId}/invite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }),
       });
       const json = await res.json();
-      if (!res.ok || !json.success) {
-        const errorMsg = json.error ?? 'Failed to invite';
-        setInviteError(errorMsg);
-        toast.error(errorMsg);
-        return;
-      }
-      setInviteSuccess('Invite sent');
-      toast.success(`Invitation sent to ${email}`);
-      setInviteEmail('');
-    } catch {
-      const errorMsg = 'Failed to invite';
-      setInviteError(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setInviting(false);
-    }
+      if (!res.ok || !json.success) { const m = json.error ?? 'Failed to invite'; setInviteError(m); toast.error(m); return; }
+      setInviteSuccess('Invite sent'); toast.success(`Invitation sent to ${email}`); setInviteEmail('');
+    } catch { const m = 'Failed to invite'; setInviteError(m); toast.error(m); }
+    finally { setInviting(false); }
   }
 
   async function removeMember(userId: string) {
     if (!calendarId) return;
     setRemovingUserId(userId);
     try {
-      const res = await fetch(
-        `/api/calendars/${calendarId}/members/${userId}`,
-        {
-          method: 'DELETE',
-        }
-      );
+      const res = await fetch(`/api/calendars/${calendarId}/members/${userId}`, { method: 'DELETE' });
       const json = await res.json();
-      if (!res.ok || !json.success) {
-        return;
-      }
-
-      // If I removed myself, go back to calendars list
-      if (currentUserId && userId === currentUserId) {
-        router.push('/calendars');
-        return;
-      }
-
+      if (!res.ok || !json.success) return;
+      if (currentUserId && userId === currentUserId) { router.push('/calendars'); return; }
       await refreshMembers();
-    } finally {
-      setRemovingUserId(null);
-    }
+    } finally { setRemovingUserId(null); }
   }
 
   if (loading) {
@@ -280,398 +187,265 @@ export default function CalendarViewPage() {
     );
   }
 
-  const hasEvents = events.length > 0;
+  const calColor = calendar?.color || '#2563EB';
 
   return (
     <div className="flex min-h-dvh flex-col pb-20 md:h-dvh" style={{ background: 'var(--engaged-bg)' }}>
-      {/* Header */}
-      <div className="border-b bg-white px-4 py-3">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="flex-1">
-            <CalendarSwitcher currentCalendarId={calendarId} />
-            {/* Member avatars */}
-            <button
-              className="mt-0.5 flex -space-x-1"
-              onClick={() => setMembersOpen(true)}
-              title="Members"
-            >
-              {calendar?.calendar_members?.slice(0, 6).map((m, i) => (
-                <div
-                  key={i}
-                  className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-gray-200"
-                  style={{
-                    backgroundColor:
-                      MEMBER_COLORS[i % MEMBER_COLORS.length] + '40',
-                  }}
-                >
-                  {m.profiles?.avatar_url ? (
-                    <img
-                      src={m.profiles.avatar_url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span
-                      className="text-[8px] font-semibold"
-                      style={{ color: MEMBER_COLORS[i % MEMBER_COLORS.length] }}
-                    >
-                      {m.profiles?.full_name?.[0] ?? '?'}
-                    </span>
-                  )}
-                </div>
-              ))}
 
-              {/* Add hint */}
-              <div className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-gray-100">
-                <UserPlus size={12} className="text-gray-500" />
-              </div>
-            </button>
+      {/* ── Header ── */}
+      <div className="px-4 pt-3 pb-0" style={{ background: '#fff', borderBottom: '1.5px solid var(--engaged-border)' }}>
+        <div className="flex items-center gap-2">
+          <button onClick={() => router.back()} className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center" style={{ border: '1.5px solid var(--engaged-border)' }}>
+            <ArrowLeft size={17} style={{ color: 'var(--engaged-text2)' }} />
+          </button>
+
+          {/* Color dot + name */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: calColor }} />
+            <span className="text-[20px] font-black tracking-[-0.04em] truncate" style={{ color: 'var(--engaged-text)' }}>
+              {calendar?.name ?? '\u2026'}
+            </span>
           </div>
-          <Link
-            href="/search"
-            className="text-gray-400 hover:text-gray-600"
-            title="Search events"
-          >
-            <Search size={20} />
+
+          {/* Member avatars */}
+          <button className="flex items-center flex-shrink-0" onClick={() => setMembersOpen(true)}>
+            {calendar?.calendar_members?.slice(0, 4).map((m, i) => (
+              <div key={m.user_id}
+                className="w-7 h-7 rounded-full border-2 border-white overflow-hidden flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                style={{ marginLeft: i === 0 ? 0 : -8, background: MEMBER_COLORS[i % MEMBER_COLORS.length] + '30', color: MEMBER_COLORS[i % MEMBER_COLORS.length], zIndex: 10 - i }}>
+                {m.profiles?.avatar_url
+                  ? <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                  : (m.profiles?.full_name?.[0] ?? '?').toUpperCase()}
+              </div>
+            ))}
+          </button>
+
+          {/* Action buttons */}
+          <Link href="/search" className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ color: 'var(--engaged-text2)' }} aria-label="Search">
+            <Search size={17} />
           </Link>
-          {isOwner && (
-            <button
-              onClick={() => setMembersOpen(true)}
-              className="text-gray-400 hover:text-gray-600"
-              title="Invite members"
-              aria-label="Invite members"
-            >
-              <UserPlus size={20} />
-            </button>
-          )}
-          <Link
-            href={`/calendars/${id}/settings`}
-            className="text-gray-400 hover:text-gray-600"
-            title="Settings"
-          >
-            <Settings size={20} />
+          <Link href={`/calendars/${id}/settings`} className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ color: 'var(--engaged-text2)' }} aria-label="Settings">
+            <Settings size={17} />
           </Link>
-          <Link
-            href={`/calendars/${id}/events/new?date=${selectedDate}`}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600"
-          >
-            <Plus size={18} />
+          <Link href={`/calendars/${id}/events/new?date=${selectedDate}`}
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: 'var(--engaged-blue)' }} aria-label="New event">
+            <Plus size={17} />
           </Link>
         </div>
-        <CalendarViewTabs
-          calendarId={calendarId}
-          active="month"
-          date={selectedDate}
-          className="mt-3 ml-8"
-        />
+
+        {/* View toggle strip */}
+        <div className="flex items-center gap-2 mt-3 pb-3">
+          {[
+            { key: 'month', label: 'Month', href: `/calendars/${id}?date=${selectedDate}` },
+            { key: '3day', label: '3 Days', href: `/calendars/${id}/3day?date=${selectedDate}` },
+            { key: 'agenda', label: 'Agenda', href: `/calendars/${id}/agenda?date=${selectedDate}` },
+          ].map(tab => (
+            <Link key={tab.key} href={tab.href}
+              className="h-[30px] px-4 rounded-full text-[13px] font-bold flex items-center flex-shrink-0"
+              style={tab.key === 'month'
+                ? { background: 'var(--engaged-blue)', color: '#fff' }
+                : { background: '#fff', border: '1.5px solid var(--engaged-border)', color: 'var(--engaged-text2)' }}>
+              {tab.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
-      {/* Month navigator */}
-      <div className="flex items-center justify-between border-b bg-white px-4 py-2">
-        <button
-          onClick={() => setCurrentMonth(m => subMonths(m, 1))}
-          className="p-1 text-gray-500 hover:text-gray-700"
-        >
-          <ChevronLeft size={20} />
+      {/* ── Month Navigator ── */}
+      <div className="flex items-center justify-between px-4 py-2.5" style={{ background: '#fff', borderBottom: '1.5px solid var(--engaged-border)' }}>
+        <button onClick={() => setCurrentMonth(m => subMonths(m, 1))}
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ border: '1.5px solid var(--engaged-border)' }}>
+          <ChevronLeft size={16} style={{ color: 'var(--engaged-text2)' }} />
         </button>
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-gray-900">
-            {format(currentMonth, 'MMMM yyyy')}
+          <span>
+            <span className="text-[22px] font-black tracking-[-0.04em]" style={{ color: 'var(--engaged-text)' }}>{format(currentMonth, 'MMMM')}</span>
+            {' '}
+            <span className="text-[14px] font-semibold" style={{ color: 'var(--engaged-text2)' }}>{format(currentMonth, 'yyyy')}</span>
           </span>
           <button
-            onClick={() => {
-              const next = !showHolidays;
-              setShowHolidays(next);
-              localStorage.setItem('calendar_show_holidays', String(next));
-            }}
-            className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-              showHolidays
-                ? 'border border-blue-200 bg-blue-50 text-blue-600'
-                : 'border border-gray-200 bg-gray-100 text-gray-500'
-            }`}
-            title={showHolidays ? 'Hide holidays' : 'Show holidays'}
-          >
-            🎉 Holidays
+            onClick={() => { const n = !showHolidays; setShowHolidays(n); localStorage.setItem('calendar_show_holidays', String(n)); }}
+            className="px-2.5 py-1 rounded-full text-[11px] font-semibold"
+            style={showHolidays
+              ? { background: 'var(--engaged-blue-lt)', color: 'var(--engaged-blue)', border: '1.5px solid var(--engaged-blue-mid)' }
+              : { background: '#fff', border: '1.5px solid var(--engaged-border)', color: 'var(--engaged-text3)' }}>
+            {'\uD83C\uDF89'} Holidays
           </button>
         </div>
-        <button
-          onClick={() => setCurrentMonth(m => addMonths(m, 1))}
-          className="p-1 text-gray-500 hover:text-gray-700"
-        >
-          <ChevronRight size={20} />
+        <button onClick={() => setCurrentMonth(m => addMonths(m, 1))}
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ border: '1.5px solid var(--engaged-border)' }}>
+          <ChevronRight size={16} style={{ color: 'var(--engaged-text2)' }} />
         </button>
       </div>
 
-      {/* Calendar grid */}
-      <div className="flex flex-1 min-h-0 flex-col p-3 overflow-hidden">
-        {/* Day headers */}
-        <div className="mb-1 grid grid-cols-7">
+      {/* ── Calendar Grid ── */}
+      <div className="px-3 pt-2 flex-shrink-0">
+        {/* Day labels */}
+        <div className="grid grid-cols-7 mb-1">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-            <div
-              key={d}
-              className="py-1 text-center text-xs font-medium text-gray-400"
-            >
-              {d}
-            </div>
+            <div key={d} className="text-center py-1 text-[10px] font-bold uppercase" style={{ color: 'var(--engaged-text3)', letterSpacing: '0.06em' }}>{d}</div>
           ))}
         </div>
 
         {/* Day cells */}
-        <div className="grid flex-1 min-h-0 grid-cols-7 [grid-template-rows:repeat(6,minmax(0,1fr))] md:[grid-template-rows:repeat(6,minmax(120px,1fr))] gap-0.5 overflow-auto">
-          {/* Empty cells before first day */}
-          {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} />
-          ))}
+        <div className="grid grid-cols-7" style={{ gap: 3 }}>
+          {Array.from({ length: firstDayOfWeek }).map((_, i) => <div key={`el-${i}`} />)}
 
           {days.map(day => {
-            const dayEvents = eventsOnDay(day);
-            const dayHolidays = holidaysOnDay(day);
+            const dayEvts = eventsOnDay(day);
+            const dayHols = holidaysOnDay(day);
             const isToday = isSameDay(day, new Date());
-            const isSelected = format(day, 'yyyy-MM-dd') === selectedDate;
-
-            const totalItems = dayHolidays.length + dayEvents.length;
-            const maxVisible = 3;
+            const isSel = format(day, 'yyyy-MM-dd') === selectedDate;
 
             return (
-              // Use div+onClick instead of Link so event-chip Links below aren't nested inside an <a>
-              <div
-                key={day.toISOString()}
-                className={`flex min-h-0 cursor-pointer flex-col rounded-xl p-1 transition-colors ${
-                  isSelected
-                    ? 'bg-blue-50 ring-2 ring-blue-400 ring-inset'
-                    : isToday
-                      ? 'bg-blue-50/60'
-                      : 'bg-white hover:bg-gray-50'
-                }`}
-                onClick={() => {
-                  const next = format(day, 'yyyy-MM-dd');
-                  router.replace(`/calendars/${id}?date=${next}`);
-                }}
-              >
-                <div
-                  className={`mb-0.5 flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${
-                    isToday
-                      ? 'bg-blue-500 text-white'
-                      : isSelected
-                        ? 'text-blue-600'
-                        : 'text-gray-700'
-                  }`}
-                >
+              <div key={day.toISOString()}
+                onClick={() => router.replace(`/calendars/${id}?date=${format(day, 'yyyy-MM-dd')}`)}
+                className="flex flex-col items-center pt-1 pb-1 rounded-xl cursor-pointer"
+                style={{ aspectRatio: '0.85', background: isSel ? 'var(--engaged-blue-lt)' : isToday ? '#F0F7FF' : '#fff', border: isSel ? '1.5px solid var(--engaged-blue-mid)' : '1.5px solid var(--engaged-border)' }}>
+                {/* Date number */}
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0"
+                  style={{ background: isToday ? 'var(--engaged-blue)' : 'transparent', color: isToday ? '#fff' : isSel ? 'var(--engaged-blue)' : 'var(--engaged-text)' }}>
                   {format(day, 'd')}
                 </div>
-                {/* Holiday + Event chips */}
-                <div className="min-h-0 flex-1 space-y-0.5 overflow-hidden">
-                  {/* Holidays */}
-                  {dayHolidays.slice(0, maxVisible).map((h, i) => (
-                    <div
-                      key={`holiday-${i}`}
-                      className="truncate rounded bg-gradient-to-r from-orange-400 to-pink-500 px-1 text-[10px] leading-4 font-medium text-white"
-                      title={h.localName || h.name}
-                    >
-                      🎉 {h.localName || h.name}
-                    </div>
+                {/* Event dots */}
+                <div className="flex flex-wrap justify-center gap-[2px] mt-0.5 px-0.5 max-h-[14px] overflow-hidden">
+                  {dayHols.slice(0, 1).map((_, i) => (
+                    <div key={`hd-${i}`} style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
                   ))}
-                  {/* Events */}
-                  {dayEvents
-                    .slice(0, Math.max(0, maxVisible - dayHolidays.length))
-                    .map(evt => (
-                      <EventCardCompact
-                        key={evt.id}
-                        event={evt}
-                        calendarId={calendarId}
-                        onClick={e => e.stopPropagation()}
-                        color={
-                          evt.color ||
-                          memberColor((evt.profiles as any)?.id ?? '') ||
-                          calendar?.color ||
-                          '#3B82F6'
-                        }
-                      />
-                    ))}
-                  {totalItems > maxVisible && (
-                    <div className="text-[10px] font-medium text-blue-400">
-                      +{totalItems - maxVisible}
-                    </div>
-                  )}
+                  {dayEvts.slice(0, 3 - Math.min(dayHols.length, 1)).map(evt => (
+                    <div key={evt.id} style={{ width: 5, height: 5, borderRadius: '50%', background: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calColor, flexShrink: 0 }} />
+                  ))}
                 </div>
               </div>
             );
           })}
 
-          {/* Trailing filler cells to ensure a consistent 6-row (42-cell) grid */}
-          {Array.from({ length: trailingCellsTo42 }).map((_, i) => (
-            <div key={`filler-${i}`} />
-          ))}
+          {Array.from({ length: trailingCellsTo42 }).map((_, i) => <div key={`fl-${i}`} />)}
         </div>
       </div>
-      {/* Members modal */}
+
+      {/* ── Selected Day Events ── */}
+      <div className="flex-1 overflow-y-auto mt-2 px-4 pb-2" style={{ borderTop: '1.5px solid var(--engaged-border)' }}>
+        <div className="flex items-center justify-between pt-3 pb-2">
+          <h3 className="text-[15px] font-black tracking-[-0.03em]" style={{ color: 'var(--engaged-text)' }}>
+            {format(new Date(selectedDate + 'T12:00:00'), 'EEEE, MMM d')}
+          </h3>
+          <Link href={`/calendars/${id}/events/new?date=${selectedDate}`} className="text-[12px] font-bold" style={{ color: 'var(--engaged-blue)' }}>+ Add event</Link>
+        </div>
+
+        {eventsForSelectedDate.length === 0 && holidaysForSelectedDate.length === 0 ? (
+          <p className="text-[13px] py-4" style={{ color: 'var(--engaged-text3)' }}>No events on this day</p>
+        ) : (
+          <div className="space-y-2 pb-2">
+            {holidaysForSelectedDate.map((h, i) => (
+              <div key={`hs-${i}`} className="flex items-center gap-3 py-2.5 px-3 rounded-xl"
+                style={{ background: '#FFF7ED', borderLeft: '4px solid #F97316' }}>
+                <div>
+                  <p className="text-[13px] font-bold" style={{ color: '#C2410C' }}>{'\uD83C\uDF89'} {h.localName || h.name}</p>
+                  <p className="text-[11px]" style={{ color: '#EA580C' }}>All day · Public holiday</p>
+                </div>
+              </div>
+            ))}
+            {eventsForSelectedDate.map(evt => {
+              const color = evt.color || memberColor((evt.profiles as any)?.id ?? '') || calColor;
+              return (
+                <Link key={evt.id} href={`/calendars/${id}/events/${evt.id}`}
+                  className="flex items-center gap-3 py-2.5 px-3 rounded-xl block"
+                  style={{ background: '#fff', border: '1.5px solid var(--engaged-border)', borderLeft: `4px solid ${color}` }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-bold truncate" style={{ color: 'var(--engaged-text)' }}>{evt.title}</p>
+                    <p className="text-[12px]" style={{ color: 'var(--engaged-text2)' }}>
+                      {evt.all_day ? 'All day' : format(new Date(evt.start_at), 'h:mm a')}
+                      {evt.end_at && !evt.all_day ? ` \u2013 ${format(new Date(evt.end_at), 'h:mm a')}` : ''}
+                    </p>
+                  </div>
+                  <svg width="16" height="16" fill="none" stroke="var(--engaged-border)" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></svg>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Members Modal ── */}
       {membersOpen && (
         <div className="fixed inset-0 z-[999]">
-          <button
-            className="absolute inset-0 bg-black/30"
-            onClick={() => setMembersOpen(false)}
-            aria-label="Close"
-          />
-
-          <div className="absolute relative inset-x-0 top-0 mx-auto flex h-[100dvh] max-w-md flex-col bg-white shadow-xl">
+          <button className="absolute inset-0 bg-black/30" onClick={() => setMembersOpen(false)} aria-label="Close" />
+          <div className="absolute inset-x-0 top-0 mx-auto flex h-[100dvh] max-w-md flex-col bg-white shadow-xl">
             <div className="flex flex-shrink-0 items-center justify-between border-b px-4 pt-10 pb-3">
               <div>
-                <h2 className="text-base font-bold text-gray-900">
-                  Calendar members
-                </h2>
-                <p className="text-xs text-gray-500">
-                  {calendar?.calendar_members?.length ?? 0} member
-                  {(calendar?.calendar_members?.length ?? 0) === 1 ? '' : 's'}
-                </p>
+                <h2 className="text-base font-bold" style={{ color: 'var(--engaged-text)' }}>Calendar members</h2>
+                <p className="text-xs" style={{ color: 'var(--engaged-text2)' }}>{calendar?.calendar_members?.length ?? 0} member{(calendar?.calendar_members?.length ?? 0) === 1 ? '' : 's'}</p>
               </div>
-              <button
-                onClick={() => setMembersOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full"
-                aria-label="Close"
-              >
-                <X size={18} className="text-gray-900" />
+              <button onClick={() => setMembersOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full" aria-label="Close">
+                <X size={18} style={{ color: 'var(--engaged-text)' }} />
               </button>
             </div>
-
             <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
-              {/* Invite by email (owner only) */}
               {isOwner && (
                 <section className="space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    Invite by email
-                  </h3>
+                  <h3 className="text-sm font-semibold" style={{ color: 'var(--engaged-text)' }}>Invite by email</h3>
                   <div className="flex items-center gap-2">
-                    <input
-                      type="email"
-                      value={inviteEmail}
-                      onChange={e => setInviteEmail(e.target.value)}
+                    <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
                       placeholder="name@example.com"
-                      className="h-10 flex-1 rounded-xl border border-gray-200 px-3 text-sm outline-none"
-                    />
-                    <button
-                      onClick={sendInvite}
-                      disabled={inviting || !inviteEmail.trim()}
-                      className="h-10 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white disabled:bg-gray-300"
-                    >
-                      {inviting ? 'Inviting…' : 'Invite'}
+                      className="h-10 flex-1 rounded-xl border px-3 text-sm outline-none" style={{ borderColor: 'var(--engaged-border)' }} />
+                    <button onClick={sendInvite} disabled={inviting || !inviteEmail.trim()}
+                      className="h-10 rounded-xl px-4 text-sm font-semibold text-white disabled:opacity-40"
+                      style={{ background: 'var(--engaged-blue)' }}>
+                      {inviting ? 'Inviting\u2026' : 'Invite'}
                     </button>
                   </div>
-                  {inviteError && (
-                    <p className="text-xs text-red-600">{inviteError}</p>
-                  )}
-                  {inviteSuccess && (
-                    <p className="text-xs text-green-700">{inviteSuccess}</p>
-                  )}
-                  <p className="text-[11px] text-gray-500">
-                    The recipient must sign up / log in, then accept the invite.
-                  </p>
+                  {inviteError && <p className="text-xs text-red-600">{inviteError}</p>}
+                  {inviteSuccess && <p className="text-xs text-green-700">{inviteSuccess}</p>}
+                  <p className="text-[11px]" style={{ color: 'var(--engaged-text3)' }}>The recipient must sign up then accept the invite.</p>
                 </section>
               )}
-
               <section className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-900">Members</h3>
+                <h3 className="text-sm font-semibold" style={{ color: 'var(--engaged-text)' }}>Members</h3>
                 <div className="space-y-2">
                   {calendar?.calendar_members?.map((m, i) => {
                     const isMe = currentUserId && m.user_id === currentUserId;
                     const canRemove = isOwner && m.role !== 'owner' && !isMe;
                     const canLeave = isMe && m.role !== 'owner';
-
                     return (
-                      <div
-                        key={m.user_id}
-                        className="flex items-center justify-between gap-3"
-                      >
+                      <div key={m.user_id} className="flex items-center justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
-                          <div
-                            className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full"
-                            style={{
-                              backgroundColor:
-                                MEMBER_COLORS[i % MEMBER_COLORS.length] + '40',
-                            }}
-                          >
-                            {m.profiles.avatar_url ? (
-                              <img
-                                src={m.profiles.avatar_url}
-                                alt=""
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <span
-                                className="text-sm font-bold"
-                                style={{
-                                  color:
-                                    MEMBER_COLORS[i % MEMBER_COLORS.length],
-                                }}
-                              >
-                                {(m.profiles.full_name ||
-                                  m.profiles.email ||
-                                  '?')[0]?.toUpperCase()}
-                              </span>
-                            )}
+                          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full"
+                            style={{ backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length] + '40' }}>
+                            {m.profiles.avatar_url
+                              ? <img src={m.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
+                              : <span className="text-sm font-bold" style={{ color: MEMBER_COLORS[i % MEMBER_COLORS.length] }}>{(m.profiles.full_name || '?')[0]?.toUpperCase()}</span>}
                           </div>
-
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-gray-900">
-                              {m.profiles.full_name ||
-                                m.profiles.email ||
-                                'Member'}
-                              {isMe ? ' (You)' : ''}
-                            </p>
-                            <p className="truncate text-xs text-gray-500">
-                              {m.role}
-                            </p>
+                            <p className="truncate text-sm font-semibold" style={{ color: 'var(--engaged-text)' }}>{m.profiles.full_name || 'Member'}{isMe ? ' (You)' : ''}</p>
+                            <p className="text-xs" style={{ color: 'var(--engaged-text2)' }}>{m.role}</p>
                           </div>
                         </div>
-
                         <div className="flex flex-shrink-0 items-center gap-2">
                           {canRemove && (
-                            <button
-                              onClick={() => removeMember(m.user_id)}
-                              disabled={removingUserId === m.user_id}
-                              className="h-9 rounded-xl border border-gray-200 px-3 text-xs font-semibold text-gray-700 disabled:opacity-50"
-                            >
-                              <span className="inline-flex items-center gap-1">
-                                <Trash2 size={14} />
-                                Remove
-                              </span>
+                            <button onClick={() => removeMember(m.user_id)} disabled={removingUserId === m.user_id}
+                              className="h-9 rounded-xl border px-3 text-xs font-semibold disabled:opacity-50"
+                              style={{ borderColor: 'var(--engaged-border)', color: 'var(--engaged-text)' }}>
+                              <span className="inline-flex items-center gap-1"><Trash2 size={14} /> Remove</span>
                             </button>
                           )}
-
                           {canLeave && (
-                            <button
-                              onClick={() => removeMember(m.user_id)}
-                              disabled={removingUserId === m.user_id}
-                              className="h-9 rounded-xl border border-gray-200 px-3 text-xs font-semibold text-gray-700 disabled:opacity-50"
-                            >
-                              <span className="inline-flex items-center gap-1">
-                                <LogOut size={14} />
-                                Leave
-                              </span>
+                            <button onClick={() => removeMember(m.user_id)} disabled={removingUserId === m.user_id}
+                              className="h-9 rounded-xl border px-3 text-xs font-semibold disabled:opacity-50"
+                              style={{ borderColor: 'var(--engaged-border)', color: 'var(--engaged-text)' }}>
+                              <span className="inline-flex items-center gap-1"><LogOut size={14} /> Leave</span>
                             </button>
                           )}
                         </div>
                       </div>
                     );
                   })}
-
-                  {(!calendar?.calendar_members ||
-                    calendar.calendar_members.length === 0) && (
-                    <p className="text-sm text-gray-500">No members</p>
+                  {(!calendar?.calendar_members || calendar.calendar_members.length === 0) && (
+                    <p className="text-sm" style={{ color: 'var(--engaged-text2)' }}>No members</p>
                   )}
                 </div>
-
-                {!isOwner && (
-                  <p className="text-[11px] text-gray-500">
-                    Members can view events and comment. Only the owner can edit
-                    events.
-                  </p>
-                )}
               </section>
             </div>
           </div>
