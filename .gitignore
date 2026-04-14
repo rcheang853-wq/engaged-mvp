@@ -66,3 +66,8 @@ coverage/
 *.swo
 *~
 .env*.local
+
+# local QA artifacts
+/playwright-artifacts/
+/temp/
+/scripts/smoke-*.mjs
