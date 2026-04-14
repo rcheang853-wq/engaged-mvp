@@ -38,7 +38,7 @@ function SignInPageContent() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16" style={{ background: 'var(--engaged-bg)' }}>
       <Link href="/" className="flex flex-col items-center gap-2 mb-10 no-underline">
-        <Image src="/logo.png" alt="Engaged" width={88} height={88} priority />
+        <Image src="/logo.png" alt="Engaged" width={160} height={160} priority />
         <span className="text-[26px] font-black tracking-[-0.04em]" style={{ color: 'var(--engaged-text)' }}>Engaged</span>
       </Link>
 

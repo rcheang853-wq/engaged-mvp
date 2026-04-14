@@ -132,11 +132,6 @@ export function SignInForm({
 
   return (
     <div className={className}>
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
-        <p className="text-sm text-gray-500 mt-1">Sign in to your account to continue</p>
-      </div>
-
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 flex gap-2">
           <svg className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
@@ -304,20 +299,7 @@ export function SignInForm({
           </Button>
         )}
 
-        {onSignUp && (
-          <div className="text-center mt-2">
-            <p className="text-sm text-gray-600">
-              Don&apos;t have an account?{' '}
-              <button
-                type="button"
-                onClick={onSignUp}
-                className="text-blue-500 hover:text-blue-600 font-semibold transition-colors"
-              >
-                Sign up
-              </button>
-            </p>
-          </div>
-        )}
+
       </Form>
     </div>
   );
