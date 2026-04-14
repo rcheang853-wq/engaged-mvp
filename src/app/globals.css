@@ -163,24 +163,25 @@
   z-index: 10;
   width: 130px;
 }
-.kobe-corner.tl { top: -52px; left: -62px; }
-.kobe-corner.tr { top: -52px; right: -62px; transform: scaleX(-1); }
-.kobe-corner.bl { bottom: -52px; left: -62px; }
-.kobe-corner.br { bottom: -52px; right: -62px; transform: scaleX(-1); }
+/* 20% overlap: push corners so only ~26px (20% of 130px) of artwork sits inside card */
+.kobe-corner.tl { top: -72px; left: -80px; }
+.kobe-corner.tr { top: -72px; right: -80px; transform: scaleX(-1); }
+.kobe-corner.bl { bottom: -72px; left: -80px; }
+.kobe-corner.br { bottom: -72px; right: -80px; transform: scaleX(-1); }
 
 @media (max-width: 960px) {
   .kobe-corner { width: 100px; }
-  .kobe-corner.tl { top: -40px; left: -48px; }
-  .kobe-corner.tr { top: -40px; right: -48px; }
-  .kobe-corner.bl { bottom: -40px; left: -48px; }
-  .kobe-corner.br { bottom: -40px; right: -48px; }
+  .kobe-corner.tl { top: -58px; left: -64px; }
+  .kobe-corner.tr { top: -58px; right: -64px; }
+  .kobe-corner.bl { bottom: -58px; left: -64px; }
+  .kobe-corner.br { bottom: -58px; right: -64px; }
 }
 @media (max-width: 600px) {
   .kobe-corner { width: 72px; }
-  .kobe-corner.tl { top: -30px; left: -32px; }
-  .kobe-corner.tr { top: -30px; right: -32px; }
-  .kobe-corner.bl { bottom: -30px; left: -32px; }
-  .kobe-corner.br { bottom: -30px; right: -32px; }
+  .kobe-corner.tl { top: -40px; left: -44px; }
+  .kobe-corner.tr { top: -40px; right: -44px; }
+  .kobe-corner.bl { bottom: -40px; left: -44px; }
+  .kobe-corner.br { bottom: -40px; right: -44px; }
 }
 
 /* Animations */
