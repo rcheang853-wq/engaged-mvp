@@ -58,6 +58,7 @@ export default function CalendarViewPage() {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const [showHolidays, setShowHolidays] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -68,6 +69,13 @@ export default function CalendarViewPage() {
   const [holidays, setHolidays] = useState<Array<{ date: string; name: string; localName: string }>>([]);
 
   const calendarId = Array.isArray(id) ? id[0] : id;
+
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     authClient.getCurrentUser().then(u => setCurrentUserId(u?.id ?? null)).catch(() => setCurrentUserId(null));
@@ -101,9 +109,13 @@ export default function CalendarViewPage() {
       .catch(() => setHolidays([]));
   }, [currentMonth, showHolidays]);
 
+  // Validate and sanitise the date param (fixes Codex comment #1)
   const selectedDate = useMemo(() => {
     const qp = searchParams.get('date');
-    if (qp && /^\d{4}-\d{2}-\d{2}$/.test(qp)) return qp;
+    if (qp && /^\d{4}-\d{2}-\d{2}$/.test(qp)) {
+      const d = new Date(qp + 'T12:00:00');
+      if (!isNaN(d.getTime())) return qp;
+    }
     return format(new Date(), 'yyyy-MM-dd');
   }, [searchParams]);
 
@@ -139,6 +151,13 @@ export default function CalendarViewPage() {
     ? calendar.calendar_members.find(m => m.user_id === currentUserId)?.role
     : null;
   const isOwner = myRole === 'owner';
+
+  // Fixes Codex comment #2: sync selectedDate when navigating months
+  const shiftMonth = (delta: 1 | -1) => {
+    const newMonth = delta === 1 ? addMonths(currentMonth, 1) : subMonths(currentMonth, 1);
+    setCurrentMonth(newMonth);
+    router.replace(`/calendars/${id}?date=${format(startOfMonth(newMonth), 'yyyy-MM-dd')}`);
+  };
 
   async function refreshMembers() {
     if (!calendarId) return;
@@ -190,7 +209,7 @@ export default function CalendarViewPage() {
   const calColor = calendar?.color || '#2563EB';
 
   return (
-    <div className="flex min-h-dvh flex-col pb-20 md:h-dvh" style={{ background: 'var(--engaged-bg)' }}>
+    <div className="flex min-h-dvh flex-col pb-20" style={{ background: 'var(--engaged-bg)' }}>
 
       {/* ── Header ── */}
       <div className="px-4 pt-3 pb-0" style={{ background: '#fff', borderBottom: '1.5px solid var(--engaged-border)' }}>
@@ -198,16 +217,12 @@ export default function CalendarViewPage() {
           <button onClick={() => router.back()} className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center" style={{ border: '1.5px solid var(--engaged-border)' }}>
             <ArrowLeft size={17} style={{ color: 'var(--engaged-text2)' }} />
           </button>
-
-          {/* Color dot + name */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: calColor }} />
             <span className="text-[20px] font-black tracking-[-0.04em] truncate" style={{ color: 'var(--engaged-text)' }}>
               {calendar?.name ?? '\u2026'}
             </span>
           </div>
-
-          {/* Member avatars */}
           <button className="flex items-center flex-shrink-0" onClick={() => setMembersOpen(true)}>
             {calendar?.calendar_members?.slice(0, 4).map((m, i) => (
               <div key={m.user_id}
@@ -219,8 +234,6 @@ export default function CalendarViewPage() {
               </div>
             ))}
           </button>
-
-          {/* Action buttons */}
           <Link href="/search" className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ color: 'var(--engaged-text2)' }} aria-label="Search">
             <Search size={17} />
           </Link>
@@ -232,7 +245,6 @@ export default function CalendarViewPage() {
             <Plus size={17} />
           </Link>
         </div>
-
         {/* View toggle strip */}
         <div className="flex items-center gap-2 mt-3 pb-3">
           {[
@@ -253,7 +265,7 @@ export default function CalendarViewPage() {
 
       {/* ── Month Navigator ── */}
       <div className="flex items-center justify-between px-4 py-2.5" style={{ background: '#fff', borderBottom: '1.5px solid var(--engaged-border)' }}>
-        <button onClick={() => setCurrentMonth(m => subMonths(m, 1))}
+        <button onClick={() => shiftMonth(-1)}
           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
           style={{ border: '1.5px solid var(--engaged-border)' }}>
           <ChevronLeft size={16} style={{ color: 'var(--engaged-text2)' }} />
@@ -273,7 +285,7 @@ export default function CalendarViewPage() {
             {'\uD83C\uDF89'} Holidays
           </button>
         </div>
-        <button onClick={() => setCurrentMonth(m => addMonths(m, 1))}
+        <button onClick={() => shiftMonth(1)}
           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
           style={{ border: '1.5px solid var(--engaged-border)' }}>
           <ChevronRight size={16} style={{ color: 'var(--engaged-text2)' }} />
@@ -289,7 +301,7 @@ export default function CalendarViewPage() {
           ))}
         </div>
 
-        {/* Day cells */}
+        {/* Day cells — dots on mobile, event chips on desktop */}
         <div className="grid grid-cols-7" style={{ gap: 3 }}>
           {Array.from({ length: firstDayOfWeek }).map((_, i) => <div key={`el-${i}`} />)}
 
@@ -298,26 +310,59 @@ export default function CalendarViewPage() {
             const dayHols = holidaysOnDay(day);
             const isToday = isSameDay(day, new Date());
             const isSel = format(day, 'yyyy-MM-dd') === selectedDate;
+            const totalItems = dayEvts.length + dayHols.length;
+            const maxChips = 3;
 
             return (
               <div key={day.toISOString()}
                 onClick={() => router.replace(`/calendars/${id}?date=${format(day, 'yyyy-MM-dd')}`)}
-                className="flex flex-col items-center pt-1 pb-1 rounded-xl cursor-pointer"
-                style={{ aspectRatio: '0.85', background: isSel ? 'var(--engaged-blue-lt)' : isToday ? '#F0F7FF' : '#fff', border: isSel ? '1.5px solid var(--engaged-blue-mid)' : '1.5px solid var(--engaged-border)' }}>
+                className="flex flex-col cursor-pointer rounded-xl pt-1 pb-1 px-1 transition-colors"
+                style={{
+                  aspectRatio: isDesktop ? undefined : '0.85',
+                  minHeight: isDesktop ? 80 : undefined,
+                  background: isSel ? 'var(--engaged-blue-lt)' : isToday ? '#F0F7FF' : '#fff',
+                  border: isSel ? '1.5px solid var(--engaged-blue-mid)' : '1.5px solid var(--engaged-border)',
+                }}>
                 {/* Date number */}
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0"
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 self-center"
                   style={{ background: isToday ? 'var(--engaged-blue)' : 'transparent', color: isToday ? '#fff' : isSel ? 'var(--engaged-blue)' : 'var(--engaged-text)' }}>
                   {format(day, 'd')}
                 </div>
-                {/* Event dots */}
-                <div className="flex flex-wrap justify-center gap-[2px] mt-0.5 px-0.5 max-h-[14px] overflow-hidden">
-                  {dayHols.slice(0, 1).map((_, i) => (
-                    <div key={`hd-${i}`} style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
-                  ))}
-                  {dayEvts.slice(0, 3 - Math.min(dayHols.length, 1)).map(evt => (
-                    <div key={evt.id} style={{ width: 5, height: 5, borderRadius: '50%', background: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calColor, flexShrink: 0 }} />
-                  ))}
-                </div>
+
+                {/* Mobile: colored dots */}
+                {!isDesktop && (
+                  <div className="flex flex-wrap justify-center gap-[2px] mt-0.5 max-h-[14px] overflow-hidden">
+                    {dayHols.slice(0, 1).map((_, i) => (
+                      <div key={`hd-${i}`} style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
+                    ))}
+                    {dayEvts.slice(0, 3 - Math.min(dayHols.length, 1)).map(evt => (
+                      <div key={evt.id} style={{ width: 5, height: 5, borderRadius: '50%', background: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calColor, flexShrink: 0 }} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Desktop: event name chips */}
+                {isDesktop && (
+                  <div className="mt-1 space-y-0.5 overflow-hidden flex-1">
+                    {dayHols.slice(0, 1).map((h, i) => (
+                      <div key={`hd-${i}`} className="truncate rounded text-[9px] px-1 leading-[16px] font-bold text-white"
+                        style={{ background: '#F97316' }}>
+                        {'\uD83C\uDF89'} {h.localName || h.name}
+                      </div>
+                    ))}
+                    {dayEvts.slice(0, maxChips - Math.min(dayHols.length, 1)).map(evt => (
+                      <div key={evt.id} className="truncate rounded text-[9px] px-1 leading-[16px] font-semibold text-white"
+                        style={{ background: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calColor }}>
+                        {evt.title}
+                      </div>
+                    ))}
+                    {totalItems > maxChips && (
+                      <div className="text-[9px] font-medium px-1" style={{ color: 'var(--engaged-blue)' }}>
+                        +{totalItems - maxChips}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -326,43 +371,72 @@ export default function CalendarViewPage() {
         </div>
       </div>
 
-      {/* ── Selected Day Events ── */}
-      <div className="flex-1 overflow-y-auto mt-2 px-4 pb-2" style={{ borderTop: '1.5px solid var(--engaged-border)' }}>
-        <div className="flex items-center justify-between pt-3 pb-2">
-          <h3 className="text-[15px] font-black tracking-[-0.03em]" style={{ color: 'var(--engaged-text)' }}>
-            {format(new Date(selectedDate + 'T12:00:00'), 'EEEE, MMM d')}
+      {/* ── Artwork band (mobile only, between grid and events) ── */}
+      <div className="md:hidden relative h-20 overflow-visible mx-4 mt-1 flex items-end justify-between px-2 pointer-events-none flex-shrink-0">
+        <img src="/artworks/walking_man.png" alt="" aria-hidden className="h-[72px] w-auto opacity-65 select-none" />
+        <img src="/artworks/bicycle_art.png" alt="" aria-hidden className="h-[72px] w-auto opacity-65 select-none" style={{ transform: 'scaleX(-1)' }} />
+      </div>
+
+      {/* ── Selected Day Events (mockup style) ── */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ borderTop: '1.5px solid var(--engaged-border)' }}>
+        <div className="flex items-center justify-between pt-3 pb-3">
+          <h3 className="text-[16px] font-black tracking-[-0.03em]" style={{ color: 'var(--engaged-text)' }}>
+            Upcoming Events
           </h3>
           <Link href={`/calendars/${id}/events/new?date=${selectedDate}`} className="text-[12px] font-bold" style={{ color: 'var(--engaged-blue)' }}>+ Add event</Link>
         </div>
 
         {eventsForSelectedDate.length === 0 && holidaysForSelectedDate.length === 0 ? (
-          <p className="text-[13px] py-4" style={{ color: 'var(--engaged-text3)' }}>No events on this day</p>
+          <p className="text-[13px] py-2" style={{ color: 'var(--engaged-text3)' }}>
+            No events on {format(new Date(selectedDate + 'T12:00:00'), 'EEEE, MMM d')}
+          </p>
         ) : (
-          <div className="space-y-2 pb-2">
+          <div className="space-y-3 pb-2">
+            {/* Holiday rows */}
             {holidaysForSelectedDate.map((h, i) => (
-              <div key={`hs-${i}`} className="flex items-center gap-3 py-2.5 px-3 rounded-xl"
-                style={{ background: '#FFF7ED', borderLeft: '4px solid #F97316' }}>
-                <div>
+              <div key={`hs-${i}`} className="flex gap-3 items-start">
+                {/* Date column */}
+                <div style={{ width: 40, flexShrink: 0, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--engaged-text3)' }}>
+                    {format(new Date(selectedDate + 'T12:00:00'), 'EEE')}
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: 'var(--engaged-text)' }}>
+                    {format(new Date(selectedDate + 'T12:00:00'), 'd')}
+                  </div>
+                </div>
+                {/* Card */}
+                <div className="flex-1 rounded-[14px] px-3 py-2.5" style={{ background: '#FFF7ED', border: '1.5px solid var(--engaged-border)', borderLeft: '4px solid #F97316' }}>
                   <p className="text-[13px] font-bold" style={{ color: '#C2410C' }}>{'\uD83C\uDF89'} {h.localName || h.name}</p>
-                  <p className="text-[11px]" style={{ color: '#EA580C' }}>All day · Public holiday</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: '#EA580C' }}>All day &middot; Public holiday</p>
                 </div>
               </div>
             ))}
+
+            {/* Event rows */}
             {eventsForSelectedDate.map(evt => {
               const color = evt.color || memberColor((evt.profiles as any)?.id ?? '') || calColor;
               return (
-                <Link key={evt.id} href={`/calendars/${id}/events/${evt.id}`}
-                  className="flex items-center gap-3 py-2.5 px-3 rounded-xl block"
-                  style={{ background: '#fff', border: '1.5px solid var(--engaged-border)', borderLeft: `4px solid ${color}` }}>
-                  <div className="flex-1 min-w-0">
+                <div key={evt.id} className="flex gap-3 items-start">
+                  {/* Date column */}
+                  <div style={{ width: 40, flexShrink: 0, textAlign: 'center' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--engaged-text3)' }}>
+                      {format(new Date(selectedDate + 'T12:00:00'), 'EEE')}
+                    </div>
+                    <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: 'var(--engaged-text)' }}>
+                      {format(new Date(selectedDate + 'T12:00:00'), 'd')}
+                    </div>
+                  </div>
+                  {/* Card */}
+                  <Link href={`/calendars/${id}/events/${evt.id}`}
+                    className="flex-1 rounded-[14px] px-3 py-2.5 block"
+                    style={{ background: '#fff', border: '1.5px solid var(--engaged-border)', borderLeft: `4px solid ${color}` }}>
                     <p className="text-[14px] font-bold truncate" style={{ color: 'var(--engaged-text)' }}>{evt.title}</p>
-                    <p className="text-[12px]" style={{ color: 'var(--engaged-text2)' }}>
+                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--engaged-text2)' }}>
                       {evt.all_day ? 'All day' : format(new Date(evt.start_at), 'h:mm a')}
                       {evt.end_at && !evt.all_day ? ` \u2013 ${format(new Date(evt.end_at), 'h:mm a')}` : ''}
                     </p>
-                  </div>
-                  <svg width="16" height="16" fill="none" stroke="var(--engaged-border)" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></svg>
-                </Link>
+                  </Link>
+                </div>
               );
             })}
           </div>
