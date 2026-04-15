@@ -134,10 +134,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Add as viewer
-    const { data, error } = await supabase
+    // Use service role for the membership insert to avoid RLS blocking.
+    // Security model: only allow this insert after validating (1) caller is authed and (2) invite_code maps to a calendar.
+    const db = createServiceClient();
+
+    const { data, error } = await db
       .from('calendar_members')
       .insert({ calendar_id: calendar.id, user_id: user.id, role: 'viewer' })
-      .select()
+      .select('id, role')
       .single();
 
     if (error) throw error;
