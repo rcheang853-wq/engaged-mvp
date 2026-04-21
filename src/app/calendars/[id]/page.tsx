@@ -1,35 +1,34 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Plus, Settings, ChevronLeft, ChevronRight,
-  Search, X, Trash2, LogOut,
+  ChevronLeft, ChevronRight, Plus, Settings,
+  List, Grid3x3, CalendarDays,
 } from 'lucide-react';
-import BottomTabBar from '@/components/BottomTabBar';
-import { authClient } from '@/lib/supabase/auth';
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
-  isSameDay, addMonths, subMonths,
+  startOfWeek, endOfWeek, isSameMonth, isSameDay, isToday,
+  addMonths, subMonths, parseISO,
 } from 'date-fns';
-import { CalendarSkeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
+import BottomTabBar from '@/components/BottomTabBar';
+
+// ── Types ────────────────────────────────────────────────────────────────────
 
 interface CalendarEvent {
   id: string;
   title: string;
   start_at: string;
-  end_at: string | null;
+  end_at: string;
   all_day: boolean;
   color: string | null;
-  profiles: { full_name: string; avatar_url: string | null };
+  creator: { full_name: string; avatar_url: string | null } | null;
 }
 
 interface CalendarMember {
   user_id: string;
   role: string;
-  profiles: { id: string; full_name: string; avatar_url: string | null };
+  profiles: { full_name: string; avatar_url: string | null };
 }
 
 interface SharedCalendar {
@@ -39,37 +38,68 @@ interface SharedCalendar {
   calendar_members: CalendarMember[];
 }
 
-const MEMBER_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+type View = 'month' | '3day' | 'agenda';
 
-export default function CalendarViewPage() {
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const toast = useToast();
+// ── Artwork helper ──────────────────────────────────────────────────────────
 
-  const [calendar, setCalendar] = useState<SharedCalendar | null>(null);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+const ARTWORK_MAP: [RegExp, string][] = [
+  [/gym|sport|boulder|climb|bike|cycle|run|jog|swim|hike|trail|volleyball|football|basketball|tennis/i, '/artworks/bicycle_art.png'],
+  [/music|band|guitar|rehearsal|concert|gig|jam|sing/i,  '/artworks/guitar_music.png'],
+  [/food|eat|brunch|lunch|dinner|breakfast|restaurant|cafe|drink|coffee|beer|wine|sake|bar/i, '/artworks/food_plate.png'],
+  [/movie|film|cinema|show|watch/i,  '/artworks/camera_spotlight.png'],
+  [/photo|camera|shoot|photography/i, '/artworks/camera_spotlight.png'],
+  [/hike|walk|trail|outdoor/i,        '/artworks/walking_woman.png'],
+  [/party|birthday|celebrate|gathering/i, '/artworks/flower_cluster.png'],
+];
+
+function artworkForTitle(title: string): string {
+  for (const [re, src] of ARTWORK_MAP) {
+    if (re.test(title)) return src;
+  }
+  return '/artworks/walking_man.png';
+}
+
+// ── Colour helpers ───────────────────────────────────────────────────────────
+
+const MEMBER_COLORS = [
+  { bg: '#FDE68A', fg: '#92400E' },
+  { bg: '#BBF7D0', fg: '#166534' },
+  { bg: '#BFDBFE', fg: '#1E40AF' },
+  { bg: '#EDE9FE', fg: '#5B21B6' },
+  { bg: '#FCE7F3', fg: '#9D174D' },
+];
+
+function eventBadgeStyle(color: string | null) {
+  const c = color ?? '#2563EB';
+  const map: Record<string, { bg: string; text: string }> = {
+    '#22C55E': { bg: '#F0FDF4', text: '#166534' },
+    '#8B5CF6': { bg: '#F5F3FF', text: '#5B21B6' },
+    '#EC4899': { bg: '#FDF2F8', text: '#9D174D' },
+    '#F59E0B': { bg: '#FFFBEB', text: '#92400E' },
+    '#14B8A6': { bg: '#F0FDFA', text: '#0F766E' },
+    '#F97316': { bg: '#FFF7ED', text: '#C2410C' },
+  };
+  return map[c] ?? { bg: '#EEF4FF', text: '#1E40AF' };
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
+
+export default function CalendarDetailPage() {
+  const params   = useParams();
+  const router   = useRouter();
+  const calId    = params?.id as string;
+
+  const [calendar, setCalendar]         = useState<SharedCalendar | null>(null);
+  const [events, setEvents]             = useState<CalendarEvent[]>([]);
+  const [loading, setLoading]           = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [membersOpen, setMembersOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviting, setInviting] = useState(false);
-  const [inviteError, setInviteError] = useState<string | null>(null);
-  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
-  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [selectedDay, setSelectedDay]   = useState(new Date());
+  const [view, setView]                 = useState<View>('month');
+  const [sheetEvent, setSheetEvent]     = useState<CalendarEvent | null>(null);
+  const [showHolidays, setShowHolidays] = useState(false);
+  const [isDesktop, setIsDesktop]       = useState(false);
 
-  const [showHolidays, setShowHolidays] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('calendar_show_holidays') !== 'false';
-    }
-    return true;
-  });
-  const [holidays, setHolidays] = useState<Array<{ date: string; name: string; localName: string }>>([]);
-
-  const calendarId = Array.isArray(id) ? id[0] : id;
-
+  // Responsive detection
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth >= 768);
     check();
@@ -77,481 +107,698 @@ export default function CalendarViewPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Fetch calendar + events
   useEffect(() => {
-    authClient.getCurrentUser().then(u => setCurrentUserId(u?.id ?? null)).catch(() => setCurrentUserId(null));
-  }, []);
-
-  useEffect(() => {
-    if (searchParams.get('members') === '1') setMembersOpen(true);
-  }, [searchParams]);
-
-  useEffect(() => {
+    if (!calId) return;
     Promise.all([
-      fetch(`/api/calendars/${id}`).then(r => r.json()),
-      fetch(`/api/calendars/${id}/events?start=${startOfMonth(currentMonth).toISOString()}&end=${endOfMonth(currentMonth).toISOString()}`).then(r => r.json()),
-    ])
-      .then(([cal, evts]) => { setCalendar(cal.data); setEvents(evts.data || []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [id, currentMonth]);
+      fetch(`/api/calendars/${calId}`).then(r => r.json()),
+      fetch(`/api/calendars/${calId}/events`).then(r => r.json()),
+    ]).then(([calData, evtData]) => {
+      setCalendar(calData.data ?? null);
+      setEvents(evtData.data ?? []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [calId]);
 
-  useEffect(() => {
-    if (!showHolidays) { setHolidays([]); return; }
-    const locale = 'MO';
-    const from = startOfMonth(currentMonth);
-    const to = endOfMonth(currentMonth);
-    fetch(`/api/holidays?locale=${locale}&from=${from.toISOString()}&to=${to.toISOString()}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.data)) {
-          setHolidays(data.data.map((h: any) => ({ date: h.start_at.split('T')[0], name: h.title, localName: h.title })));
-        }
-      })
-      .catch(() => setHolidays([]));
-  }, [currentMonth, showHolidays]);
+  // Build month grid days (includes leading/trailing days from adjacent months)
+  const gridDays = useMemo(() => {
+    const start = startOfWeek(startOfMonth(currentMonth));
+    const end   = endOfWeek(endOfMonth(currentMonth));
+    return eachDayOfInterval({ start, end });
+  }, [currentMonth]);
 
-  // Validate and sanitise the date param (fixes Codex comment #1)
-  const selectedDate = useMemo(() => {
-    const qp = searchParams.get('date');
-    if (qp && /^\d{4}-\d{2}-\d{2}$/.test(qp)) {
-      const d = new Date(qp + 'T12:00:00');
-      if (!isNaN(d.getTime())) return qp;
-    }
-    return format(new Date(), 'yyyy-MM-dd');
-  }, [searchParams]);
+  // Events by date key
+  const eventsByDate = useMemo(() => {
+    const map: Record<string, CalendarEvent[]> = {};
+    events.forEach(ev => {
+      const key = format(parseISO(ev.start_at), 'yyyy-MM-dd');
+      (map[key] ??= []).push(ev);
+    });
+    return map;
+  }, [events]);
 
-  const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
-  const firstDayOfWeek = startOfMonth(currentMonth).getDay();
+  // Upcoming events (from today, sorted)
+  const upcoming = useMemo(() => {
+    const now = new Date();
+    return [...events]
+      .filter(ev => parseISO(ev.start_at) >= now)
+      .sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime())
+      .slice(0, 10);
+  }, [events]);
 
-  const trailingCellsTo42 = useMemo(() => {
-    const leading = firstDayOfWeek;
-    const total = leading + days.length;
-    const remainder = total % 7;
-    const trailingToCompleteWeeks = remainder === 0 ? 0 : 7 - remainder;
-    const totalAfter = total + trailingToCompleteWeeks;
-    return trailingToCompleteWeeks + (totalAfter >= 42 ? 0 : 42 - totalAfter);
-  }, [days.length, firstDayOfWeek]);
+  const accentColor = calendar?.color ?? '#2563EB';
 
-  const eventsOnDay = (day: Date) => events.filter(e => isSameDay(new Date(e.start_at), day));
-  const holidaysOnDay = (day: Date) => holidays.filter(h => h.date === format(day, 'yyyy-MM-dd'));
-
-  const eventsForSelectedDate = useMemo(() =>
-    events.filter(e => isSameDay(new Date(e.start_at), new Date(selectedDate + 'T12:00:00'))),
-    [events, selectedDate]);
-
-  const holidaysForSelectedDate = useMemo(() =>
-    holidays.filter(h => h.date === selectedDate),
-    [holidays, selectedDate]);
-
-  const memberColor = (userId: string) => {
-    const idx = calendar?.calendar_members?.findIndex(m => m.user_id === userId) ?? 0;
-    return MEMBER_COLORS[idx % MEMBER_COLORS.length];
-  };
-
-  const myRole = currentUserId && calendar?.calendar_members
-    ? calendar.calendar_members.find(m => m.user_id === currentUserId)?.role
-    : null;
-  const isOwner = myRole === 'owner';
-
-  // Fixes Codex comment #2: sync selectedDate when navigating months
-  const shiftMonth = (delta: 1 | -1) => {
-    const newMonth = delta === 1 ? addMonths(currentMonth, 1) : subMonths(currentMonth, 1);
-    setCurrentMonth(newMonth);
-    router.replace(`/calendars/${id}?date=${format(startOfMonth(newMonth), 'yyyy-MM-dd')}`);
-  };
-
-  async function refreshMembers() {
-    if (!calendarId) return;
-    try {
-      const res = await fetch(`/api/calendars/${calendarId}/members`);
-      const json = await res.json();
-      if (json.success && calendar) setCalendar({ ...calendar, calendar_members: json.data });
-    } catch {}
-  }
-
-  async function sendInvite() {
-    if (!calendarId) return;
-    const email = inviteEmail.trim();
-    if (!email) return;
-    setInviting(true);
-    setInviteError(null);
-    setInviteSuccess(null);
-
-    try {
-      const res = await fetch(`/api/calendars/${calendarId}/invite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        const errorMsg = json.error ?? 'Failed to invite';
-        setInviteError(errorMsg);
-        toast.error(errorMsg);
-        return;
-      }
-
-      if (json.emailSent === false) {
-        setInviteSuccess(json.message || 'Invite saved; email not sent');
-        toast.success(json.message || 'Invite saved; email not sent');
-      } else {
-        setInviteSuccess(json.message || 'Invite created and email sent');
-        toast.success(json.message || `Invitation sent to ${email}`);
-      }
-
-      setInviteEmail('');
-    } catch {
-      const errorMsg = 'Failed to invite';
-      setInviteError(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setInviting(false);
-    }
-  }
-
-  async function removeMember(userId: string) {
-    if (!calendarId) return;
-    setRemovingUserId(userId);
-    try {
-      const res = await fetch(`/api/calendars/${calendarId}/members/${userId}`, { method: 'DELETE' });
-      const json = await res.json();
-      if (!res.ok || !json.success) return;
-      if (currentUserId && userId === currentUserId) { router.push('/calendars'); return; }
-      await refreshMembers();
-    } finally { setRemovingUserId(null); }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex min-h-dvh flex-col pb-20 md:h-dvh" style={{ background: 'var(--engaged-bg)' }}>
-        <div className="h-16 border-b bg-white px-4 py-3" />
-        <CalendarSkeleton />
-        <BottomTabBar />
-      </div>
-    );
-  }
-
-  const calColor = calendar?.color || '#2563EB';
+  if (loading) return <KobeLoader />;
+  if (!calendar) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--engaged-bg)' }}>
+      <p style={{ color: 'var(--engaged-text2)' }}>Calendar not found</p>
+    </div>
+  );
 
   return (
-    <div className="flex min-h-dvh flex-col pb-20" style={{ background: 'var(--engaged-bg)' }}>
+    <div className="min-h-screen flex flex-col pb-16" style={{ background: 'var(--engaged-bg)' }}>
 
       {/* ── Header ── */}
-      <div className="px-4 pt-3 pb-0" style={{ background: '#fff', borderBottom: '1.5px solid var(--engaged-border)' }}>
-        <div className="flex items-center gap-2">
-          <button onClick={() => router.back()} className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center" style={{ border: '1.5px solid var(--engaged-border)' }}>
-            <ArrowLeft size={17} style={{ color: 'var(--engaged-text2)' }} />
-          </button>
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: calColor }} />
-            <span className="text-[20px] font-black tracking-[-0.04em] truncate" style={{ color: 'var(--engaged-text)' }}>
-              {calendar?.name ?? '\u2026'}
-            </span>
-          </div>
-          <button className="flex items-center flex-shrink-0" onClick={() => setMembersOpen(true)}>
-            {calendar?.calendar_members?.slice(0, 4).map((m, i) => (
-              <div key={m.user_id}
-                className="w-7 h-7 rounded-full border-2 border-white overflow-hidden flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                style={{ marginLeft: i === 0 ? 0 : -8, background: MEMBER_COLORS[i % MEMBER_COLORS.length] + '30', color: MEMBER_COLORS[i % MEMBER_COLORS.length], zIndex: 10 - i }}>
-                {m.profiles?.avatar_url
-                  ? <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
-                  : (m.profiles?.full_name?.[0] ?? '?').toUpperCase()}
-              </div>
-            ))}
-          </button>
-          <Link href="/search" className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ color: 'var(--engaged-text2)' }} aria-label="Search">
-            <Search size={17} />
-          </Link>
-          <Link href={`/calendars/${id}/settings`} className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ color: 'var(--engaged-text2)' }} aria-label="Settings">
-            <Settings size={17} />
-          </Link>
-          <Link href={`/calendars/${id}/events/new?date=${selectedDate}`}
-            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white" style={{ background: 'var(--engaged-blue)' }} aria-label="New event">
-            <Plus size={17} />
-          </Link>
-        </div>
-        {/* View toggle strip */}
-        <div className="flex items-center gap-2 mt-3 pb-3">
-          {[
-            { key: 'month', label: 'Month', href: `/calendars/${id}?date=${selectedDate}` },
-            { key: '3day', label: '3 Days', href: `/calendars/${id}/3day?date=${selectedDate}` },
-            { key: 'agenda', label: 'Agenda', href: `/calendars/${id}/agenda?date=${selectedDate}` },
-          ].map(tab => (
-            <Link key={tab.key} href={tab.href}
-              className="h-[30px] px-4 rounded-full text-[13px] font-bold flex items-center flex-shrink-0"
-              style={tab.key === 'month'
-                ? { background: 'var(--engaged-blue)', color: '#fff' }
-                : { background: '#fff', border: '1.5px solid var(--engaged-border)', color: 'var(--engaged-text2)' }}>
-              {tab.label}
-            </Link>
-          ))}
-        </div>
-      </div>
+      <div className="sticky top-0 z-30 px-4 pt-10 pb-1" style={{ background: 'var(--engaged-bg)' }}>
 
-      {/* ── Month Navigator ── */}
-      <div className="flex items-center justify-between px-4 py-2.5" style={{ background: '#fff', borderBottom: '1.5px solid var(--engaged-border)' }}>
-        <button onClick={() => shiftMonth(-1)}
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ border: '1.5px solid var(--engaged-border)' }}>
-          <ChevronLeft size={16} style={{ color: 'var(--engaged-text2)' }} />
-        </button>
-        <div className="flex items-center gap-3">
-          <span>
-            <span className="text-[22px] font-black tracking-[-0.04em]" style={{ color: 'var(--engaged-text)' }}>{format(currentMonth, 'MMMM')}</span>
-            {' '}
-            <span className="text-[14px] font-semibold" style={{ color: 'var(--engaged-text2)' }}>{format(currentMonth, 'yyyy')}</span>
-          </span>
+        {/* Row 1: Title */}
+        <div className="flex items-center gap-2 mb-2">
           <button
-            onClick={() => { const n = !showHolidays; setShowHolidays(n); localStorage.setItem('calendar_show_holidays', String(n)); }}
-            className="px-2.5 py-1 rounded-full text-[11px] font-semibold"
-            style={showHolidays
-              ? { background: 'var(--engaged-blue-lt)', color: 'var(--engaged-blue)', border: '1.5px solid var(--engaged-blue-mid)' }
-              : { background: '#fff', border: '1.5px solid var(--engaged-border)', color: 'var(--engaged-text3)' }}>
-            {'\uD83C\uDF89'} Holidays
+            onClick={() => router.back()}
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: '#fff', border: '1.5px solid var(--engaged-border)' }}
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: accentColor }} />
+          <h1 className="flex-1 text-xl font-black tracking-[-0.04em] truncate" style={{ color: 'var(--engaged-text)' }}>
+            {calendar.name}
+          </h1>
+
+          <button
+            onClick={() => router.push(`/calendars/${calId}/settings`)}
+            className="w-9 h-9 rounded-full flex items-center justify-center"
+            style={{ background: '#fff', border: '1.5px solid var(--engaged-border)' }}
+          >
+            <Settings size={15} style={{ color: 'var(--engaged-text2)' }} />
           </button>
         </div>
-        <button onClick={() => shiftMonth(1)}
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ border: '1.5px solid var(--engaged-border)' }}>
-          <ChevronRight size={16} style={{ color: 'var(--engaged-text2)' }} />
-        </button>
-      </div>
 
-      {/* ── Calendar Grid ── */}
-      <div className="px-3 pt-2 flex-shrink-0">
-        {/* Day labels */}
-        <div className="grid grid-cols-7 mb-1">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-            <div key={d} className="text-center py-1 text-[10px] font-bold uppercase" style={{ color: 'var(--engaged-text3)', letterSpacing: '0.06em' }}>{d}</div>
-          ))}
-        </div>
-
-        {/* Day cells — dots on mobile, event chips on desktop */}
-        <div className="grid grid-cols-7" style={{ gap: 3 }}>
-          {Array.from({ length: firstDayOfWeek }).map((_, i) => <div key={`el-${i}`} />)}
-
-          {days.map(day => {
-            const dayEvts = eventsOnDay(day);
-            const dayHols = holidaysOnDay(day);
-            const isToday = isSameDay(day, new Date());
-            const isSel = format(day, 'yyyy-MM-dd') === selectedDate;
-            const totalItems = dayEvts.length + dayHols.length;
-            const maxChips = 3;
-
+        {/* Row 2: Members + "+ Add" */}
+        <div className="flex items-center gap-0 px-1 mb-3">
+          {/* Overlapping avatars */}
+          {calendar.calendar_members?.slice(0, 5).map((m, i) => {
+            const c = MEMBER_COLORS[i % MEMBER_COLORS.length];
             return (
-              <div key={day.toISOString()}
-                onClick={() => router.replace(`/calendars/${id}?date=${format(day, 'yyyy-MM-dd')}`)}
-                className="flex flex-col cursor-pointer rounded-xl pt-1 pb-1 px-1 transition-colors"
+              <div
+                key={m.user_id}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold overflow-hidden flex-shrink-0"
                 style={{
-                  aspectRatio: isDesktop ? undefined : '0.85',
-                  minHeight: isDesktop ? 80 : undefined,
-                  background: isSel ? 'var(--engaged-blue-lt)' : isToday ? '#F0F7FF' : '#fff',
-                  border: isSel ? '1.5px solid var(--engaged-blue-mid)' : '1.5px solid var(--engaged-border)',
-                }}>
-                {/* Date number */}
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 self-center"
-                  style={{ background: isToday ? 'var(--engaged-blue)' : 'transparent', color: isToday ? '#fff' : isSel ? 'var(--engaged-blue)' : 'var(--engaged-text)' }}>
-                  {format(day, 'd')}
-                </div>
-
-                {/* Mobile: colored dots */}
-                {!isDesktop && (
-                  <div className="flex flex-wrap justify-center gap-[2px] mt-0.5 max-h-[14px] overflow-hidden">
-                    {dayHols.slice(0, 1).map((_, i) => (
-                      <div key={`hd-${i}`} style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', flexShrink: 0 }} />
-                    ))}
-                    {dayEvts.slice(0, 3 - Math.min(dayHols.length, 1)).map(evt => (
-                      <div key={evt.id} style={{ width: 5, height: 5, borderRadius: '50%', background: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calColor, flexShrink: 0 }} />
-                    ))}
-                  </div>
-                )}
-
-                {/* Desktop: event name chips */}
-                {isDesktop && (
-                  <div className="mt-1 space-y-0.5 overflow-hidden flex-1">
-                    {dayHols.slice(0, 1).map((h, i) => (
-                      <div key={`hd-${i}`} className="truncate rounded text-[9px] px-1 leading-[16px] font-bold text-white"
-                        style={{ background: '#F97316' }}>
-                        {'\uD83C\uDF89'} {h.localName || h.name}
-                      </div>
-                    ))}
-                    {dayEvts.slice(0, maxChips - Math.min(dayHols.length, 1)).map(evt => (
-                      <div key={evt.id} className="truncate rounded text-[9px] px-1 leading-[16px] font-semibold text-white"
-                        style={{ background: evt.color || memberColor((evt.profiles as any)?.id ?? '') || calColor }}>
-                        {evt.title}
-                      </div>
-                    ))}
-                    {totalItems > maxChips && (
-                      <div className="text-[9px] font-medium px-1" style={{ color: 'var(--engaged-blue)' }}>
-                        +{totalItems - maxChips}
-                      </div>
-                    )}
-                  </div>
+                  background: m.profiles?.avatar_url ? undefined : c.bg,
+                  color: c.fg,
+                  border: '2px solid var(--engaged-bg)',
+                  marginRight: '-6px',
+                  zIndex: 5 - i,
+                  position: 'relative',
+                }}
+              >
+                {m.profiles?.avatar_url ? (
+                  <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  (m.profiles?.full_name?.[0] ?? '?').toUpperCase()
                 )}
               </div>
             );
           })}
 
-          {Array.from({ length: trailingCellsTo42 }).map((_, i) => <div key={`fl-${i}`} />)}
+          {/* + Add button */}
+          <button
+            onClick={() => router.push(`/calendars/${calId}/settings`)}
+            className="flex items-center gap-1 h-6 px-2 rounded-full text-[11px] font-bold flex-shrink-0"
+            style={{
+              background: 'var(--engaged-blue)',
+              color: '#fff',
+              marginLeft: 14,
+              border: 'none',
+            }}
+          >
+            <Plus size={10} strokeWidth={3} />
+            Add
+          </button>
+
+          <span className="text-[12px] ml-3 flex-shrink-0" style={{ color: 'var(--engaged-text3)' }}>
+            {calendar.calendar_members?.length ?? 0} members
+          </span>
+        </div>
+
+        {/* Row 3: View toggle */}
+        <div className="flex items-center gap-1.5 mb-1">
+          {([
+            { id: 'month'  as View, icon: Grid3x3,      label: 'Month'  },
+            { id: '3day'   as View, icon: CalendarDays,  label: '3 Days' },
+            { id: 'agenda' as View, icon: List,           label: 'Agenda' },
+          ] as const).map(({ id, icon: Icon, label }) => (
+            <button
+              key={id}
+              onClick={() => setView(id)}
+              className="flex items-center gap-[5px] h-[30px] px-3 rounded-[15px] text-[12px] font-bold transition-all"
+              style={{
+                background: view === id ? 'var(--engaged-blue)' : '#fff',
+                color: view === id ? '#fff' : 'var(--engaged-text2)',
+                border: `1.5px solid ${view === id ? 'var(--engaged-blue)' : 'var(--engaged-border)'}`,
+              }}
+            >
+              <Icon size={13} />
+              {label}
+            </button>
+          ))}
+
+          <div style={{ flex: 1 }} />
+
+          {/* Add event */}
+          <button
+            onClick={() => router.push(`/calendars/${calId}/events/new`)}
+            className="flex items-center gap-1 h-[30px] px-3 rounded-[15px] text-[12px] font-bold"
+            style={{ background: 'var(--engaged-blue-lt)', color: 'var(--engaged-blue)', border: 'none' }}
+          >
+            <Plus size={12} strokeWidth={2.5} />
+            Event
+          </button>
         </div>
       </div>
 
-      {/* ── Artwork band (mobile only, between grid and events) ── */}
-      <div className="md:hidden relative h-20 overflow-visible mx-4 mt-1 flex items-end justify-between px-2 pointer-events-none flex-shrink-0">
-        <img src="/artworks/walking_man.png" alt="" aria-hidden className="h-[72px] w-auto opacity-65 select-none" />
-        <img src="/artworks/bicycle_art.png" alt="" aria-hidden className="h-[72px] w-auto opacity-65 select-none" style={{ transform: 'scaleX(-1)' }} />
-      </div>
+      {/* ── View: Month ── */}
+      {view === 'month' && (
+        <div className="flex-1 overflow-y-auto">
+          {/* Month navigator */}
+          <div className="flex items-center justify-between px-4 py-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[22px] font-black tracking-[-0.04em]" style={{ color: 'var(--engaged-text)' }}>
+                {format(currentMonth, 'MMMM')}
+              </span>
+              <span className="text-sm font-semibold" style={{ color: 'var(--engaged-text2)' }}>
+                {format(currentMonth, 'yyyy')}
+              </span>
 
-      {/* ── Selected Day Events (mockup style) ── */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ borderTop: '1.5px solid var(--engaged-border)' }}>
-        <div className="flex items-center justify-between pt-3 pb-3">
-          <h3 className="text-[16px] font-black tracking-[-0.03em]" style={{ color: 'var(--engaged-text)' }}>
-            Upcoming Events
-          </h3>
-          <Link href={`/calendars/${id}/events/new?date=${selectedDate}`} className="text-[12px] font-bold" style={{ color: 'var(--engaged-blue)' }}>+ Add event</Link>
-        </div>
+              {/* Compact holidays toggle */}
+              <button
+                onClick={() => setShowHolidays(h => !h)}
+                className="flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-bold transition-all"
+                style={{
+                  background: showHolidays ? '#FFFBEB' : '#fff',
+                  color: showHolidays ? '#92400E' : 'var(--engaged-text3)',
+                  border: `1px solid ${showHolidays ? '#FDE68A' : 'var(--engaged-border)'}`,
+                }}
+              >
+                {showHolidays ? '\uD83C\uDF89' : '\uD83C\uDF89'} Holidays
+              </button>
+            </div>
 
-        {eventsForSelectedDate.length === 0 && holidaysForSelectedDate.length === 0 ? (
-          <p className="text-[13px] py-2" style={{ color: 'var(--engaged-text3)' }}>
-            No events on {format(new Date(selectedDate + 'T12:00:00'), 'EEEE, MMM d')}
-          </p>
-        ) : (
-          <div className="space-y-3 pb-2">
-            {/* Holiday rows */}
-            {holidaysForSelectedDate.map((h, i) => (
-              <div key={`hs-${i}`} className="flex gap-3 items-start">
-                {/* Date column */}
-                <div style={{ width: 40, flexShrink: 0, textAlign: 'center' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--engaged-text3)' }}>
-                    {format(new Date(selectedDate + 'T12:00:00'), 'EEE')}
-                  </div>
-                  <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: 'var(--engaged-text)' }}>
-                    {format(new Date(selectedDate + 'T12:00:00'), 'd')}
-                  </div>
-                </div>
-                {/* Card */}
-                <div className="flex-1 rounded-[14px] px-3 py-2.5" style={{ background: '#FFF7ED', border: '1.5px solid var(--engaged-border)', borderLeft: '4px solid #F97316' }}>
-                  <p className="text-[13px] font-bold" style={{ color: '#C2410C' }}>{'\uD83C\uDF89'} {h.localName || h.name}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: '#EA580C' }}>All day &middot; Public holiday</p>
-                </div>
-              </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentMonth(m => subMonths(m, 1))}
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: '#fff', border: '1.5px solid var(--engaged-border)' }}
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <button
+                onClick={() => setCurrentMonth(m => addMonths(m, 1))}
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: '#fff', border: '1.5px solid var(--engaged-border)' }}
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* Day-of-week labels */}
+          <div className="grid grid-cols-7 px-3 mb-1">
+            {['S','M','T','W','T','F','S'].map((d, i) => (
+              <div key={i} className="text-center text-[11px] font-bold py-1" style={{ color: 'var(--engaged-text3)' }}>{d}</div>
             ))}
+          </div>
 
-            {/* Event rows */}
-            {eventsForSelectedDate.map(evt => {
-              const color = evt.color || memberColor((evt.profiles as any)?.id ?? '') || calColor;
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7 gap-[3px] px-3">
+            {gridDays.map(day => {
+              const key     = format(day, 'yyyy-MM-dd');
+              const dayEvts = eventsByDate[key] ?? [];
+              const inMonth = isSameMonth(day, currentMonth);
+              const todayDay = isToday(day);
+              const sel     = isSameDay(day, selectedDay);
+
               return (
-                <div key={evt.id} className="flex gap-3 items-start">
-                  {/* Date column */}
-                  <div style={{ width: 40, flexShrink: 0, textAlign: 'center' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--engaged-text3)' }}>
-                      {format(new Date(selectedDate + 'T12:00:00'), 'EEE')}
-                    </div>
-                    <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, color: 'var(--engaged-text)' }}>
-                      {format(new Date(selectedDate + 'T12:00:00'), 'd')}
-                    </div>
+                <button
+                  key={key}
+                  onClick={() => setSelectedDay(day)}
+                  className="flex flex-col items-center rounded-xl py-1 px-0.5"
+                  style={{
+                    background: sel ? 'var(--engaged-blue-lt)' : 'transparent',
+                    minHeight: isDesktop ? 72 : undefined,
+                    aspectRatio: isDesktop ? undefined : '0.85',
+                  }}
+                >
+                  {/* Day number */}
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                    style={{
+                      background: todayDay ? accentColor : 'transparent',
+                      color: todayDay
+                        ? '#fff'
+                        : inMonth
+                          ? 'var(--engaged-text)'
+                          : 'var(--engaged-border)',  /* grey for prev/next month */
+                    }}
+                  >
+                    {format(day, 'd')}
                   </div>
-                  {/* Card */}
-                  <Link href={`/calendars/${id}/events/${evt.id}`}
-                    className="flex-1 rounded-[14px] px-3 py-2.5 block"
-                    style={{ background: '#fff', border: '1.5px solid var(--engaged-border)', borderLeft: `4px solid ${color}` }}>
-                    <p className="text-[14px] font-bold truncate" style={{ color: 'var(--engaged-text)' }}>{evt.title}</p>
-                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--engaged-text2)' }}>
-                      {evt.all_day ? 'All day' : format(new Date(evt.start_at), 'h:mm a')}
-                      {evt.end_at && !evt.all_day ? ` \u2013 ${format(new Date(evt.end_at), 'h:mm a')}` : ''}
-                    </p>
-                  </Link>
+
+                  {/* Mobile: event title chips (not dots) */}
+                  {!isDesktop && dayEvts.length > 0 && inMonth && (
+                    <div className="w-full mt-[2px] space-y-[1px] overflow-hidden" style={{ maxHeight: 28 }}>
+                      {dayEvts.slice(0, 2).map(ev => (
+                        <div
+                          key={ev.id}
+                          className="w-full rounded-[3px] px-[2px] text-[8px] font-bold leading-[10px] truncate"
+                          style={{
+                            background: ev.color ?? accentColor,
+                            color: '#fff',
+                          }}
+                        >
+                          {ev.title}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Desktop: larger chips with title */}
+                  {isDesktop && dayEvts.length > 0 && inMonth && (
+                    <div className="w-full mt-1 space-y-0.5 overflow-hidden flex-1">
+                      {dayEvts.slice(0, 3).map(ev => (
+                        <div
+                          key={ev.id}
+                          className="w-full rounded-[4px] px-1 text-[9px] font-bold leading-[12px] truncate"
+                          style={{
+                            background: ev.color ?? accentColor,
+                            color: '#fff',
+                          }}
+                        >
+                          {ev.title}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Artwork divider */}
+          <div className="relative h-20 mx-4 mt-2 overflow-hidden flex items-end justify-between">
+            <img src="/artworks/walking_man.png"  alt="" aria-hidden className="h-20 w-auto opacity-60" />
+            <img src="/artworks/bicycle_art.png"  alt="" aria-hidden className="h-20 w-auto opacity-60" />
+          </div>
+
+          {/* Upcoming events — desktop only */}
+          {isDesktop && (
+            <div className="px-4 pb-6">
+              <h3 className="text-base font-black tracking-tight mb-3 mt-1" style={{ color: 'var(--engaged-text)' }}>
+                Upcoming Events
+              </h3>
+              {upcoming.length === 0 ? (
+                <p className="text-sm text-center py-8" style={{ color: 'var(--engaged-text2)' }}>No upcoming events</p>
+              ) : (
+                upcoming.map(ev => (
+                  <EventRow key={ev.id} event={ev} calColor={accentColor} onClick={() => setSheetEvent(ev)} />
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Mobile: bottom padding only */}
+          {!isDesktop && <div className="h-6" />}
+        </div>
+      )}
+
+      {/* ── View: 3-Day ── */}
+      {view === '3day' && (
+        <ThreeDayView
+          baseDate={selectedDay}
+          eventsByDate={eventsByDate}
+          accentColor={accentColor}
+          onEventClick={setSheetEvent}
+        />
+      )}
+
+      {/* ── View: Agenda ── */}
+      {view === 'agenda' && (
+        <AgendaView
+          events={events}
+          accentColor={accentColor}
+          onEventClick={setSheetEvent}
+        />
+      )}
+
+      {/* ── FAB ── */}
+      <button
+        onClick={() => router.push(`/calendars/${calId}/events/new`)}
+        className="fixed right-4 bottom-[80px] w-14 h-14 rounded-full flex items-center justify-center z-40"
+        style={{
+          background: accentColor,
+          boxShadow: `0 6px 24px ${accentColor}66`,
+        }}
+        aria-label="Add event"
+      >
+        <Plus size={24} color="#fff" strokeWidth={2.5} />
+      </button>
+
+      {/* ── Event bottom sheet ── */}
+      {sheetEvent && (
+        <EventSheet event={sheetEvent} onClose={() => setSheetEvent(null)} />
+      )}
+
+      <BottomTabBar />
+    </div>
+  );
+}
+
+// ── Event row (for month upcoming list) ─────────────────────────────────────
+
+function EventRow({
+  event, calColor, onClick,
+}: {
+  event: CalendarEvent;
+  calColor: string;
+  onClick: () => void;
+}) {
+  const start  = parseISO(event.start_at);
+  const artSrc = artworkForTitle(event.title);
+
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-start gap-3 w-full mb-3 text-left"
+    >
+      {/* Date column */}
+      <div className="w-10 flex-shrink-0 text-center">
+        <div className="text-[11px] font-bold uppercase" style={{ color: 'var(--engaged-text3)' }}>
+          {format(start, 'EEE')}
+        </div>
+        <div className="text-[22px] font-black leading-none" style={{ color: event.color ?? calColor }}>
+          {format(start, 'd')}
+        </div>
+      </div>
+
+      {/* Card */}
+      <div
+        className="flex-1 rounded-[14px] p-3 flex items-center gap-2 min-w-0"
+        style={{
+          background: '#fff',
+          border: '1.5px solid var(--engaged-border)',
+          borderLeft: `4px solid ${event.color ?? calColor}`,
+        }}
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold truncate" style={{ color: 'var(--engaged-text)' }}>{event.title}</p>
+          <p className="text-[12px] mt-0.5" style={{ color: 'var(--engaged-text2)' }}>
+            {event.all_day
+              ? 'All day'
+              : event.end_at
+                ? `${format(start, 'HH:mm')} \u2013 ${format(parseISO(event.end_at), 'HH:mm')}`
+                : format(start, 'HH:mm')}
+          </p>
+        </div>
+        {/* Smart artwork thumbnail */}
+        <div className="relative w-10 h-10 flex-shrink-0 overflow-visible">
+          <img
+            src={artSrc}
+            alt=""
+            aria-hidden
+            className="absolute bottom-[-4px] right-[-4px] h-12 w-auto"
+          />
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ── 3-Day View ───────────────────────────────────────────────────────────────
+
+function ThreeDayView({
+  baseDate, eventsByDate, accentColor, onEventClick,
+}: {
+  baseDate: Date;
+  eventsByDate: Record<string, CalendarEvent[]>;
+  accentColor: string;
+  onEventClick: (ev: CalendarEvent) => void;
+}) {
+  const days = [0, 1, 2].map(offset => {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + offset);
+    return d;
+  });
+  const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Column headers */}
+      <div className="grid grid-cols-[40px_1fr_1fr_1fr] border-b" style={{ borderColor: 'var(--engaged-border)', flexShrink: 0 }}>
+        <div />
+        {days.map(d => (
+          <div key={d.toISOString()} className="text-center py-2">
+            <div className="text-[10px] font-bold uppercase" style={{ color: 'var(--engaged-text3)' }}>
+              {format(d, 'EEE')}
+            </div>
+            <div
+              className="w-8 h-8 mx-auto rounded-full flex items-center justify-center text-[16px] font-black"
+              style={{
+                background: isToday(d) ? accentColor : 'transparent',
+                color: isToday(d) ? '#fff' : 'var(--engaged-text)',
+              }}
+            >
+              {format(d, 'd')}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Hour rows */}
+      <div className="flex-1 overflow-y-auto">
+        {HOURS.map(h => (
+          <div key={h} className="grid grid-cols-[40px_1fr_1fr_1fr]" style={{ height: 56 }}>
+            <div
+              className="text-right pr-2 text-[10px] font-semibold"
+              style={{ color: 'var(--engaged-text3)', lineHeight: '56px' }}
+            >
+              {h === 0 ? '' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`}
+            </div>
+            {days.map(d => {
+              const key   = format(d, 'yyyy-MM-dd');
+              const dayEvts = (eventsByDate[key] ?? []).filter(ev => {
+                const hour = parseISO(ev.start_at).getHours();
+                return hour === h;
+              });
+              return (
+                <div
+                  key={key}
+                  className="relative border-t"
+                  style={{ borderColor: 'var(--engaged-border)' }}
+                >
+                  {dayEvts.map(ev => (
+                    <button
+                      key={ev.id}
+                      onClick={() => onEventClick(ev)}
+                      className="absolute inset-x-1 top-1 rounded-[6px] px-1.5 py-0.5 text-left z-10"
+                      style={{
+                        background: ev.color ?? accentColor,
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {ev.title}
+                    </button>
+                  ))}
                 </div>
               );
             })}
           </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Agenda View ──────────────────────────────────────────────────────────────
+
+function AgendaView({
+  events, accentColor, onEventClick,
+}: {
+  events: CalendarEvent[];
+  accentColor: string;
+  onEventClick: (ev: CalendarEvent) => void;
+}) {
+  const sorted = useMemo(() => {
+    const grouped: Record<string, CalendarEvent[]> = {};
+    [...events]
+      .sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime())
+      .forEach(ev => {
+        const key = format(parseISO(ev.start_at), 'yyyy-MM-dd');
+        (grouped[key] ??= []).push(ev);
+      });
+    return grouped;
+  }, [events]);
+
+  const dateKeys = Object.keys(sorted);
+
+  if (dateKeys.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-sm" style={{ color: 'var(--engaged-text2)' }}>No events yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-4 pb-6">
+      {dateKeys.map(dateKey => {
+        const date = parseISO(dateKey);
+        const dayEvts = sorted[dateKey];
+        return (
+          <div key={dateKey} className="mb-4">
+            {/* Date header */}
+            <div
+              className="flex items-center gap-3 py-3 sticky top-0 z-10"
+              style={{ background: 'var(--engaged-bg)', borderBottom: '1.5px solid var(--engaged-border)' }}
+            >
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
+                style={{
+                  background: isToday(date) ? accentColor : 'var(--engaged-blue-lt)',
+                  color: isToday(date) ? '#fff' : accentColor,
+                }}
+              >
+                {format(date, 'd')}
+              </div>
+              <div>
+                <div className="text-[13px] font-bold" style={{ color: 'var(--engaged-text)' }}>
+                  {isToday(date) ? 'Today' : format(date, 'EEEE')}
+                </div>
+                <div className="text-[11px]" style={{ color: 'var(--engaged-text3)' }}>
+                  {format(date, 'MMMM yyyy')}
+                </div>
+              </div>
+            </div>
+
+            {/* Events */}
+            {dayEvts.map(ev => {
+              const start  = parseISO(ev.start_at);
+              const artSrc = artworkForTitle(ev.title);
+              return (
+                <button
+                  key={ev.id}
+                  onClick={() => onEventClick(ev)}
+                  className="flex items-center gap-3 w-full py-2.5 text-left border-b"
+                  style={{ borderColor: 'var(--engaged-border)' }}
+                >
+                  {/* Time */}
+                  <div className="w-14 flex-shrink-0 text-right">
+                    <div className="text-[12px] font-bold" style={{ color: 'var(--engaged-text2)' }}>
+                      {ev.all_day ? 'All day' : format(start, 'HH:mm')}
+                    </div>
+                    {!ev.all_day && ev.end_at && (
+                      <div className="text-[10px]" style={{ color: 'var(--engaged-text3)' }}>
+                        {format(parseISO(ev.end_at), 'HH:mm')}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dot */}
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: ev.color ?? accentColor }} />
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[14px] font-bold truncate" style={{ color: 'var(--engaged-text)' }}>
+                      {ev.title}
+                    </div>
+                  </div>
+
+                  {/* Artwork */}
+                  <div className="relative w-9 h-9 overflow-visible flex-shrink-0">
+                    <img src={artSrc} alt="" aria-hidden className="absolute bottom-[-2px] right-[-2px] h-10 w-auto" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Event bottom sheet ───────────────────────────────────────────────────────
+
+function EventSheet({ event, onClose }: { event: CalendarEvent; onClose: () => void }) {
+  const start  = parseISO(event.start_at);
+  const end    = event.end_at ? parseISO(event.end_at) : null;  // end_at is optional
+  const artSrc = artworkForTitle(event.title);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end"
+      style={{ background: 'rgba(0,0,0,0.4)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="w-full rounded-t-3xl px-5 pb-10 pt-5 relative"
+        style={{ background: 'var(--engaged-bg)' }}
+      >
+        {/* Handle */}
+        <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--engaged-border)' }} />
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ background: '#fff', border: '1.5px solid var(--engaged-border)' }}
+        >
+          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        {/* Artwork */}
+        <img src={artSrc} alt="" aria-hidden className="absolute top-2 right-14 h-20 w-auto" />
+
+        {/* Content */}
+        <h2 className="text-2xl font-black tracking-[-0.04em] mb-3 pr-24" style={{ color: 'var(--engaged-text)' }}>
+          {event.title}
+        </h2>
+        <div className="flex items-center gap-2 mb-2" style={{ color: 'var(--engaged-text2)' }}>
+          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span className="text-sm">
+            {event.all_day
+              ? `${format(start, 'EEE, MMM d')} \u00B7 All day`
+              : end
+                ? `${format(start, 'EEE, MMM d \u00B7 HH:mm')} \u2013 ${format(end, 'HH:mm')}`
+                : format(start, 'EEE, MMM d \u00B7 HH:mm')}
+          </span>
+        </div>
+        {event.creator && (
+          <div className="flex items-center gap-2 mt-3">
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+              style={{ background: 'var(--engaged-blue-lt)', color: 'var(--engaged-blue)' }}
+            >
+              {event.creator.full_name[0]?.toUpperCase()}
+            </div>
+            <span className="text-[13px]" style={{ color: 'var(--engaged-text2)' }}>
+              Added by {event.creator.full_name}
+            </span>
+          </div>
         )}
       </div>
+    </div>
+  );
+}
 
-      {/* ── Members Modal ── */}
-      {membersOpen && (
-        <div className="fixed inset-0 z-[999]">
-          <button className="absolute inset-0 bg-black/30" onClick={() => setMembersOpen(false)} aria-label="Close" />
-          <div className="absolute inset-x-0 top-0 mx-auto flex h-[100dvh] max-w-md flex-col bg-white shadow-xl">
-            <div className="flex flex-shrink-0 items-center justify-between border-b px-4 pt-10 pb-3">
-              <div>
-                <h2 className="text-base font-bold" style={{ color: 'var(--engaged-text)' }}>Calendar members</h2>
-                <p className="text-xs" style={{ color: 'var(--engaged-text2)' }}>{calendar?.calendar_members?.length ?? 0} member{(calendar?.calendar_members?.length ?? 0) === 1 ? '' : 's'}</p>
-              </div>
-              <button onClick={() => setMembersOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full" aria-label="Close">
-                <X size={18} style={{ color: 'var(--engaged-text)' }} />
-              </button>
-            </div>
-            <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
-              {isOwner && (
-                <section className="space-y-2">
-                  <h3 className="text-sm font-semibold" style={{ color: 'var(--engaged-text)' }}>Invite by email</h3>
-                  <div className="flex items-center gap-2">
-                    <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="h-10 flex-1 rounded-xl border px-3 text-sm outline-none" style={{ borderColor: 'var(--engaged-border)' }} />
-                    <button onClick={sendInvite} disabled={inviting || !inviteEmail.trim()}
-                      className="h-10 rounded-xl px-4 text-sm font-semibold text-white disabled:opacity-40"
-                      style={{ background: 'var(--engaged-blue)' }}>
-                      {inviting ? 'Inviting\u2026' : 'Invite'}
-                    </button>
-                  </div>
-                  {inviteError && <p className="text-xs text-red-600">{inviteError}</p>}
-                  {inviteSuccess && <p className="text-xs text-green-700">{inviteSuccess}</p>}
-                  <p className="text-[11px]" style={{ color: 'var(--engaged-text3)' }}>The recipient must sign up then accept the invite.</p>
-                </section>
-              )}
-              <section className="space-y-2">
-                <h3 className="text-sm font-semibold" style={{ color: 'var(--engaged-text)' }}>Members</h3>
-                <div className="space-y-2">
-                  {calendar?.calendar_members?.map((m, i) => {
-                    const isMe = currentUserId && m.user_id === currentUserId;
-                    const canRemove = isOwner && m.role !== 'owner' && !isMe;
-                    const canLeave = isMe && m.role !== 'owner';
-                    return (
-                      <div key={m.user_id} className="flex items-center justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full"
-                            style={{ backgroundColor: MEMBER_COLORS[i % MEMBER_COLORS.length] + '40' }}>
-                            {m.profiles.avatar_url
-                              ? <img src={m.profiles.avatar_url} alt="" className="h-full w-full object-cover" />
-                              : <span className="text-sm font-bold" style={{ color: MEMBER_COLORS[i % MEMBER_COLORS.length] }}>{(m.profiles.full_name || '?')[0]?.toUpperCase()}</span>}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold" style={{ color: 'var(--engaged-text)' }}>{m.profiles.full_name || 'Member'}{isMe ? ' (You)' : ''}</p>
-                            <p className="text-xs" style={{ color: 'var(--engaged-text2)' }}>{m.role}</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-shrink-0 items-center gap-2">
-                          {canRemove && (
-                            <button onClick={() => removeMember(m.user_id)} disabled={removingUserId === m.user_id}
-                              className="h-9 rounded-xl border px-3 text-xs font-semibold disabled:opacity-50"
-                              style={{ borderColor: 'var(--engaged-border)', color: 'var(--engaged-text)' }}>
-                              <span className="inline-flex items-center gap-1"><Trash2 size={14} /> Remove</span>
-                            </button>
-                          )}
-                          {canLeave && (
-                            <button onClick={() => removeMember(m.user_id)} disabled={removingUserId === m.user_id}
-                              className="h-9 rounded-xl border px-3 text-xs font-semibold disabled:opacity-50"
-                              style={{ borderColor: 'var(--engaged-border)', color: 'var(--engaged-text)' }}>
-                              <span className="inline-flex items-center gap-1"><LogOut size={14} /> Leave</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {(!calendar?.calendar_members || calendar.calendar_members.length === 0) && (
-                    <p className="text-sm" style={{ color: 'var(--engaged-text2)' }}>No members</p>
-                  )}
-                </div>
-              </section>
-            </div>
-          </div>
-        </div>
-      )}
+// ── Loader ───────────────────────────────────────────────────────────────────
 
-      <BottomTabBar />
+function KobeLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--engaged-bg)' }}>
+      <div className="text-center">
+        <div
+          className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-[3px]"
+          style={{ borderColor: 'var(--engaged-border)', borderTopColor: 'var(--engaged-blue)' }}
+        />
+        <p className="text-sm font-semibold" style={{ color: 'var(--engaged-text2)' }}>Loading\u2026</p>
+      </div>
     </div>
   );
 }
