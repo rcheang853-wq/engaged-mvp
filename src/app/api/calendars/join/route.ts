@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       data: {
         code,
         calendar,
-        permission: 'viewer',
+        permission: calendar.default_join_role ?? 'viewer',
         state: 'join',
         requires_auth: false,
         already_member: false,

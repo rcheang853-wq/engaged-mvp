@@ -38,8 +38,7 @@ BEGIN
 
   INSERT INTO public.calendar_members (calendar_id, user_id, role)
   VALUES (v_calendar_id, auth.uid(), v_role)
-  ON CONFLICT (calendar_id, user_id) DO UPDATE
-    SET role = EXCLUDED.role;
+  ON CONFLICT (calendar_id, user_id) DO NOTHING;
 
   UPDATE public.calendar_invites
   SET status = 'accepted', accepted_at = NOW()
