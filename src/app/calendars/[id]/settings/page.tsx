@@ -18,6 +18,7 @@ type Calendar = {
   description: string | null;
   color: string | null;
   invite_code: string | null;
+  default_join_role: 'viewer' | 'editor';
   calendar_members?: CalendarMember[];
 };
 
@@ -37,6 +38,7 @@ export default function CalendarSettingsPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'viewer' | 'editor'>('viewer');
   const [inviting, setInviting] = useState(false);
   const [generatingShareLink, setGeneratingShareLink] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<string | null>(null);
@@ -45,6 +47,8 @@ export default function CalendarSettingsPage() {
     if (!calendar?.invite_code) return null;
     return `${window.location.origin}/join?code=${encodeURIComponent(calendar.invite_code)}`;
   }, [calendar?.invite_code]);
+
+  const isOwner = calendar?.calendar_members?.some((member) => member.role === 'owner') ?? false;
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +64,7 @@ export default function CalendarSettingsPage() {
           setName(cal.name ?? '');
           setDescription(cal.description ?? '');
           setColor(cal.color ?? '#3B82F6');
+          setInviteRole('viewer');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -72,7 +77,7 @@ export default function CalendarSettingsPage() {
   }, [calendarId]);
 
   const onSave = async () => {
-    if (!calendarId || saving) return;
+    if (!calendarId || saving || !calendar) return;
     setSaving(true);
     setSaveMessage(null);
 
@@ -84,6 +89,7 @@ export default function CalendarSettingsPage() {
           name: name.trim(),
           description: description.trim() || null,
           color,
+          default_join_role: calendar.default_join_role,
         }),
       });
       const json = await res.json();
@@ -123,7 +129,7 @@ export default function CalendarSettingsPage() {
       const res = await fetch(`/api/calendars/${calendarId}/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, role: inviteRole }),
       });
       const json = await res.json();
       if (json.success) {
@@ -213,7 +219,7 @@ export default function CalendarSettingsPage() {
         <h1 className="flex-1 font-bold text-gray-900">Calendar Settings</h1>
         <button
           onClick={onSave}
-          disabled={saving || !name.trim()}
+          disabled={saving || !name.trim() || !isOwner}
           className="bg-blue-500 text-white px-4 py-1.5 rounded-xl text-sm font-semibold disabled:opacity-40 hover:bg-blue-600 transition-colors"
         >
           {saving ? 'Saving…' : 'Save'}
@@ -234,6 +240,7 @@ export default function CalendarSettingsPage() {
               className="w-full border rounded-xl px-3 py-2 text-sm"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={!isOwner}
             />
           </div>
 
@@ -244,6 +251,7 @@ export default function CalendarSettingsPage() {
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              disabled={!isOwner}
             />
           </div>
 
@@ -254,6 +262,7 @@ export default function CalendarSettingsPage() {
               value={color}
               onChange={(e) => setColor(e.target.value)}
               className="h-10 w-12 border rounded"
+              disabled={!isOwner}
             />
             <span className="text-xs text-gray-500">{color}</span>
           </div>
@@ -291,9 +300,19 @@ export default function CalendarSettingsPage() {
                 placeholder="friend@example.com"
                 className="flex-1 border rounded-xl px-3 py-2 text-sm"
               />
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as 'viewer' | 'editor')}
+                className="border rounded-xl px-3 py-2 text-sm bg-white"
+                aria-label="Invite role"
+                disabled={!isOwner}
+              >
+                <option value="viewer">Viewer</option>
+                <option value="editor">Editor</option>
+              </select>
               <button
                 onClick={onInvite}
-                disabled={inviting || !inviteEmail.trim()}
+                disabled={inviting || !inviteEmail.trim() || !isOwner}
                 className="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-40"
               >
                 <Mail size={16} />
@@ -306,11 +325,31 @@ export default function CalendarSettingsPage() {
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Default permission for share-link joins</label>
+            <select
+              value={calendar.default_join_role}
+              onChange={(e) =>
+                setCalendar((prev) =>
+                  prev ? { ...prev, default_join_role: e.target.value as 'viewer' | 'editor' } : prev
+                )
+              }
+              className="w-full border rounded-xl px-3 py-2 text-sm bg-white"
+              disabled={!isOwner}
+            >
+              <option value="viewer">Viewer</option>
+              <option value="editor">Editor</option>
+            </select>
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+              Anyone with the share link can join with this permission. Use Editor only if you trust anyone who receives the link.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
               <label className="text-sm font-medium text-gray-700">Share link (whole calendar)</label>
               <button
                 onClick={onGenerateShareLink}
-                disabled={generatingShareLink}
+                disabled={generatingShareLink || !isOwner}
                 className="inline-flex items-center gap-2 border rounded-xl px-3 py-1.5 text-xs font-semibold disabled:opacity-40"
               >
                 <RefreshCw size={14} className={generatingShareLink ? 'animate-spin' : ''} />
@@ -360,6 +399,12 @@ export default function CalendarSettingsPage() {
             <p className="text-xs text-gray-500">
               Recipients opening this link can preview the calendar, then join as <span className="font-semibold">viewer</span>.
             </p>
+
+            {!isOwner && (
+              <p className="text-xs text-gray-500">
+                Only the calendar owner can change sharing defaults or send invites.
+              </p>
+            )}
 
             {inviteMessage && <div className="text-sm text-gray-700">{inviteMessage}</div>}
           </div>

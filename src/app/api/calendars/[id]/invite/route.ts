@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 const inviteSchema = z.object({
   email: z.string().email(),
+  role: z.enum(['viewer', 'editor']).default('viewer'),
 });
 
 // POST /api/calendars/[id]/invite
@@ -37,10 +38,24 @@ export async function POST(
     }
 
     const email = parsed.data.email.trim().toLowerCase();
+    const role = parsed.data.role;
+
+    const { data: membership } = await supabase
+      .from('calendar_members')
+      .select('role')
+      .eq('calendar_id', calendarId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const isOwner = membership?.role === 'owner';
+    if (!isOwner) {
+      return NextResponse.json({ success: false, error: 'Only owners can send invites' }, { status: 403 });
+    }
 
     // Prevent duplicate pending invites
-    const { data: existing } = await supabase
-      .from('calendar_invites')
+    const invitesTable = (supabase as any).from('calendar_invites');
+
+    const { data: existing } = await invitesTable
       .select('id')
       .eq('calendar_id', calendarId)
       .eq('invited_email', email)
@@ -51,15 +66,15 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Invite already pending' }, { status: 409 });
     }
 
-    const { data, error } = await supabase
-      .from('calendar_invites')
+    const { data, error } = await invitesTable
       .insert({
         calendar_id: calendarId,
         invited_email: email,
         invited_by: user.id,
+        role,
         status: 'pending',
       })
-      .select('id, calendar_id, invited_email, status, created_at, expires_at')
+      .select('id, calendar_id, invited_email, role, status, created_at, expires_at')
       .single();
 
     if (error) {
