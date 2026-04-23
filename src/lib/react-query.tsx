@@ -94,9 +94,6 @@ export default function ReactQueryProvider({ children }: { children: ReactNode }
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools initialIsOpen={false} />
       )}
-      {process.env.NODE_ENV === 'production' && (
-        <ReactQueryDevtoolsProduction initialIsOpen={false} />
-      )}
     </QueryClientProvider>
   );
 }
