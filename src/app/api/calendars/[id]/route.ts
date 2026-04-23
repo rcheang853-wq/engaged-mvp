@@ -16,6 +16,7 @@ function createServiceClient() {
 const updateCalendarSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).nullable().optional(),
+  default_join_role: z.enum(['viewer', 'editor']).optional(),
   color: z
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/)
@@ -104,6 +105,7 @@ export async function PATCH(
         updated_at: new Date().toISOString(),
         ...(parsed.data.name !== undefined && { name: parsed.data.name }),
         ...(parsed.data.description !== undefined && { description: parsed.data.description ?? null }),
+        ...(parsed.data.default_join_role !== undefined && { default_join_role: parsed.data.default_join_role }),
         ...(parsed.data.color !== undefined && { color: parsed.data.color }),
       })
       .eq('id', id)

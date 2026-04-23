@@ -19,7 +19,7 @@ async function getCalendarByCode(inviteCode: string) {
   const db = createServiceClient();
   const { data: calendar, error } = await db
     .from('calendars')
-    .select('id, name, color')
+    .select('id, name, color, default_join_role')
     .eq('invite_code', inviteCode)
     .single();
 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       data: {
         code,
         calendar,
-        permission: 'viewer',
+        permission: calendar.default_join_role ?? 'viewer',
         state: 'join',
         requires_auth: false,
         already_member: false,
@@ -140,7 +140,11 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await db
       .from('calendar_members')
-      .insert({ calendar_id: calendar.id, user_id: user.id, role: 'viewer' })
+      .insert({
+        calendar_id: calendar.id,
+        user_id: user.id,
+        role: calendar.default_join_role ?? 'viewer',
+      })
       .select('id, role')
       .single();
 
