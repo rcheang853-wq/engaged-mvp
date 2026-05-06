@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "node scripts/verify-env.js && next build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -14,12 +14,13 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "type-check": "tsc --noEmit",
+    "check:supabase": "node scripts/verify-env.js --network",
     "prepare": "husky install || exit 0",
     "db:setup": "node scripts/setup-database.js",
     "ingest:macauticket": "node workers/macauticket-ingest/index.js",
     "build:production": "cross-env NODE_ENV=production npm run build",
     "start:production": "cross-env NODE_ENV=production npm run start",
-    "deploy:check": "npm run type-check && npm run lint && npm run test && npm run build:production",
+    "deploy:check": "npm run check:supabase && npm run type-check && npm run lint && npm run test && npm run build:production",
     "precommit": "npm run lint:fix && npm run format && npm run type-check"
   },
   "dependencies": {

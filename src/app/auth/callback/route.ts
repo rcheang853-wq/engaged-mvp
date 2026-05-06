@@ -75,6 +75,13 @@ export async function GET(request: NextRequest) {
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
+    if (error.message.toLowerCase().includes('code verifier')) {
+      const clientCallbackUrl = new URL('/auth/callback/client', url.origin);
+      clientCallbackUrl.searchParams.set('code', code);
+      clientCallbackUrl.searchParams.set('redirectTo', redirectTo);
+      return NextResponse.redirect(clientCallbackUrl);
+    }
+
     const signInUrl = new URL('/auth/signin', url.origin);
     signInUrl.searchParams.set('error', error.message);
     return NextResponse.redirect(signInUrl);

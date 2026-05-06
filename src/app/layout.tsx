@@ -36,13 +36,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://api.supabase.com" />
         <link rel="dns-prefetch" href="https://api.stripe.com" />
 
-        {/* Preload critical resources */}
-        <link
-          rel="preload"
-          href="/_next/static/css/app/layout.css"
-          as="style"
-        />
-
         {/* PWA manifest */}
         <link rel="manifest" href="/manifest.json" />
 
