@@ -6,24 +6,23 @@ export function registerServiceWorker() {
     return;
   }
 
-  const isProduction = process.env.NODE_ENV === 'production';
+  // Disable the custom service worker for now. It caches Next static assets across
+  // deployments and can serve stale chunks with the wrong content type.
+  navigator.serviceWorker
+    .getRegistrations()
+    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+    .catch((error) => console.warn('Failed to unregister service workers:', error));
 
-  if (!isProduction) {
-    // In development, make sure any previously registered workers are removed
-    navigator.serviceWorker
-      .getRegistrations()
-      .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
-      .catch((error) => console.warn('Failed to unregister service workers in development:', error));
-
-    if ('caches' in window) {
-      caches
-        .keys()
-        .then((cacheNames) => Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName))))
-        .catch((error) => console.warn('Failed to clear caches in development:', error));
-    }
-
-    return;
+  if ('caches' in window) {
+    caches
+      .keys()
+      .then((cacheNames) => Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName))))
+      .catch((error) => console.warn('Failed to clear service worker caches:', error));
   }
+
+  return;
+
+  const isProduction = process.env.NODE_ENV === 'production';
 
   const globalScope = window as typeof window & { __engagedSwRegistered?: boolean };
   if (globalScope.__engagedSwRegistered) {
