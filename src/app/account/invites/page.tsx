@@ -9,6 +9,7 @@ interface CalendarInvite {
   id: string;
   calendar_id: string;
   invited_email: string;
+  role: 'viewer' | 'editor';
   created_at: string;
   expires_at: string;
   calendars: { id: string; name: string; color: string | null } | null;
@@ -140,6 +141,9 @@ export default function InvitesPage() {
                       {invite.calendars?.name ?? 'Shared Calendar'}
                     </h3>
                     <p className="text-sm text-[#6B7280]">Invited to: {invite.invited_email}</p>
+                    <p className="text-xs text-[#6B7280] mt-1">
+                      Permission: <span className="font-semibold capitalize">{invite.role}</span>
+                    </p>
                     <p className="text-xs text-[#9CA3AF] mt-1">
                       Expires: {new Date(invite.expires_at).toLocaleDateString()}
                     </p>

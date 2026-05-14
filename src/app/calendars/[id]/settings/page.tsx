@@ -1,15 +1,27 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Copy, Mail, RefreshCw, Users } from 'lucide-react';
+import { ArrowLeft, Copy, Mail, RefreshCw, Trash2, Users } from 'lucide-react';
 import BottomTabBar from '@/components/BottomTabBar';
+
+type CalendarRole = 'owner' | 'editor' | 'viewer';
 
 type CalendarMember = {
   id?: string;
   user_id: string;
-  role: string;
+  role: CalendarRole;
   profiles?: { full_name: string; email?: string; avatar_url: string | null };
+};
+
+type PendingInvite = {
+  id: string;
+  invited_email: string;
+  role: 'viewer' | 'editor';
+  status: string;
+  created_at: string;
+  expires_at: string;
+  profile?: { id: string; full_name: string | null; email: string | null; avatar_url: string | null } | null;
 };
 
 type Calendar = {
@@ -20,6 +32,8 @@ type Calendar = {
   invite_code: string | null;
   default_join_role: 'viewer' | 'editor';
   calendar_members?: CalendarMember[];
+  current_user_id?: string;
+  current_user_role?: CalendarRole;
 };
 
 export default function CalendarSettingsPage() {
@@ -42,13 +56,28 @@ export default function CalendarSettingsPage() {
   const [inviting, setInviting] = useState(false);
   const [generatingShareLink, setGeneratingShareLink] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<string | null>(null);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
+  const [memberActionUserId, setMemberActionUserId] = useState<string | null>(null);
 
   const inviteLink = useMemo(() => {
     if (!calendar?.invite_code) return null;
     return `${window.location.origin}/join?code=${encodeURIComponent(calendar.invite_code)}`;
   }, [calendar?.invite_code]);
 
-  const isOwner = calendar?.calendar_members?.some((member) => member.role === 'owner') ?? false;
+  const isOwner = calendar?.current_user_role === 'owner';
+
+  const refreshPendingInvites = useCallback(async () => {
+    if (!calendarId) return;
+
+    const res = await fetch(`/api/calendars/${calendarId}/invites`);
+    const json = await res.json();
+
+    if (json.success) {
+      setPendingInvites(json.data ?? []);
+    } else {
+      setPendingInvites([]);
+    }
+  }, [calendarId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +94,11 @@ export default function CalendarSettingsPage() {
           setDescription(cal.description ?? '');
           setColor(cal.color ?? '#3B82F6');
           setInviteRole('viewer');
+          if (cal.current_user_role === 'owner') {
+            void refreshPendingInvites();
+          } else {
+            setPendingInvites([]);
+          }
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -74,7 +108,7 @@ export default function CalendarSettingsPage() {
     return () => {
       cancelled = true;
     };
-  }, [calendarId]);
+  }, [calendarId, refreshPendingInvites]);
 
   const onSave = async () => {
     if (!calendarId || saving || !calendar) return;
@@ -118,6 +152,78 @@ export default function CalendarSettingsPage() {
     }
   };
 
+  const onChangeMemberRole = async (member: CalendarMember, role: 'viewer' | 'editor') => {
+    if (!calendarId || member.role === role || member.role === 'owner') return;
+
+    setMemberActionUserId(member.user_id);
+    setInviteMessage(null);
+
+    try {
+      const res = await fetch(`/api/calendars/${calendarId}/members/${member.user_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      const json = await res.json();
+
+      if (!json.success) {
+        setInviteMessage(json.error || 'Failed to update member');
+        return;
+      }
+
+      const updatedMember = json.data as CalendarMember;
+      setCalendar((prev) =>
+        prev
+          ? {
+              ...prev,
+              calendar_members: (prev.calendar_members ?? []).map((item) =>
+                item.user_id === updatedMember.user_id ? { ...item, ...updatedMember } : item
+              ),
+            }
+          : prev
+      );
+      setInviteMessage('Member role updated');
+    } catch {
+      setInviteMessage('Failed to update member');
+    } finally {
+      setMemberActionUserId(null);
+      setTimeout(() => setInviteMessage(null), 2500);
+    }
+  };
+
+  const onRemoveMember = async (member: CalendarMember) => {
+    if (!calendarId || member.role === 'owner') return;
+    if (!confirm('Remove this member from the calendar?')) return;
+
+    setMemberActionUserId(member.user_id);
+    setInviteMessage(null);
+
+    try {
+      const res = await fetch(`/api/calendars/${calendarId}/members/${member.user_id}`, { method: 'DELETE' });
+      const json = await res.json();
+
+      if (!json.success) {
+        setInviteMessage(json.error || 'Failed to remove member');
+        return;
+      }
+
+      setCalendar((prev) =>
+        prev
+          ? {
+              ...prev,
+              calendar_members: (prev.calendar_members ?? []).filter((item) => item.user_id !== member.user_id),
+            }
+          : prev
+      );
+      setInviteMessage('Member removed');
+    } catch {
+      setInviteMessage('Failed to remove member');
+    } finally {
+      setMemberActionUserId(null);
+      setTimeout(() => setInviteMessage(null), 2500);
+    }
+  };
+
   const onInvite = async () => {
     const email = inviteEmail.trim();
     if (!email || inviting) return;
@@ -134,6 +240,7 @@ export default function CalendarSettingsPage() {
       const json = await res.json();
       if (json.success) {
         setInviteEmail('');
+        void refreshPendingInvites();
 
         if (json.emailSent === false) {
           const fallbackHint = inviteLink
@@ -275,11 +382,41 @@ export default function CalendarSettingsPage() {
           </div>
           <div className="space-y-2">
             {(calendar.calendar_members ?? []).map((m) => (
-              <div key={m.user_id} className="flex items-center justify-between text-sm">
-                <div className="text-gray-900">
-                  {m.profiles?.full_name || m.profiles?.email || m.user_id}
+              <div key={m.user_id} className="flex items-center justify-between gap-3 text-sm">
+                <div className="min-w-0">
+                  <div className="truncate text-gray-900">
+                    {m.profiles?.full_name || m.profiles?.email || m.user_id}
+                  </div>
+                  {m.profiles?.full_name && m.profiles?.email && (
+                    <div className="truncate text-xs text-gray-500">{m.profiles.email}</div>
+                  )}
                 </div>
-                <div className="text-xs text-gray-500">{m.role}</div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {isOwner && m.role !== 'owner' ? (
+                    <select
+                      value={m.role}
+                      onChange={(e) => onChangeMemberRole(m, e.target.value as 'viewer' | 'editor')}
+                      disabled={memberActionUserId === m.user_id}
+                      className="border rounded-xl px-2 py-1 text-xs bg-white"
+                      aria-label="Member role"
+                    >
+                      <option value="viewer">Viewer</option>
+                      <option value="editor">Editor</option>
+                    </select>
+                  ) : (
+                    <div className="text-xs text-gray-500">{m.role}</div>
+                  )}
+                  {isOwner && m.role !== 'owner' && (
+                    <button
+                      onClick={() => onRemoveMember(m)}
+                      disabled={memberActionUserId === m.user_id}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border text-gray-500 disabled:opacity-40"
+                      aria-label="Remove member"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
             {(calendar.calendar_members ?? []).length === 0 && (
@@ -287,6 +424,51 @@ export default function CalendarSettingsPage() {
             )}
           </div>
         </section>
+
+        {isOwner && (
+          <section className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Mail size={16} className="text-gray-500" />
+                <h2 className="font-semibold text-gray-900">Pending Invites</h2>
+              </div>
+              <button
+                onClick={refreshPendingInvites}
+                className="inline-flex items-center gap-2 border rounded-xl px-3 py-1.5 text-xs font-semibold"
+              >
+                <RefreshCw size={14} />
+                Refresh
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {pendingInvites.map((invite) => {
+                const displayName = invite.profile?.full_name || invite.profile?.email || invite.invited_email;
+                return (
+                  <div key={invite.id} className="flex items-center justify-between gap-3 text-sm">
+                    <div className="min-w-0">
+                      <div className="truncate text-gray-900">{displayName}</div>
+                      {displayName !== invite.invited_email && (
+                        <div className="truncate text-xs text-gray-500">{invite.invited_email}</div>
+                      )}
+                      <div className="text-xs text-gray-500">
+                        Expires {new Date(invite.expires_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-xs font-semibold capitalize text-gray-700">{invite.role}</div>
+                      <div className="text-xs text-amber-600 capitalize">{invite.status}</div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {pendingInvites.length === 0 && (
+                <div className="text-sm text-gray-500">No pending invites</div>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
           <h2 className="font-semibold text-gray-900">Invite / Share</h2>
@@ -397,7 +579,7 @@ export default function CalendarSettingsPage() {
             )}
 
             <p className="text-xs text-gray-500">
-              Recipients opening this link can preview the calendar, then join as <span className="font-semibold">viewer</span>.
+              Recipients opening this link can preview the calendar, then join as <span className="font-semibold">{calendar.default_join_role}</span>.
             </p>
 
             {!isOwner && (

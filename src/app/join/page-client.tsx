@@ -85,7 +85,6 @@ export default function JoinPageClient() {
       setCode(normalized);
       void fetchPreview(normalized);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleJoin = async () => {
@@ -203,7 +202,7 @@ export default function JoinPageClient() {
                 {preview.calendar.name}
               </div>
               <p className="text-xs text-[#6B7280]">
-                Permission on join: <span className="font-semibold text-[#374151]">viewer</span>
+                Permission on join: <span className="font-semibold text-[#374151]">{preview.permission}</span>
               </p>
               <p className="text-xs text-[#6B7280]">
                 {preview.state === 'open' && 'Sign in first to continue joining this calendar.'}

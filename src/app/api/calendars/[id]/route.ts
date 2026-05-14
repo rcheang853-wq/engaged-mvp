@@ -42,18 +42,29 @@ export async function GET(
 
     const { id } = await params;
 
-    // Use service role for DB read — user is already validated.
-    // Scope query to calendars where the user is a member.
     const db = createServiceClient();
+
+    const { data: currentMembership, error: membershipError } = await db
+      .from('calendar_members')
+      .select('role')
+      .eq('calendar_id', id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (membershipError || !currentMembership) {
+      return NextResponse.json(
+        { success: false, error: 'Calendar not found' },
+        { status: 404 }
+      );
+    }
 
     const { data, error } = await db
       .from('calendars')
       .select(
         `*,
-         calendar_members!inner(id, user_id, role, joined_at, profiles(id, full_name, avatar_url, email))`
+         calendar_members(id, user_id, role, joined_at, profiles(id, full_name, avatar_url, email))`
       )
       .eq('id', id)
-      .eq('calendar_members.user_id', user.id)
       .single();
 
     if (error || !data) {
@@ -63,7 +74,14 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...data,
+        current_user_id: user.id,
+        current_user_role: currentMembership.role,
+      },
+    });
   } catch (err: any) {
     return NextResponse.json(
       { success: false, error: err.message },

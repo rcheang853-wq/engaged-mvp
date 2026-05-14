@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, MapPin, Bell, Repeat, Tag, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, MapPin, Repeat, Link as LinkIcon } from 'lucide-react';
 import { PRIVATE_EVENT_TAXONOMY } from '@/lib/private-event-taxonomy';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
@@ -73,9 +73,9 @@ export default function NewEventPage() {
         const members = cal?.calendar_members as any[] | undefined;
         const role = members?.find((m) => m.user_id === userId)?.role as string | undefined;
         const ownerId = (cal?.owner_id ?? cal?.created_by ?? cal?.user_id) as string | undefined;
-        const isOwner = role === 'owner' || (!!userId && !!ownerId && userId === ownerId);
+        const canEditCalendar = role === 'owner' || role === 'editor' || (!!userId && !!ownerId && userId === ownerId);
 
-        if (!cancelled) setCanEdit(isOwner);
+        if (!cancelled) setCanEdit(canEditCalendar);
       } catch {
         if (!cancelled) setCanEdit(null);
       }
@@ -86,7 +86,7 @@ export default function NewEventPage() {
   const handleSave = async () => {
     if (!title.trim() || saving) return;
     if (canEdit === false) {
-      setPermissionError('Only calendar owners can create events in shared calendars.');
+      setPermissionError('Only calendar owners and editors can create events in shared calendars.');
       return;
     }
 
@@ -124,7 +124,7 @@ export default function NewEventPage() {
       const d = await res.json();
       if (!res.ok || !d.success) {
         if (res.status === 401 || res.status === 403) {
-          setPermissionError('Only calendar owners can create events in shared calendars.');
+          setPermissionError('Only calendar owners and editors can create events in shared calendars.');
         } else {
           setPermissionError('Failed to create event. Please try again.');
         }

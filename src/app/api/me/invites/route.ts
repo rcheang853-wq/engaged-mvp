@@ -31,7 +31,7 @@ export async function GET(_req: NextRequest) {
 
     const { data, error } = await supabase
       .from('calendar_invites')
-      .select('id, calendar_id, invited_email, invited_by, status, created_at, expires_at, calendars(id, name, color)')
+      .select('id, calendar_id, invited_email, invited_by, role, status, created_at, expires_at, calendars(id, name, color)')
       .eq('invited_email', profile.email)
       .eq('status', 'pending')
       .order('created_at', { ascending: false });

@@ -26,6 +26,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     const { id, eventId } = await params;
 
+    const { data: membership } = await supabase
+      .from('calendar_members')
+      .select('role')
+      .eq('calendar_id', id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
     const { data, error } = await supabase
       .from('calendar_events')
       .select(`*, profiles:created_by(id, full_name, avatar_url), event_comments(id, body, created_at, profiles:user_id(id, full_name, avatar_url))`)
@@ -34,7 +41,16 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       .single();
 
     if (error) return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
-    return NextResponse.json({ success: true, data: { ...data, viewer_is_owner: data.created_by === user.id } });
+    const viewerRole = membership?.role ?? null;
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...data,
+        viewer_role: viewerRole,
+        viewer_can_edit: viewerRole === 'owner' || viewerRole === 'editor',
+        viewer_is_owner: viewerRole === 'owner' || data.created_by === user.id,
+      },
+    });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

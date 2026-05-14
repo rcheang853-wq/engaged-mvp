@@ -29,6 +29,8 @@ interface CalendarEvent {
   discoverable_by_others: boolean;
   created_by: string;
   viewer_is_owner?: boolean;
+  viewer_role?: 'owner' | 'editor' | 'viewer' | null;
+  viewer_can_edit?: boolean;
   profiles: { id: string; full_name: string; avatar_url: string | null };
   event_comments: Comment[];
 }
@@ -162,7 +164,7 @@ export default function EventDetailPage() {
 
   const eventColor = event.color || '#3B82F6';
   const eventTags = event.tags ?? [];
-  const isOwner = event.viewer_is_owner ?? !!(currentUserId && event.created_by === currentUserId);
+  const canEdit = event.viewer_can_edit ?? event.viewer_is_owner ?? !!(currentUserId && event.created_by === currentUserId);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -190,7 +192,7 @@ export default function EventDetailPage() {
           >
             <Share2 size={16} />
           </button>
-          {isOwner && (
+          {canEdit && (
             <button
               className="w-9 h-9 rounded-full bg-black/20 flex items-center justify-center text-white backdrop-blur-sm hover:bg-black/30 transition-colors"
               aria-label="More actions"
@@ -202,7 +204,7 @@ export default function EventDetailPage() {
         </div>
 
         {/* Owner dropdown */}
-        {menuOpen && isOwner && (
+        {menuOpen && canEdit && (
           <div className="absolute top-14 right-4 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20 w-44">
             <button
               onClick={() => { setMenuOpen(false); router.push(`/calendars/${id}/events/${eventId}/edit`); }}
@@ -297,7 +299,7 @@ export default function EventDetailPage() {
           )}
 
           {/* Discoverability */}
-          {isOwner && (
+          {canEdit && (
             <div className="flex items-start gap-3 border-t border-gray-50 pt-3">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: eventColor + '15' }}>
                 <Share2 size={16} style={{ color: eventColor }} />
