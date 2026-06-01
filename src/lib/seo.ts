@@ -1,7 +1,9 @@
 import { Metadata } from 'next';
 
-// Base URL for production (update with your actual domain)
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://engaged-app.com';
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  'https://engaged-mvp.vercel.app';
 
 // Default SEO configuration
 export const defaultSEO: Metadata = {
@@ -38,9 +40,9 @@ export const defaultSEO: Metadata = {
     description: 'A simple, private calendar to create, manage, and share events.',
     images: [
       {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
+        url: '/icon-512x512.png',
+        width: 512,
+        height: 512,
         alt: 'Engaged - Discover Local Events',
       },
     ],
@@ -49,7 +51,7 @@ export const defaultSEO: Metadata = {
     card: 'summary_large_image',
     title: 'Engaged - Personal Calendar',
     description: 'A simple, private calendar to create, manage, and share events.',
-    images: ['/og-image.jpg'],
+    images: ['/icon-512x512.png'],
     creator: '@engaged_app',
   },
   robots: {
@@ -207,7 +209,7 @@ export function generateOrganizationStructuredData() {
     '@type': 'Organization',
     name: 'Engaged',
     url: BASE_URL,
-    logo: `${BASE_URL}/logo.png`,
+    logo: `${BASE_URL}/oauth-logo.png`,
     description: 'A simple calendar for personal events.',
     sameAs: [
       // Add social media URLs here

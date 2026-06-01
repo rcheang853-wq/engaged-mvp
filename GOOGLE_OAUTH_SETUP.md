@@ -2,6 +2,8 @@
 
 This document provides step-by-step instructions for configuring Google OAuth authentication for the Engaged App using Supabase.
 
+For production branding and the fix for Google showing `hrwcwledehtkqlrzeqiq.supabase.co`, use `docs/oauth-branding-setup.md` first.
+
 ## Prerequisites
 
 - A Google Account
